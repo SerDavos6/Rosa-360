@@ -54,8 +54,8 @@ function ovrChart(m){const s=ovrSeries(m);if(s.length<2)return '';const w=300,h=
 const emptyState=(i,t,x,b)=>`<div class="empty"><div class="eic">${ic(i)}</div><b>${t}</b><p class="mu">${x}</p>${b||''}</div>`;
 function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('canvas'),w=c.width=innerWidth,h=c.height=innerHeight;c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:95';document.body.append(c);
   const g=c.getContext('2d'),acc=getComputedStyle(document.documentElement).getPropertyValue('--acf').trim()||'#f5c518',cols=[acc,'#ffd54a','#ffffff','#34d399','#60a5fa','#f87171'],t0=performance.now(),
-  ps=Array.from({length:110},()=>({x:w/2,y:h*.38,vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,s:6+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.random()*cols.length|0]}));
-  (function f(t){const k=t-t0;g.clearRect(0,0,w,h);ps.forEach(p=>{p.vy+=.45;p.vx*=.992;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;g.save();g.globalAlpha=Math.max(0,1-k/1800);g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);g.restore()});if(k<1800)requestAnimationFrame(f);else c.remove()})(t0)}
+  ps=Array.from({length:60},()=>({x:w/2,y:h*.38,vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,s:6+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.random()*cols.length|0]}));
+  (function f(t){const k=t-t0;g.clearRect(0,0,w,h);ps.forEach(p=>{p.vy+=.45;p.vx*=.992;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;g.globalAlpha=Math.max(0,1-k/1800);g.setTransform(Math.cos(p.r),Math.sin(p.r),-Math.sin(p.r),Math.cos(p.r),p.x,p.y);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6)});g.setTransform(1,0,0,1,0,0);if(k<1800)requestAnimationFrame(f);else c.remove()})(t0)}
 
 // ===== Storico contro un avversario =====
 function h2hCard(tid,opp,exId,quiet){const k=String(opp||'').trim().toLowerCase();if(!k)return '';

@@ -494,9 +494,14 @@ function lvApply(id,fn){
 function lvPump(id){
   const o=LV[id];if(!o||o.busy||!o.pend)return;
   const d=o.pend,k=o.taps;o.pend=null;o.taps=0;o.busy=true;
-  S.db.doc('matches/'+id).update(d).then(()=>{const m=S.matches.find(m=>m.id===id);if(m)Object.assign(m,d)})
+  S.db.doc('matches/'+id).update(d).then(()=>{const m=S.matches.find(m=>m.id===id);if(m){const {clock,...rest}=d;Object.assign(m,rest)}})
     .catch(()=>{S.err='Evento non salvato: controlla la connessione.'})
     .finally(()=>{o.busy=false;o.n=Math.max(0,o.n-k);if(o.pend)lvPump(id);else{if(o.n===0)o.d=null;rq()}})}
+// Cronometro: l'effetto è immediato sullo schermo (con l'ora del tocco); il salvataggio segue in coda con gli altri eventi.
+function lvClockSet(id,c){
+  const x=S.matches.find(m=>m.id===id);if(!x)return;
+  const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0});
+  x.clock=c;o.n++;o.taps++;o.pend=Object.assign(o.pend||{},{clock:c});rq();lvPump(id)}
 function liveSel(p){LIVE.p=LIVE.p===p?null:p;LIVE.assist=false;LIVE.pick=null;rq()}
 function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:Date.now(),...lvM(id)})});LIVE.assist=true;rq()}
 function liveAssist(id,a){
@@ -542,10 +547,11 @@ function liveCardHtml(x){
 const lvElapsed=x=>{const c=x&&x.clock;return c?(+c.base||0)+(c.since?Date.now()-c.since:0):0};
 const lvFmt=ms=>{const t=Math.floor(ms/1000);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
 const lvM=id=>{const x=S.matches.find(m=>m.id===id);return x&&x.clock?{m:Math.floor(lvElapsed(x)/60000)+1}:{}};
-function liveClock(id){const x=S.matches.find(m=>m.id===id),c=(x&&x.clock)||{base:0,since:null};S.db.doc('matches/'+id).update({clock:c.since?{base:(+c.base||0)+Date.now()-c.since,since:null}:{base:+c.base||0,since:Date.now()}})}
-function liveClockStop(id){const x=S.matches.find(m=>m.id===id);if(x&&x.clock&&x.clock.since)S.db.doc('matches/'+id).update({clock:{base:lvElapsed(x),since:null}})}
-function liveClockReset(id){ask({title:'Azzerare il cronometro?',msg:'Riparte da 00:00. I minuti già scritti nella cronaca restano.',ok:'Azzera',danger:1,fn:()=>S.db.doc('matches/'+id).update({clock:{base:0,since:null}})})}
-setInterval(()=>{const e=document.getElementById('lvclock');if(e&&S.matches)e.textContent=lvFmt(lvElapsed(S.matches.find(m=>m.id===e.dataset.id)))},1000);
+function liveClock(id){const x=S.matches.find(m=>m.id===id),c=(x&&x.clock)||{base:0,since:null},now=Date.now();
+  lvClockSet(id,c.since?{base:(+c.base||0)+now-c.since,since:null}:{base:+c.base||0,since:now})}
+function liveClockStop(id){const x=S.matches.find(m=>m.id===id);if(x&&x.clock&&x.clock.since)lvClockSet(id,{base:lvElapsed(x),since:null})}
+function liveClockReset(id){ask({title:'Azzerare il cronometro?',msg:'Riparte da 00:00. I minuti già scritti nella cronaca restano.',ok:'Azzera',danger:1,fn:()=>lvClockSet(id,{base:0,since:null})})}
+setInterval(()=>{if(document.hidden)return;const e=document.getElementById('lvclock');if(e&&S.matches)e.textContent=lvFmt(lvElapsed(S.matches.find(m=>m.id===e.dataset.id)))},1000);
 
 // ===== Selettore colore con cursore, uguale su iOS e Android =====
 // Il <input type="color"> lo disegna il sistema (iOS e Android lo mostrano in modo diverso): qui lo sostituiamo con uno nostro.
