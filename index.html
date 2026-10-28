@@ -13,7 +13,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Squadra">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +28,7 @@
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
 html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-text-size-adjust:100%;background:var(--bg);min-height:100%;min-height:-webkit-fill-available}
 body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
-#app{position:fixed;top:0;left:0;right:0;bottom:0;height:100vh;height:100dvh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+#app{position:fixed;inset:0;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
 @media (min-width:761px){#app{border-left:1px solid var(--bd);border-right:1px solid var(--bd)}}
 .view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .pg{max-width:760px;margin:0 auto;padding:14px 14px 32px}
@@ -677,4 +676,9 @@ async function boot(){
   S.tab="cal";
   makeClaude(session.user.id);init()}
 boot();
-</script><script>(function(){var st=navigator.standalone||matchMedia("(display-mode: standalone)").matches;if(!st)return;var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);function fit(){var a=document.getElementById("app");if(!a)return;var h=Math.max(innerHeight,document.documentElement.clientHeight);if(ios&&!document.body.classList.contains("kb")){var sh=Math.max(screen.height,screen.width);if(innerWidth<=screen.width+1&&h<sh)h=sh}a.style.height=h+"px"}fit();addEventListener("resize",fit);addEventListener("orientationchange",function(){setTimeout(fit,200)});addEventListener("pageshow",fit)})()</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
+</script><script>(function(){var st=navigator.standalone||matchMedia("(display-mode: standalone)").matches;if(!st)return;var max=innerHeight;function typing(){var a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)}
+function heal(){if(typing())return;var h=innerHeight;if(h>max)max=h;if(max-h<=4)return;var a=document.getElementById("app");if(!a)return;var v=document.querySelector(".view"),t=v?v.scrollTop:0;a.style.display="none";void a.offsetHeight;a.style.display="";if(v)v.scrollTop=t}
+function later(){setTimeout(heal,150);setTimeout(heal,600)}
+addEventListener("resize",function(){if(innerHeight>max)max=innerHeight});
+addEventListener("focusout",later);addEventListener("pageshow",later);addEventListener("orientationchange",function(){max=0;setTimeout(function(){max=innerHeight},400)});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)later()});later()})()</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
