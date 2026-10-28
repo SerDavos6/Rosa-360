@@ -4,15 +4,16 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="preconnect" href="https://xmgtlgeftxpjacolaqnb.supabase.co" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Squadra – gestione calcio e calcetto</title>
+<title>Rosa 360 – gestione calcio e calcetto</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#fdd30b">
+<meta name="theme-color" content="#0d1014">
+<script>try{var c=localStorage.getItem("bar");if(c&&/^#[0-9a-f]{6}$/i.test(c))document.querySelector("meta[name=theme-color]").setAttribute("content",c)}catch(e){}</script>
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Squadra">
+<meta name="apple-mobile-web-app-title" content="Rosa 360">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -556,9 +557,9 @@ function impView(t,mgr){
   const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}${migCard(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>${shareStyleCard(t)}`:"";
   const seg=mgr?`<div class="seg"><button class="${ps==="io"?"on":""}" onclick="S.ps='io';render()">Il mio profilo</button><button class="${ps==="sq"?"on":""}" onclick="S.ps='sq';render()">Squadra${pend.length?' <i class="dot" style="position:static;display:inline-block;margin-left:6px"></i>':""}</button></div>`:"";
   return seg+(ps==="sq"?sq:io)}
-function inviteText(){const t=S.teams.find(x=>x.id===S.tid);return "Unisciti a "+(t?.name||"la squadra")+" su Squadra! Codice invito: "+(t?.code||"")+"\n"+location.origin+location.pathname}
+function inviteText(){const t=S.teams.find(x=>x.id===S.tid);return "Unisciti a "+(t?.name||"la squadra")+" su Rosa 360! Codice invito: "+(t?.code||"")+"\n"+location.origin+location.pathname}
 async function shareCode(){const text=inviteText();
-  if(navigator.share){try{await navigator.share({title:"Squadra",text})}catch(e){if(e.name!=="AbortError")toast("Condivisione non riuscita. Prova a copiare il codice.")}return}
+  if(navigator.share){try{await navigator.share({title:"Rosa 360",text})}catch(e){if(e.name!=="AbortError")toast("Condivisione non riuscita. Prova a copiare il codice.")}return}
   window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank")}
 async function copyCode(){const t=S.teams.find(x=>x.id===S.tid);if(!t)return;
   try{await navigator.clipboard.writeText(t.code);toast("Codice copiato",true)}catch(e){toast("Non riesco a copiare: seleziona il codice a mano.")}}
@@ -721,7 +722,7 @@ function makeClaude(uid){
   };
   window.claude={use:async k=>k==="db"?dbo:k==="user"?{id:async()=>uid}:null};
 }
-function loginView(msg){$("app").innerHTML=plain(`<div class="logo0"><img src="icon-192.png" alt=""><h1>Squadra</h1><div class="mu">Rosa, partite e statistiche della tua squadra</div></div><div class="card"><label>Email</label><input id="le" type="email" autocomplete="email"><label>Password (almeno 6 caratteri)</label><input id="lp" type="password" autocomplete="current-password"><div style="text-align:right;margin-top:6px"><button style="border:0;background:none;padding:4px;color:var(--ac);font-weight:600" onclick="forgotPassword()">Password dimenticata?</button></div><div class="err" id="lm">${msg||""}</div><div class="row" style="margin-top:12px"><button class="p" onclick="doAuth(false)">Accedi</button><button onclick="doAuth(true)">Registrati</button></div></div>`)}
+function loginView(msg){$("app").innerHTML=plain(`<div class="logo0"><img src="icon-192.png" alt=""><h1>Rosa 360</h1><div class="mu">Rosa, partite e statistiche della tua squadra</div></div><div class="card"><label>Email</label><input id="le" type="email" autocomplete="email"><label>Password (almeno 6 caratteri)</label><input id="lp" type="password" autocomplete="current-password"><div style="text-align:right;margin-top:6px"><button style="border:0;background:none;padding:4px;color:var(--ac);font-weight:600" onclick="forgotPassword()">Password dimenticata?</button></div><div class="err" id="lm">${msg||""}</div><div class="row" style="margin-top:12px"><button class="p" onclick="doAuth(false)">Accedi</button><button onclick="doAuth(true)">Registrati</button></div></div>`)}
 async function doAuth(up){const email=v("le"),password=$("lp").value;
   if(!email||password.length<6){$("lm").textContent="Inserisci email e una password di almeno 6 caratteri.";return}
   const r=up?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});

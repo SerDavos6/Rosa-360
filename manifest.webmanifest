@@ -1,6 +1,6 @@
 {
-  "name": "Squadra – gestione calcio e calcetto",
-  "short_name": "Squadra",
+  "name": "Rosa 360 – gestione calcio e calcetto",
+  "short_name": "Rosa 360",
   "description": "Rosa, calendario, statistiche e carte della tua squadra.",
   "lang": "it",
   "start_url": "./",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#fdd30b",
-  "theme_color": "#fdd30b",
+  "theme_color": "#0d1014",
   "icons": [
     {
       "src": "icon-192.png",

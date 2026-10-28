@@ -67,7 +67,7 @@ function fluidDb(db){
 // ---------- tutto il resto parte quando la pagina è pronta ----------
 function fluidoStart(){
   // Avvio giallo con il logo, finché compare la prima schermata vera.
-  const boot=document.createElement('div');boot.id='boot';boot.innerHTML='<img src="icon-192.png" alt="">';document.body.append(boot);
+  const boot=document.createElement('div');boot.id='boot';try{const c=localStorage.getItem('bar');if(/^#[0-9a-f]{6}$/i.test(c||''))boot.style.background=c}catch(e){}boot.innerHTML='<img src="icon-192.png" alt="">';document.body.append(boot);
   const t0=Date.now();let gone=false;
   const hide=()=>{if(gone)return;gone=true;setTimeout(()=>{boot.classList.add('off');setTimeout(()=>boot.remove(),350)},Math.max(0,450-(Date.now()-t0)))};
   const app=document.getElementById('app');
@@ -89,6 +89,11 @@ function fluidoStart(){
     return false};
   window.addEventListener('popstate',()=>{if(!pushed)return;pushed=false;goBack();sync()});
 
+  // La barra in alto del telefono segue sempre il colore dell'intestazione; l'ultimo colore viene ricordato per il prossimo avvio.
+  const sb0=syncBar;let lastBar='';
+  syncBar=function(){sb0.apply(this,arguments);const m=document.querySelector('meta[name=theme-color]'),c=m&&m.getAttribute('content');
+    if(!c||c===lastBar||!/^#[0-9a-f]{6}$/i.test(c))return;lastBar=c;try{localStorage.setItem('bar',c)}catch(e){}
+    const n=m.cloneNode();n.setAttribute('content',c);m.replaceWith(n)};
   const r0=render;
   render=function(){
     if(!sc&&S.profile&&S.teams.length&&S.members.length){sc=true;S.tab=qv;S.mid=null;S.pd=null;try{history.replaceState({},document.title,location.pathname)}catch(e){}}
