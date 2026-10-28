@@ -23,13 +23,16 @@
  --bg:#f4f6fa;--sf:#ffffff;--tx:#0f172a;--mu:#64748b;--bd:#e5e9f0;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e8f3ec;--on:#ffffff;--dg:#c62828;color-scheme:light}
 :root:root:root{--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#222c3c;--ac:#f5c518;--acf:#f5c518;--ac2:#2a2615;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
-html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
-body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
-#app{position:fixed;inset:0;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;background:var(--bg)}
+body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;min-height:100dvh}
+#app{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100dvh;min-height:100svh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+@supports not (height:100dvh){#app{height:100vh;min-height:100vh}}
+@media (display-mode: standalone),(display-mode: fullscreen){body,#app{min-height:100dvh;height:100dvh}}
 @media (min-width:761px){#app{border-left:1px solid var(--bd);border-right:1px solid var(--bd)}}
-.view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.pg{max-width:760px;margin:0 auto;padding:14px 14px 32px}
+.view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.pg{max-width:760px;margin:0 auto;padding:14px 14px calc(32px + env(safe-area-inset-bottom,0px))}
 .view.plain .pg{padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
 
 /* --- intestazione fissa --- */
@@ -51,7 +54,7 @@ body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-
 .mtabs .on{color:var(--ac);box-shadow:inset 0 -3px 0 var(--acf)}
 
 /* --- navigazione fissa in basso --- */
-.bn{flex:none;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.bn{flex:none;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding-bottom:max(env(safe-area-inset-bottom,0px),0px);z-index:5;min-height:var(--navh)}
 .bn button{flex:1;position:relative;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;border:0;border-radius:0;background:transparent;color:var(--mu);font-size:11px;font-weight:700}
 .bn button span{display:block;font-size:24px;line-height:1}
 .bn .on{color:var(--ac)}
