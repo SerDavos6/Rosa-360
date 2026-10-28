@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Squadra – gestione calcio e calcetto</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0d1014">
+<meta name="theme-color" content="#fdd30b">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -228,7 +228,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js"></script><script src="match-report.js"></script>
+<script src="ui-extra.js"></script><script src="match-report.js"></script><script src="fluido.js"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -326,7 +326,7 @@ try{S.tid=localStorage.getItem("tid")}catch(e){}
 async function init(){
   const user=await claude.use("user"),db=await claude.use("db");
   if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi a claude.ai per usare l’app.</b><p class="mu">Servono un account e il database condiviso.</p></div>');return}
-  S.db=db;S.uid=await user.id();
+  S.db=(typeof fluidDb==="function"?fluidDb(db):db);S.uid=await user.id();
   const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));
     if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
   db.doc("profiles/"+S.uid).onSnapshot(s=>{S.profile=s.exists?s.data():null;render()});
@@ -547,7 +547,7 @@ function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
 function impView(t,mgr){
   const pend=S.reqs.filter(r=>r.tid===t.id),ps=mgr&&S.ps==="sq"?"sq":"io";
   const io=`<div class="card pcard">${crest(myMember().photo,ic("user"),"xl")}<div class="nm2">${esc(myMember().nick)}</div>${S.profile.name?`<div>${esc(S.profile.name)}</div>`:""}<div class="mu">${esc(S.profile.email||"")}</div><div class="pbtns"><button onclick="S.profile=null;render()">Modifica profilo</button><button onclick="S.tid=null;render()">Cambia squadra</button></div><button class="out" onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button></div>
-  <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div><p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
+  <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>${typeof aspettoExtra==="function"?aspettoExtra():""}<p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
   <div class="card"><b>Codice invito</b><div class="code" onclick="copyCode()" title="Tocca per copiare">${esc(t.code)}</div>
   <div class="pbtns"><button class="p" onclick="shareCode()">${ic("share")} Condividi</button><button onclick="copyCode()">${ic("copy")} Copia</button></div>
   <p class="mu">Condividilo con i giocatori (per esempio su WhatsApp): potranno inviare la richiesta di accesso, che dirigenti e capitano approvano.</p></div>
@@ -756,5 +756,6 @@ async function boot(){
   if(!session)return loginView();
   S.tab="cal";
   makeClaude(session.user.id);init()}
+if(typeof fluidoStart==="function")fluidoStart();
 boot();
 </script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
