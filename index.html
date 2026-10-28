@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Squadra">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -686,4 +686,6 @@ function heal(){if(typing())return;var h=innerHeight;if(h>max)max=h;if(max-h<=4)
 function later(){setTimeout(heal,150);setTimeout(heal,600)}
 addEventListener("resize",function(){if(innerHeight>max)max=innerHeight});
 addEventListener("focusout",later);addEventListener("pageshow",later);addEventListener("orientationchange",function(){max=0;setTimeout(function(){max=innerHeight},400)});
-document.addEventListener("visibilitychange",function(){if(!document.hidden)later()});later()})()</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
+document.addEventListener("visibilitychange",function(){if(!document.hidden)later()});later()})()</script><script>(function(){function m(){var x=document.querySelector('meta[name="theme-color"]:not([media])');if(!x){x=document.createElement("meta");x.name="theme-color";document.head.append(x)}return x}
+function up(){var e=document.querySelector(".bar")||document.body,c=getComputedStyle(e).backgroundColor;if(!c||c==="rgba(0, 0, 0, 0)")c=getComputedStyle(document.body).backgroundColor;var t=m();if(t.content!==c)t.content=c}
+document.querySelectorAll('meta[name="theme-color"][media]').forEach(function(n){n.remove()});up();setInterval(up,1000);addEventListener("pageshow",up)})()</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
