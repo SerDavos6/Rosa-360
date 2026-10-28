@@ -481,37 +481,46 @@ const lvEff=x=>{const o=LV[x.id];return o&&o.n>0?{...x,...o.d}:x};
 const lvStat=(d,p)=>d.stats[p]||(d.stats[p]={g:0,a:0,og:0,y:0,r:0,gs:0});
 const lvDec=(s,k)=>{if(s)s[k]=Math.max(0,(+s[k]||0)-1)};
 function lvKeepers(cur){return (cur.present||[]).filter(i=>{const m=S.members.find(m=>m.id===i);return m&&m.role==='giocatore'&&m.pos==='P'})}
+const rq=()=>{if(rq.t)return;rq.t=requestAnimationFrame(()=>{rq.t=0;render()})};
+const lvBusy=()=>Object.values(LV).some(o=>o&&o.n>0);
 function lvApply(id,fn){
   const base=S.matches.find(m=>m.id===id);if(!base)return;const bb=badgeKeys(base.tid);
-  const o=LV[id]||(LV[id]={n:0,d:null,chain:Promise.resolve()}),cur=lvEff(base);
+  const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0}),cur=lvEff(base);
   const d={gf:+cur.gf||0,ga:+cur.ga||0,played:!!cur.played,stats:JSON.parse(JSON.stringify(cur.stats||{})),events:[...(cur.events||[])]};
-  fn(d,cur);o.d=d;o.n++;render();badgeCheer(bb,badgeKeys(base.tid));
-  o.chain=o.chain.then(()=>S.db.doc('matches/'+id).update(d)).catch(()=>{S.err='Evento non salvato: controlla la connessione.'}).finally(()=>{o.n--;if(o.n===0)o.d=null;render()});
-}
-function liveSel(p){LIVE.p=LIVE.p===p?null:p;LIVE.assist=false;LIVE.pick=null;render()}
-function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:Date.now(),...lvM(id)})});LIVE.assist=true;render()}
+  fn(d,cur);o.d=d;o.n++;o.pend=d;o.taps++;
+  rq();setTimeout(()=>badgeCheer(bb,badgeKeys(base.tid)),0); // il controllo traguardi dopo il disegno, così il tocco risponde subito
+  lvPump(id)}
+// Un solo salvataggio alla volta: se nel frattempo arrivano altri tocchi, parte un unico salvataggio con lo stato aggiornato.
+function lvPump(id){
+  const o=LV[id];if(!o||o.busy||!o.pend)return;
+  const d=o.pend,k=o.taps;o.pend=null;o.taps=0;o.busy=true;
+  S.db.doc('matches/'+id).update(d).then(()=>{const m=S.matches.find(m=>m.id===id);if(m)Object.assign(m,d)})
+    .catch(()=>{S.err='Evento non salvato: controlla la connessione.'})
+    .finally(()=>{o.busy=false;o.n=Math.max(0,o.n-k);if(o.pend)lvPump(id);else{if(o.n===0)o.d=null;rq()}})}
+function liveSel(p){LIVE.p=LIVE.p===p?null:p;LIVE.assist=false;LIVE.pick=null;rq()}
+function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:Date.now(),...lvM(id)})});LIVE.assist=true;rq()}
 function liveAssist(id,a){
   if(a)lvApply(id,d=>{const e=d.events[d.events.length-1];if(e&&e.k==='g'&&!e.a){e.a=a;lvStat(d,a).a++}});
-  LIVE.p=null;LIVE.assist=false;render()}
+  LIVE.p=null;LIVE.assist=false;rq()}
 function liveOpp(id){const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.p=null;LIVE.assist=false;LIVE.pick='opp';
-  if(ks.length>1){render();return}liveGk(id,ks[0]||null)}
+  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
 function liveOwn(id){const p=LIVE.p;if(!p)return;const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.pick='og';
-  if(ks.length>1){render();return}liveGk(id,ks[0]||null)}
+  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
 function liveGk(id,gk){const k=LIVE.pick,p=LIVE.p;LIVE.pick=null;
   if(k==='opp')lvApply(id,d=>{d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'opp',gk:gk||null,t:Date.now(),...lvM(id)})});
   else if(k==='og'&&p)lvApply(id,d=>{lvStat(d,p).og++;d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'og',p,gk:gk||null,t:Date.now(),...lvM(id)})});
   else if(k==='ps')lvApply(id,d=>{if(gk){const s=lvStat(d,gk);s.ps=(+s.ps||0)+1}d.events.push({k:'ps',gk:gk||null,t:Date.now(),...lvM(id)})});
-  LIVE.p=null;render()}
+  LIVE.p=null;rq()}
 function liveSave(id){const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.p=null;LIVE.assist=false;LIVE.pick='ps';
-  if(ks.length>1){render();return}liveGk(id,ks[0]||null)}
-function liveGkCancel(){LIVE.pick=null;render()}
-function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:Date.now(),...lvM(id)})});LIVE.p=null;render()}
+  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
+function liveGkCancel(){LIVE.pick=null;rq()}
+function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:Date.now(),...lvM(id)})});LIVE.p=null;rq()}
 function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
   if(e.k==='g'){lvDec(d.stats[e.p],'g');d.gf=Math.max(0,d.gf-1);if(e.a)lvDec(d.stats[e.a],'a')}
   else if(e.k==='opp'){d.ga=Math.max(0,d.ga-1);if(e.gk)lvDec(d.stats[e.gk],'gs')}
   else if(e.k==='og'){lvDec(d.stats[e.p],'og');d.ga=Math.max(0,d.ga-1);if(e.gk)lvDec(d.stats[e.gk],'gs')}
   else if(e.k==='ps'){if(e.gk)lvDec(d.stats[e.gk],'ps')}
-  else lvDec(d.stats[e.p],e.k)});LIVE.p=null;LIVE.assist=false;render()}
+  else lvDec(d.stats[e.p],e.k)});LIVE.p=null;LIVE.assist=false;rq()}
 function liveEnd(id){ask({title:'Fine partita?',msg:'La partita viene segnata come giocata con il risultato attuale.',ok:'Fine partita',fn:()=>{lvApply(id,d=>{d.played=true});liveClockStop(id)}})}
 function liveLog(x){
   const nm=id=>esc(S.members.find(m=>m.id===id)?.nick||'?'),ev=x.events||[];
