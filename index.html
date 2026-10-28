@@ -199,8 +199,13 @@ dialog{max-width:600px;width:calc(100% - 24px);max-height:90vh;max-height:90dvh;
 dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;border-radius:12px;margin:12px 0}dialog .row{position:sticky;bottom:0;background:var(--sf);padding:8px 0}
 .report-colors{display:flex;gap:16px;border:1px solid var(--bd);border-radius:12px;margin:12px 0;padding:10px 14px}.report-colors legend{font-size:13px;color:var(--mu)}.report-colors label{flex:1;margin:0}.report-colors input{display:block;height:42px;padding:3px;margin-top:5px;cursor:pointer}
 .report-full{display:flex;gap:8px;align-items:center;margin:14px 0}.report-full input{width:auto;flex:0 0 auto}#report-image[aria-busy="true"]{opacity:.55}
+
+/* iOS Home Screen: all'avvio l'altezza risulta più corta della safe-area superiore (~59pt) -> riempi lo schermo */
+@supports (-webkit-touch-callout:none){@media (display-mode:standalone){#app{height:min(100lvh,calc(100dvh + env(safe-area-inset-top,0px)))}}}
+/* striscia opaca dietro la barra di stato: evita l'effetto sfumato/liquido in alto */
+#sstrip{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--sf);z-index:30}
 </style>
-</head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
+</head><body><div id="sstrip" aria-hidden="true"></div><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
 <script src="/ui-extra.js"></script><script src="/match-report.js"></script>
 
 <script>
