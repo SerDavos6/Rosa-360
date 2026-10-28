@@ -299,21 +299,38 @@ function dominant(img){const c=document.createElement("canvas");c.width=c.height
     const sat=(mx-mn)/mx,k=[r>>5,g>>5,bl>>5].join(),o=b[k]||(b[k]={n:0,c:0,r:0,g:0,b:0});o.n+=1+sat*2;o.c++;o.r+=r;o.g+=g;o.b+=bl}
   let best=null;for(const k in b)if(!best||b[k].n>best.n)best=b[k];if(!best)return null;
   return "#"+[best.r,best.g,best.b].map(v=>Math.round(v/best.c).toString(16).padStart(2,"0")).join("")}
+// ===== Immagini: salvate nello spazio file di Supabase (non dentro il database) =====
+const IMG_BUCKET="immagini",isData=s=>typeof s==="string"&&s.startsWith("data:");
+const dataToBlob=d=>{const m=/^data:([^;]+);base64,(.*)$/.exec(d||"");if(!m)return null;const bin=atob(m[2]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m[1]})};
+// Restituisce l'indirizzo pubblico dell'immagine; se il caricamento non riesce restituisce l'immagine com'era, così l'app funziona comunque.
+async function sbUpload(d,folder){
+  try{const b=dataToBlob(d);if(!b)return d;const ext=b.type==="image/jpeg"?"jpg":"png",path=(folder||"misc")+"/"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
+    const r=await sb.storage.from(IMG_BUCKET).upload(path,b,{contentType:b.type,cacheControl:"31536000",upsert:false});
+    if(r.error)return d;return sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl}catch(e){return d}}
+function migCard(t){const n=S.members.filter(m=>m.tid===t.id&&isData(m.photo)).length+(isData(t.logo)?1:0)+S.matches.filter(x=>x.tid===t.id&&isData(x.oppLogo)).length;
+  return `<div class="card"><b>Immagini</b><p class="mu">${n?n+" immagini sono ancora salvate dentro il database. Spostarle rende l’app più veloce.":"Tutte le immagini sono già fuori dal database."}</p>${n?'<button onclick="migraImmagini()">Sposta ora</button>':""}</div>`}
+async function migraImmagini(){
+  const t=S.teams.find(x=>x.id===S.tid);if(!t)return;toast("Sposto le immagini…",true);let ok=0,ko=0;
+  const job=async(d,apply)=>{const u=await sbUpload(d,"migrate");if(isData(u)){ko++;return}try{await apply(u);ok++}catch(e){ko++}};
+  for(const m of S.members.filter(m=>m.tid===t.id&&isData(m.photo)))await job(m.photo,u=>S.db.doc("members/"+m.id).update({photo:u}));
+  if(isData(t.logo))await job(t.logo,u=>S.db.doc("teams/"+t.id).update({logo:u}));
+  for(const x of S.matches.filter(x=>x.tid===t.id&&isData(x.oppLogo)))await job(x.oppLogo,u=>S.db.doc("matches/"+x.id).update({oppLogo:u}));
+  toast(ko?"Spostate "+ok+", non riuscite "+ko+". Controlla di aver creato lo spazio “immagini” su Supabase.":"Spostate "+ok+" immagini",!ko)}
 function readLogo(f,cb){const img=new Image();img.onload=()=>{const s=Math.min(1,128/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);cb(c.toDataURL("image/png"),img)};img.src=URL.createObjectURL(f)}
-function teamLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,(d,img)=>{const col=dominant(img);S.db.doc("teams/"+S.tid).update(col?{logo:d,color:col}:{logo:d})})}
+function teamLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async(d,img)=>{const col=dominant(img),u=await sbUpload(d,"squadre");S.db.doc("teams/"+S.tid).update(col?{logo:u,color:col}:{logo:u})})}
 function setColor(c){S.db.doc("teams/"+S.tid).update({color:c})}
-function oppLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,d=>{logoTmp=d;$("lg").textContent="Logo caricato ✓"})}
-function matchLogo(inp,id){const f=inp.files[0];if(!f)return;readLogo(f,d=>S.db.doc("matches/"+id).update({oppLogo:d}))}
+function oppLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{logoTmp=d;const e0=$("lg");if(e0)e0.textContent="Caricamento…";const u=await sbUpload(d,"avversari");if(logoTmp===d)logoTmp=u;const e1=$("lg");if(e1)e1.textContent="Logo caricato ✓"})}
+function matchLogo(inp,id){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{const u=await sbUpload(d,"avversari");S.db.doc("matches/"+id).update({oppLogo:u})})}
 try{S.tid=localStorage.getItem("tid")}catch(e){}
 
 async function init(){
   const user=await claude.use("user"),db=await claude.use("db");
   if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi a claude.ai per usare l’app.</b><p class="mu">Servono un account e il database condiviso.</p></div>');return}
   S.db=db;S.uid=await user.id();
-  const sub=(c,k)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));
-    if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()});
+  const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
   db.doc("profiles/"+S.uid).onSnapshot(s=>{S.profile=s.exists?s.data():null;render()});
-  sub("teams","teams");sub("members","members");sub("requests","reqs");sub("matches","matches");
+  sub("teams","teams");sub("members","members");sub("requests","reqs");sub("matches","matches",{recent:curSeason().slice(0,4)+"-09-01"});
 }
 const set=(p,d)=>S.db.doc(p).set(d).catch(e=>{S.err="Salvataggio non riuscito ("+e.code+"). Serve il livello Contributor.";render()});
 const del=p=>S.db.doc(p).delete();
@@ -339,7 +356,7 @@ function squadBlock(t){
     tors=[...new Set(l.map(x=>x.tourn||"Amichevoli"))].map(n=>[n,teamRec(l.filter(x=>(x.tourn||"Amichevoli")===n))]);
   const row=(n,s)=>`<tr><td>${esc(n)}</td><td>${s.g}</td><td>${s.v}</td><td>${s.n}</td><td>${s.p}</td><td>${s.gf}</td><td>${s.ga}</td><td>${s.dr>0?"+":""}${s.dr}</td><td><b>${s.pt}</b></td></tr>`;
   return `<h2>Squadra · ${lab}</h2><div class="card tipw"><div class="pgrid">${tile(r.g,"GIOCATE")}${tile(r.v,"VITTORIE")}${tile(r.n,"PAREGGI")}${tile(r.p,"SCONFITTE")}${tile(r.gf,"GOL FATTI")}${tile(r.ga,"GOL SUBITI")}${tile((r.dr>0?"+":"")+r.dr,"DIFF. RETI")}${tile(r.pt,"PUNTI")}</div><div style="margin-top:12px"><span class="mu">Forma (ultime ${Math.min(8,l.length)})</span><div class="fmrow">${form}</div></div></div>
-  <h2>Per torneo</h2>${[...tors,...(tors.length>1?[["Totale",r]]:[])].map(([n,x])=>`<div class="card"><b class="hd">${esc(n)}</b><div class="pgrid">${tile(x.g,"GIOCATE")}${tile(x.v,"VITTORIE")}${tile(x.n,"PAREGGI")}${tile(x.p,"SCONFITTE")}${tile(x.gf,"GOL FATTI")}${tile(x.ga,"GOL SUBITI")}${tile((x.dr>0?"+":"")+x.dr,"DIFF. RETI")}${tile(x.pt,"PUNTI")}</div></div>`).join("")}`}
+  ${trendChart(l)}<h2>Per torneo</h2>${[...tors,...(tors.length>1?[["Totale",r]]:[])].map(([n,x])=>`<div class="card"><b class="hd">${esc(n)}</b><div class="pgrid">${tile(x.g,"GIOCATE")}${tile(x.v,"VITTORIE")}${tile(x.n,"PAREGGI")}${tile(x.p,"SCONFITTE")}${tile(x.gf,"GOL FATTI")}${tile(x.ga,"GOL SUBITI")}${tile((x.dr>0?"+":"")+x.dr,"DIFF. RETI")}${tile(x.pt,"PUNTI")}</div></div>`).join("")}`}
 function stats(m){
   const t={p:0,g:0,a:0,og:0,y:0,r:0,gs:0,ps:0};
   S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).forEach(x=>{
@@ -414,7 +431,7 @@ function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1><div class=
  <div id="rpf">${posFields("r")}</div>
  <label>Foto</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
  <div class="err">${esc(S.err)}</div><p><button class="p" onclick="saveProfile()">Salva profilo</button></p></div>`}
-function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8)};img.src=URL.createObjectURL(f)}
+function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8);const mine=photoData;sbUpload(mine,"foto").then(u=>{if(photoData===mine)photoData=u})};img.src=URL.createObjectURL(f)}
 function saveProfile(){
   const rl=v("rl");if(!v("em")||!v("nk"))return S.err="Email e soprannome sono obbligatori.",render();
   if(rl==="giocatore"&&!v("rnum"))return S.err="Indica il numero di maglia.",render();
@@ -536,7 +553,7 @@ function impView(t,mgr){
   <p class="mu">Condividilo con i giocatori (per esempio su WhatsApp): potranno inviare la richiesta di accesso, che dirigenti e capitano approvano.</p></div>
   <div class="card mu">Capitano: ${esc(S.members.find(m=>m.tid===t.id&&m.captain)?.nick||"non ancora scelto")}. Il capitano lo nominano i dirigenti dalla scheda Rosa.</div>
   <p class="mu">Overall = base 55 + gol e assist (pesati per ruolo) + presenze − autogol e cartellini; i portieri perdono punti per i gol subiti.</p>`;
-  const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>${shareStyleCard(t)}`:"";
+  const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}${migCard(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>${shareStyleCard(t)}`:"";
   const seg=mgr?`<div class="seg"><button class="${ps==="io"?"on":""}" onclick="S.ps='io';render()">Il mio profilo</button><button class="${ps==="sq"?"on":""}" onclick="S.ps='sq';render()">Squadra${pend.length?' <i class="dot" style="position:static;display:inline-block;margin-left:6px"></i>':""}</button></div>`:"";
   return seg+(ps==="sq"?sq:io)}
 function inviteText(){const t=S.teams.find(x=>x.id===S.tid);return "Unisciti a "+(t?.name||"la squadra")+" su Squadra! Codice invito: "+(t?.code||"")+"\n"+location.origin+location.pathname}
@@ -559,7 +576,7 @@ function playerModal(id){
   return `<div class="pmw" onclick="if(event.target===this){S.pd=null;render()}"><div class="pm"><button class="s" style="float:right" onclick="S.pd=null;render()">✕ Chiudi</button>
   <h2 style="margin-top:0">${esc(m.nick)}${m.captain?" ©":""}</h2><div class="mu">${esc([m.name,m.role==="dirigente"?"Dirigente":POS[m.pos],pl&&m.num?"#"+m.num:""].filter(Boolean).join(" · "))}</div>
   <div class="pgrid">${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
-  ${pl?badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}</div></div>`}
+  ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}</div></div>`}
 function calView(t,mgr){
   const all=S.matches.filter(x=>x.tid===t.id),ms=all.filter(inSeason),tor=[...new Set(ms.map(x=>x.tourn||"Amichevoli"))];
   const mf=S.mf||"",cnt={"":ms.length,todo:ms.filter(x=>!x.played).length,done:ms.filter(x=>x.played).length};
@@ -679,20 +696,24 @@ function makeClaude(uid){
   const T=()=>sb.from("docs"),P=p=>{const a=p.split("/");return{c:a[0],id:a[1]}};
   const snap=r=>({id:r.id,exists:true,data:()=>r.data});
   const chk=r=>{if(r.error)throw{code:r.error.code||"errore",message:r.error.message};return r};
-  let n=0;
+  let n=0,mergeOk=true;
   const listen=(c,fn)=>{const ch=sb.channel("ch"+c+(++n)).on("postgres_changes",{event:"*",schema:"public",table:"docs"},p=>{const o=(p.new&&p.new.collection)||(p.old&&p.old.collection);if(!o||o===c)fn(p)}).subscribe();return()=>sb.removeChannel(ch)};
   const get1=(c,id)=>T().select("data").eq("collection",c).eq("id",id).maybeSingle();
   const dbo={
     doc:p=>{const{c,id}=P(p);return{
       set:async d=>chk(await T().upsert({collection:c,id,data:d})),
-      update:async d=>{const r=chk(await get1(c,id));chk(await T().upsert({collection:c,id,data:{...((r.data&&r.data.data)||{}),...d}}))},
+      update:async d=>{
+        if(mergeOk){const q=await sb.rpc("merge_doc",{c,i:id,p:d});if(!q.error)return;
+          if(q.error.code==="PGRST202"||q.error.code==="42883"||q.status===404)mergeOk=false;else throw{code:q.error.code||"errore",message:q.error.message}}
+        const r=chk(await get1(c,id));chk(await T().upsert({collection:c,id,data:{...((r.data&&r.data.data)||{}),...d}}))},
       delete:async()=>chk(await T().delete().eq("collection",c).eq("id",id)),
       onSnapshot:(f,e)=>{const run=async()=>{const r=await get1(c,id);if(r.error)return e&&e({code:r.error.code});f(r.data?snap({id,data:r.data.data}):{exists:false,data:()=>undefined})};run();return listen(c,run)}}},
-    collection:c=>({onSnapshot:(f,e)=>{let rows=null,tm=0,tf=0;
+    collection:c=>({onSnapshot:(f,e,opt)=>{let rows=null,tm=0,tf=0;
       const emit=()=>{tf=0;f({docs:[...rows.values()].map(snap)})};
       const soon=()=>{if(!tf)tf=setTimeout(emit,60)};
       const full=async()=>{const r=await T().select("id,data").eq("collection",c);if(r.error)return e&&e({code:r.error.code});rows=new Map(r.data.map(x=>[x.id,x]));emit()};
-      full();
+      const boot=async()=>{if(opt&&opt.recent){const r=await T().select("id,data").eq("collection",c).gte("data->>date",opt.recent);if(!r.error&&!rows){rows=new Map(r.data.map(x=>[x.id,x]));emit()}}await full()};
+      boot();
       return listen(c,p=>{
         if(rows&&(p.eventType==="INSERT"||p.eventType==="UPDATE")&&p.new&&p.new.collection===c&&p.new.id!=null&&p.new.data!==undefined){rows.set(p.new.id,{id:p.new.id,data:p.new.data});soon()}
         else if(rows&&p.eventType==="DELETE"&&p.old&&p.old.collection===c&&p.old.id!=null){rows.delete(p.old.id);soon()}

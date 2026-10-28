@@ -606,3 +606,13 @@ function shareStyleCard(t){
   return `<div class="card"><b>Immagine del risultato</b><p class="mu">Stile e colori usati in automatico per “Condividi risultato” di tutte le partite. Nella singola immagine puoi comunque fare ritocchi, che valgono solo per quella.</p><label>Stile</label>${seg('resultLayout',s.resultLayout)}${colors('resultPalette',FORMATION_COLORS.slice(0,3))}</div>
   <div class="card"><b>Immagine della formazione</b><p class="mu">Stile e colori usati in automatico per “Condividi formazione”, maglie comprese.</p><label>Stile</label>${seg('formationLayout',s.formationLayout)}${colors('formationPalette',FORMATION_COLORS)}</div>`;
 }
+
+// Schermo sempre acceso mentre è aperta la scheda "In diretta".
+let _wl=null,_wlBusy=false;
+async function wakeSync(){
+  if(_wlBusy)return;_wlBusy=true;
+  try{const p=document.querySelector('.mp[data-k="live"]'),want=!document.hidden&&!!p&&p.style.display!=='none'&&!!p.querySelector('.card.live');
+    if(want&&!_wl&&navigator.wakeLock){_wl=await navigator.wakeLock.request('screen');_wl.addEventListener('release',()=>{_wl=null})}
+    else if(!want&&_wl){const w=_wl;_wl=null;await w.release()}}catch(e){_wl=null}
+  _wlBusy=false}
+setInterval(wakeSync,2500);document.addEventListener('visibilitychange',wakeSync);

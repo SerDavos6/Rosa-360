@@ -162,3 +162,32 @@ const FX_TABS=['cal','rosa','cls','imp'];
 function fxBefore(){return {tab:S.tab,mid:S.mid}}
 function fxSlide(els,d){els.forEach(e=>{if(!e)return;e.classList.remove('fx-l','fx-r');void e.offsetWidth;e.classList.add(d>0?'fx-r':'fx-l')})}
 function fxAfter(f){if(!f)return;let d=0;if(f.tab!==S.tab)d=FX_TABS.indexOf(S.tab)-FX_TABS.indexOf(f.tab);else if(f.mid!==S.mid)d=S.mid?1:-1;if(d)fxSlide([document.querySelector('#app .view .pg')],d)}
+
+
+// ===== Ragnatela del giocatore (sulla scheda) =====
+function radarChart(m){
+  const t=stats(m);if(!t.p)return '';
+  const tp=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)).length||1,pl=S.members.filter(x=>x.tid===m.tid&&x.role==='giocatore');
+  const rate=(x,k)=>{const s=stats(x);return s.p?s[k]/s.p:0},mx=k=>Math.max(.5,...pl.map(x=>rate(x,k))),cl=v=>Math.round(Math.max(0,Math.min(100,v))),gk=m.pos==='P';
+  const ax=[
+    gk?['Porta',cl(100-t.gs/t.p*20)]:['Gol',cl(rate(m,'g')/mx('g')*100)],
+    gk?['Rigori',cl(t.ps*34)]:['Assist',cl(rate(m,'a')/mx('a')*100)],
+    ['Presenze',cl(t.p/tp*100)],
+    ['Disciplina',cl(100-(t.y+t.r*3+t.og*2)/t.p*40)],
+    ['Overall',cl((ovr(m)-40)/59*100)]];
+  const cx=110,cy=100,R=68,n=ax.length,P=(i,k)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*R*k,cy+Math.sin(a)*R*k]},pt=a=>a.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+  const ring=k=>'<polygon points="'+pt(ax.map((_,i)=>P(i,k)))+'" fill="none" stroke="var(--bd)" stroke-width="1"/>';
+  const lab=ax.map((a,i)=>{const [x,y]=P(i,1.2),an=x<cx-4?'end':x>cx+4?'start':'middle';return '<text x="'+x.toFixed(1)+'" y="'+(y+4).toFixed(1)+'" text-anchor="'+an+'" font-size="11" font-weight="700" fill="var(--mu)">'+a[0]+' <tspan fill="var(--tx)">'+a[1]+'</tspan></text>'}).join('');
+  return '<h2>Profilo</h2><div class="card" style="padding:10px"><svg viewBox="0 0 220 200" width="100%" role="img" aria-label="Profilo: '+ax.map(a=>a[0]+' '+a[1]).join(', ')+'">'+ring(1)+ring(.66)+ring(.33)+ax.map((_,i)=>{const [x,y]=P(i,1);return '<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="var(--bd)"/>'}).join('')+'<polygon points="'+pt(ax.map((a,i)=>P(i,Math.max(.04,a[1]/100))))+'" fill="var(--acf)" fill-opacity=".28" stroke="var(--acf)" stroke-width="2.5" stroke-linejoin="round"/>'+lab+'</svg><p class="mu" style="margin:4px 0 0;text-align:center">Gol e assist sono rispetto al migliore della squadra; presenze sulle partite giocate.</p></div>'}
+
+// ===== Andamento della squadra: gol fatti (su) e subiti (giù) partita per partita =====
+function trendChart(l){
+  const s=l.slice(-12);if(s.length<2)return '';
+  const w=300,h=130,p=12,base=62,mxv=Math.max(3,...s.map(x=>Math.max(+x.gf||0,+x.ga||0))),k=(base-20)/mxv,sl=(w-2*p)/s.length,bw=Math.min(18,sl*.6);
+  const bars=s.map((x,i)=>{const cx=p+sl*i+sl/2,a=+x.gf||0,b=+x.ga||0,res=a>b?'#34d399':a===b?'#fbbf24':'#f87171';
+    return '<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(base-a*k).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(a*k,a?1.5:0).toFixed(1)+'" rx="3" fill="var(--acf)"/>'
+      +'<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+base+'" width="'+bw.toFixed(1)+'" height="'+Math.max(b*k,b?1.5:0).toFixed(1)+'" rx="3" fill="var(--dg)" fill-opacity=".85"/>'
+      +'<text x="'+cx.toFixed(1)+'" y="'+(base-a*k-4).toFixed(1)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">'+a+'</text>'
+      +'<text x="'+cx.toFixed(1)+'" y="'+(base+b*k+11).toFixed(1)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">'+b+'</text>'
+      +'<circle cx="'+cx.toFixed(1)+'" cy="'+(h-8)+'" r="4" fill="'+res+'"/>'}).join('');
+  return '<h2>Andamento</h2><div class="card" style="padding:10px"><svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Gol fatti e subiti nelle ultime '+s.length+' partite"><line x1="'+p+'" x2="'+(w-p)+'" y1="'+base+'" y2="'+base+'" stroke="var(--bd)"/>'+bars+'</svg><div class="row" style="justify-content:center;gap:14px;font-size:12px"><span class="mu"><b style="color:var(--acf)">■</b> Gol fatti</span><span class="mu"><b style="color:var(--dg)">■</b> Gol subiti</span><span class="mu">Ultime '+s.length+' partite, dalla più vecchia</span></div></div>'}
