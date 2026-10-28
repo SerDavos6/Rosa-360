@@ -155,3 +155,10 @@ function badgePanel(m){return '<h2>Traguardi</h2><div class="card"><div class="b
 function openMaps(id){const x=S.matches.find(m=>m.id===id),q=v('el')||(x&&matchDetail(x).location)||'';if(!q){toast('Scrivi prima il luogo della partita.');return}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   window.open((ios?'https://maps.apple.com/?q=':'https://www.google.com/maps/search/?api=1&query=')+encodeURIComponent(q),'_blank','noopener')}
+
+// ===== Transizioni: le schede scorrono di lato =====
+(function(){const st=document.createElement('style');st.textContent='.fx-l{animation:fxl .26s cubic-bezier(.2,.85,.25,1)}.fx-r{animation:fxr .26s cubic-bezier(.2,.85,.25,1)}@keyframes fxl{from{transform:translateX(-36px);opacity:.3}}@keyframes fxr{from{transform:translateX(36px);opacity:.3}}@media (prefers-reduced-motion:reduce){.fx-l,.fx-r{animation:none}}';document.head.append(st)})();
+const FX_TABS=['cal','rosa','cls','imp'];
+function fxBefore(){return {tab:S.tab,mid:S.mid}}
+function fxSlide(els,d){els.forEach(e=>{if(!e)return;e.classList.remove('fx-l','fx-r');void e.offsetWidth;e.classList.add(d>0?'fx-r':'fx-l')})}
+function fxAfter(f){if(!f)return;let d=0;if(f.tab!==S.tab)d=FX_TABS.indexOf(S.tab)-FX_TABS.indexOf(f.tab);else if(f.mid!==S.mid)d=S.mid?1:-1;if(d)fxSlide([document.querySelector('#app .view .pg')],d)}

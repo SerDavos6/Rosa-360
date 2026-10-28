@@ -186,8 +186,8 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 
 /* --- scheda giocatore: pannello dal basso --- */
 .pmw{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;background:rgba(5,8,14,.66)}
-.pm{width:100%;max-width:560px;margin:0 auto;max-height:90%;overflow-y:auto;background:var(--sf);border-radius:24px 24px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));animation:sheet .22s ease-out}
-@keyframes sheet{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+.pm{width:100%;max-width:560px;margin:0 auto;max-height:90%;overflow-y:auto;background:var(--sf);border-radius:24px 24px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));animation:sheet .32s cubic-bezier(.2,.85,.25,1)}
+@keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
 .pm h2:first-of-type{margin-top:0}
 
 /* --- finestre di condivisione --- */
@@ -304,10 +304,10 @@ function squadBlock(t){
   const lab=a==="all"?"tutte le stagioni":a;
   if(!l.length)return `<h2>Squadra · ${lab}</h2>${emptyState("trophy","Ancora nessuna statistica","Appena una partita viene segnata come giocata, qui compaiono record e forma della squadra.","")}`;
   const r=teamRec(l),tile=(n,k)=>`<div class="tl"><b>${n}</b>${k}</div>`,
-    form=l.slice(-8).map(x=>`<div class="fmx ${x.gf>x.ga?"v":x.gf===x.ga?"n":"p"}"><b>${esc(x.gf)}-${esc(x.ga)}</b><span>${esc((x.opp||"").slice(0,7))}</span></div>`).join(""),
+    form=l.slice(-8).map((x,i)=>`<div class="fmx ${x.gf>x.ga?"v":x.gf===x.ga?"n":"p"}" style="animation-delay:${i*45}ms" role="button" tabindex="0" data-tv="${x.gf>x.ga?"Vittoria":x.gf===x.ga?"Pareggio":"Sconfitta"} ${esc(x.gf)}–${esc(x.ga)}" data-ts="vs ${esc(x.opp)}${x.date?" · "+esc(dt(x.date).f):""}${x.tourn?" · "+esc(x.tourn):""}"><b>${esc(x.gf)}-${esc(x.ga)}</b><span>${esc((x.opp||"").slice(0,7))}</span></div>`).join(""),
     tors=[...new Set(l.map(x=>x.tourn||"Amichevoli"))].map(n=>[n,teamRec(l.filter(x=>(x.tourn||"Amichevoli")===n))]);
   const row=(n,s)=>`<tr><td>${esc(n)}</td><td>${s.g}</td><td>${s.v}</td><td>${s.n}</td><td>${s.p}</td><td>${s.gf}</td><td>${s.ga}</td><td>${s.dr>0?"+":""}${s.dr}</td><td><b>${s.pt}</b></td></tr>`;
-  return `<h2>Squadra · ${lab}</h2><div class="card"><div class="pgrid">${tile(r.g,"GIOCATE")}${tile(r.v,"VITTORIE")}${tile(r.n,"PAREGGI")}${tile(r.p,"SCONFITTE")}${tile(r.gf,"GOL FATTI")}${tile(r.ga,"GOL SUBITI")}${tile((r.dr>0?"+":"")+r.dr,"DIFF. RETI")}${tile(r.pt,"PUNTI")}</div><div style="margin-top:12px"><span class="mu">Forma (ultime ${Math.min(8,l.length)})</span><div class="fmrow">${form}</div></div></div>
+  return `<h2>Squadra · ${lab}</h2><div class="card tipw"><div class="pgrid">${tile(r.g,"GIOCATE")}${tile(r.v,"VITTORIE")}${tile(r.n,"PAREGGI")}${tile(r.p,"SCONFITTE")}${tile(r.gf,"GOL FATTI")}${tile(r.ga,"GOL SUBITI")}${tile((r.dr>0?"+":"")+r.dr,"DIFF. RETI")}${tile(r.pt,"PUNTI")}</div><div style="margin-top:12px"><span class="mu">Forma (ultime ${Math.min(8,l.length)})</span><div class="fmrow">${form}</div></div></div>
   <h2>Per torneo</h2>${[...tors,...(tors.length>1?[["Totale",r]]:[])].map(([n,x])=>`<div class="card"><b class="hd">${esc(n)}</b><div class="pgrid">${tile(x.g,"GIOCATE")}${tile(x.v,"VITTORIE")}${tile(x.n,"PAREGGI")}${tile(x.p,"SCONFITTE")}${tile(x.gf,"GOL FATTI")}${tile(x.ga,"GOL SUBITI")}${tile((x.dr>0?"+":"")+x.dr,"DIFF. RETI")}${tile(x.pt,"PUNTI")}</div></div>`).join("")}`}
 function stats(m){
   const t={p:0,g:0,a:0,og:0,y:0,r:0,gs:0,ps:0};
@@ -339,14 +339,14 @@ let lastKey="";
 function toTop(){const v=document.querySelector("#app .view");if(v)v.scrollTop=0}
 function keepScroll(k,t){const v=document.querySelector("#app .view");if(!v)return;if(k===lastKey)v.scrollTop=t;lastKey=k}
 function render(){
-  if(!S.db)return;const a=$("app"),old=a.querySelector(".view"),oldTop=old?old.scrollTop:0;
+  if(!S.db)return;const a=$("app"),old=a.querySelector(".view"),oldTop=old?old.scrollTop:0,fx=fxBefore();
   if(!S.profile){applyTheme(null,null);applyMode();syncBar();a.innerHTML=plain(regView());keepScroll("reg",oldTop);return}
   const mine=S.members.filter(m=>m.uid===S.uid);
   const team=S.teams.find(t=>t.id===S.tid);
   applyTheme(team&&myMember()?team.color:null,team&&myMember()?team.bg:null);applyMode();syncBar();
   if(!team||!myMember()){a.innerHTML=plain(homeView(mine));keepScroll("home",oldTop);return}
   a.innerHTML=teamView(team);
-  keepScroll([S.tab,S.mid||"",S.cs||"",S.ps||""].join("|"),oldTop);
+  keepScroll([S.tab,S.mid||"",S.cs||"",S.ps||""].join("|"),oldTop);fxAfter(fx);
   if(S.err){toast(S.err);S.err=""}
 }
 document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.matches&&t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.add("kb")});
@@ -605,7 +605,7 @@ function stp(id,d){const e=$(id);if(!e||e.disabled)return;e.value=Math.max(0,(+e
 function markDirty(){const b=$("sbar");if(b)b.hidden=false}
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
 document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
-function mTab(k){S.mt=k;toTop();document.querySelectorAll(".mp").forEach(e=>e.style.display=e.dataset.k===k?"block":"none");document.querySelectorAll(".mtabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===k))}
+function mTab(k){const K=["info","live","stats"],d=K.indexOf(k)-K.indexOf(document.querySelector(".mtabs .on")?.dataset.k);S.mt=k;toTop();document.querySelectorAll(".mp").forEach(e=>{e.classList.remove("fx-l","fx-r");e.style.display=e.dataset.k===k?"block":"none";if(e.dataset.k===k&&d)fxSlide([e],d)});document.querySelectorAll(".mtabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===k))}
 function collectMatch(id){
   const x=S.matches.find(m=>m.id===id),present=[...document.querySelectorAll(".pc:checked")].map(e=>e.value),stats={};
   present.forEach(mid=>{const o={};let any=false;for(const k of["g","a","og","y","r","gs","ps"]){const e=$("s_"+mid+"_"+k);if(e){o[k]=+e.value||0;any=true}}if(any)stats[mid]=o});
