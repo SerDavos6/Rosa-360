@@ -495,7 +495,7 @@ function lvPump(id){
   const o=LV[id];if(!o||o.busy||!o.pend)return;
   const d=o.pend,k=o.taps;o.pend=null;o.taps=0;o.busy=true;
   S.db.doc('matches/'+id).update(d).then(()=>{const m=S.matches.find(m=>m.id===id);if(m){const {clock,...rest}=d;Object.assign(m,rest)}})
-    .catch(()=>{S.err='Evento non salvato: controlla la connessione.'})
+    .catch(e=>{S.err='Evento non salvato'+(e&&(e.code||e.message)?' ('+(e.code||e.message)+')':'')+': controlla la connessione.'})
     .finally(()=>{o.busy=false;o.n=Math.max(0,o.n-k);if(o.pend)lvPump(id);else{if(o.n===0)o.d=null;rq()}})}
 // Cronometro: l'effetto è immediato sullo schermo (con l'ora del tocco); il salvataggio segue in coda con gli altri eventi.
 function lvClockSet(id,c){

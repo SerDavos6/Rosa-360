@@ -306,7 +306,7 @@ const dataToBlob=d=>{const m=/^data:([^;]+);base64,(.*)$/.exec(d||"");if(!m)retu
 async function sbUpload(d,folder){
   try{const b=dataToBlob(d);if(!b)return d;const ext=b.type==="image/jpeg"?"jpg":"png",path=(folder||"misc")+"/"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
     const r=await sb.storage.from(IMG_BUCKET).upload(path,b,{contentType:b.type,cacheControl:"31536000",upsert:false});
-    if(r.error)return d;return sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl}catch(e){return d}}
+    if(r.error){window.__upErr=r.error.message||String(r.error);return d}return sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl}catch(e){window.__upErr=(e&&e.message)||String(e);return d}}
 function migCard(t){const n=S.members.filter(m=>m.tid===t.id&&isData(m.photo)).length+(isData(t.logo)?1:0)+S.matches.filter(x=>x.tid===t.id&&isData(x.oppLogo)).length;
   return `<div class="card"><b>Immagini</b><p class="mu">${n?n+" immagini sono ancora salvate dentro il database. Spostarle rende l’app più veloce.":"Tutte le immagini sono già fuori dal database."}</p>${n?'<button onclick="migraImmagini()">Sposta ora</button>':""}</div>`}
 async function migraImmagini(){
@@ -315,7 +315,7 @@ async function migraImmagini(){
   for(const m of S.members.filter(m=>m.tid===t.id&&isData(m.photo)))await job(m.photo,u=>S.db.doc("members/"+m.id).update({photo:u}));
   if(isData(t.logo))await job(t.logo,u=>S.db.doc("teams/"+t.id).update({logo:u}));
   for(const x of S.matches.filter(x=>x.tid===t.id&&isData(x.oppLogo)))await job(x.oppLogo,u=>S.db.doc("matches/"+x.id).update({oppLogo:u}));
-  toast(ko?"Spostate "+ok+", non riuscite "+ko+". Controlla di aver creato lo spazio “immagini” su Supabase.":"Spostate "+ok+" immagini",!ko)}
+  toast(ko?"Spostate "+ok+", non riuscite "+ko+(window.__upErr?". Errore: "+window.__upErr:"."):ok?"Spostate "+ok+" immagini":"Nessuna immagine da spostare",!ko)}
 function readLogo(f,cb){const img=new Image();img.onload=()=>{const s=Math.min(1,128/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);cb(c.toDataURL("image/png"),img)};img.src=URL.createObjectURL(f)}
 function teamLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async(d,img)=>{const col=dominant(img),u=await sbUpload(d,"squadre");S.db.doc("teams/"+S.tid).update(col?{logo:u,color:col}:{logo:u})})}
 function setColor(c){S.db.doc("teams/"+S.tid).update({color:c})}
@@ -704,7 +704,7 @@ function makeClaude(uid){
       set:async d=>chk(await T().upsert({collection:c,id,data:d})),
       update:async d=>{
         if(mergeOk){const q=await sb.rpc("merge_doc",{c,i:id,p:d});if(!q.error)return;
-          if(q.error.code==="PGRST202"||q.error.code==="42883"||q.status===404)mergeOk=false;else throw{code:q.error.code||"errore",message:q.error.message}}
+          mergeOk=false;window.__rpcErr=(q.error.code||"")+" "+(q.error.message||"")}
         const r=chk(await get1(c,id));chk(await T().upsert({collection:c,id,data:{...((r.data&&r.data.data)||{}),...d}}))},
       delete:async()=>chk(await T().delete().eq("collection",c).eq("id",id)),
       onSnapshot:(f,e)=>{const run=async()=>{const r=await get1(c,id);if(r.error)return e&&e({code:r.error.code});f(r.data?snap({id,data:r.data.data}):{exists:false,data:()=>undefined})};run();return listen(c,run)}}},
