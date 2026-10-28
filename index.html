@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Squadra">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -23,16 +23,13 @@
  --bg:#f4f6fa;--sf:#ffffff;--tx:#0f172a;--mu:#64748b;--bd:#e5e9f0;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e8f3ec;--on:#ffffff;--dg:#c62828;color-scheme:light}
 :root:root:root{--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#222c3c;--ac:#f5c518;--acf:#f5c518;--ac2:#2a2615;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
-html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;background:var(--bg)}
-body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;min-height:100dvh}
-#app{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100dvh;min-height:100svh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
-@supports not (height:100dvh){#app{height:100vh;min-height:100vh}}
-@media (display-mode: standalone),(display-mode: fullscreen){body,#app{min-height:100dvh;height:100dvh}}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+#app{position:fixed;inset:0;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
 @media (min-width:761px){#app{border-left:1px solid var(--bd);border-right:1px solid var(--bd)}}
-.view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
-.view::-webkit-scrollbar{display:none}
-.pg{max-width:760px;margin:0 auto;padding:14px 14px calc(32px + env(safe-area-inset-bottom,0px))}
+.view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.pg{max-width:760px;margin:0 auto;padding:14px 14px 32px}
 .view.plain .pg{padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
 
 /* --- intestazione fissa --- */
@@ -54,7 +51,7 @@ body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-
 .mtabs .on{color:var(--ac);box-shadow:inset 0 -3px 0 var(--acf)}
 
 /* --- navigazione fissa in basso --- */
-.bn{flex:none;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding-bottom:max(env(safe-area-inset-bottom,0px),0px);z-index:5;min-height:var(--navh)}
+.bn{flex:none;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
 .bn button{flex:1;position:relative;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;border:0;border-radius:0;background:transparent;color:var(--mu);font-size:11px;font-weight:700}
 .bn button span{display:block;font-size:24px;line-height:1}
 .bn .on{color:var(--ac)}
@@ -135,10 +132,14 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 .rb.v{background:#34d399}.rb.n{background:#fbbf24}.rb.p{background:#f87171}
 .fm{display:inline-block;width:24px;height:24px;border-radius:8px;margin-right:6px}.fm.v{background:#34d399}.fm.n{background:#fbbf24}.fm.p{background:#f87171}
 .mp{animation:fadein .16s ease-out}@keyframes fadein{from{opacity:.4}to{opacity:1}}
-.pcg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.pcg label{display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;min-height:46px;border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-size:15px;font-weight:600;letter-spacing:0;background:var(--bg)}
+.pcg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;width:100%;min-width:0}
+.pcg label{display:flex;align-items:center;gap:10px;min-width:0;width:100%;margin:0;padding:10px 12px;min-height:46px;border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-size:15px;font-weight:600;letter-spacing:0;background:var(--bg);overflow:hidden;overflow-wrap:anywhere;word-break:break-word}
 .pcg label:has(input:checked){border-color:var(--acf);background:var(--ac2)}
-.pcg input{width:20px;height:20px}
+.pcg input{flex:0 0 20px;width:20px;height:20px;margin:0}
+.pcg label{line-height:1.25}
+.pcg label span{min-width:0;flex:1;overflow-wrap:anywhere;word-break:break-word}
+ .pc-section{margin-top:14px}.pc-section:first-child{margin-top:10px}.pc-title{display:flex;align-items:center;gap:7px;margin:0 2px 7px;color:var(--tx);font-size:14px;font-weight:800;letter-spacing:.2px}.pc-title span{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--ac2);color:var(--acf);font-size:12px}
+@media (max-width:380px){.pcg{gap:6px}.pcg label{gap:8px;padding:9px 10px;font-size:14px}.pcg input{flex-basis:19px;width:19px;height:19px}}
 .chk{display:flex;align-items:center;gap:10px;margin:12px 0 0;color:var(--tx);font-size:15px;letter-spacing:0}.chk input{width:22px;height:22px}
 .formation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.formation-grid label{font-size:11px;text-transform:uppercase;margin-bottom:3px}.formation-grid select{margin:0}.formation-grid>div:first-child{grid-column:1/-1}
 .sp{padding:12px 14px}.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}.stp .mu{display:block;font-size:12px;margin-bottom:3px}
@@ -200,6 +201,26 @@ dialog{max-width:600px;width:calc(100% - 24px);max-height:90vh;max-height:90dvh;
 dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;border-radius:12px;margin:12px 0}dialog .row{position:sticky;bottom:0;background:var(--sf);padding:8px 0}
 .report-colors{display:flex;gap:16px;border:1px solid var(--bd);border-radius:12px;margin:12px 0;padding:10px 14px}.report-colors legend{font-size:13px;color:var(--mu)}.report-colors label{flex:1;margin:0}.report-colors input{display:block;height:42px;padding:3px;margin-top:5px;cursor:pointer}
 .report-full{display:flex;gap:8px;align-items:center;margin:14px 0}.report-full input{width:auto;flex:0 0 auto}#report-image[aria-busy="true"]{opacity:.55}
+
+/* --- mobile/PWA robustness: niente overflow orizzontale nelle liste --- */
+@media (max-width:760px){
+  #app{width:100%;max-width:none}
+  .bar{padding-left:14px;padding-right:14px}
+  .mbar{overflow:hidden}
+  .mscore{min-width:0}
+  .mscore .tm{min-width:0;overflow:hidden}
+  .mscore .tm span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pg{width:100%;min-width:0}
+  .card{min-width:0}
+  .row{min-width:0}
+  .row>*{min-width:0}
+}
+@supports (-webkit-touch-callout:none){
+  html,body{background:var(--bg)}
+  body{-webkit-overflow-scrolling:touch}
+  .bar,.bn,.sbar{background:var(--sf);background-color:var(--sf);backdrop-filter:none;-webkit-backdrop-filter:none}
+  .card,.pcg label,input,select,textarea,button{backdrop-filter:none;-webkit-backdrop-filter:none}
+}
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
 <script src="/ui-extra.js"></script><script src="/match-report.js"></script>
@@ -593,7 +614,9 @@ function matchParts(x,mgr){
   const panel=(k,h)=>`<div class="mp" data-k="${k}" style="display:${tab===k?"block":"none"}">${h}</div>`;
   const info=`<div class="card"><b>Risultato</b><div class="row"><div><label>Gol nostri</label><input id="gf" type="number" inputmode="numeric" min="0" value="${x.gf}" ${mgr?"":"disabled"}></div><div><label>Gol avversari</label><input id="ga" type="number" inputmode="numeric" min="0" value="${x.ga}" ${mgr?"":"disabled"}></div></div>
   <label class="chk"><input type="checkbox" id="pl" ${x.played?"checked":""} ${mgr?"":"disabled"}> Partita giocata</label></div>
-  <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div><div class="pcg">${ms.map(m=>`<label><input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr?"":"disabled"}> ${esc(m.nick)}</label>`).join("")}</div></div>
+  <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div>
+  ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label><input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr?"":"disabled"}> <span>${esc(m.nick)}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
+  </div>
   ${h2hCard(x.tid,x.opp,x.id)}<div class="card"><b>Dettagli</b><div class="row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
   <div id="formation-holder">${formationCard(x,mgr)}</div>
   <p><button class="p" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button></p>
