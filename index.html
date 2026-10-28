@@ -233,7 +233,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
-const S={uid:null,db:null,profile:null,teams:[],members:[],reqs:[],matches:[],tid:null,tab:"home",mid:null,flt:"",err:""};
+const S={uid:null,db:null,profile:null,teams:[],members:[],reqs:[],matches:[],tid:null,tab:"cal",mid:null,flt:"",err:""};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const v=id=>($(id)?.value||"").trim();
@@ -450,7 +450,7 @@ function homeView(mine){
   <div class="err">${esc(S.err)}</div>`}
 function upNext(tid){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
   return S.matches.filter(m=>m.tid===tid&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0]}
-function openTeam(id){S.tid=id;S.tab="home";S.mid=null;try{localStorage.setItem("tid",id)}catch(e){}render()}
+function openTeam(id){S.tid=id;S.tab="cal";S.mid=null;try{localStorage.setItem("tid",id)}catch(e){}render()}
 async function createTeam(){const n=v("tn");if(!n)return;const id=rid()+rid(),code=rid();
   await S.db.doc("teams/"+id).set({name:n,code,owner:S.uid}).catch(()=>{});
   set("members/"+rid()+rid(),{tid:id,uid:S.uid,nick:S.profile.nick,name:S.profile.name,role:S.profile.role,pos:S.profile.pos||"",num:S.profile.num||"",photo:S.profile.photo||"",captain:false,admin:true});openTeam(id)}
@@ -461,12 +461,12 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
 function teamBar(t){return `<header class="bar">${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button></header>`}
 function teamView(t){
   const mgr=canManage(),pend=S.reqs.filter(r=>r.tid===t.id);
-  const nav=[["home",ic("home"),"Oggi"],["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"],["imp",ic("user"),"Profilo"]];
+  const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"],["imp",ic("user"),"Profilo"]];
   const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;
   if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body={home:oggiView,rosa:rosaView,cal:calView,cls:clsView,imp:impView}[S.tab](t,mgr)}
+  else{head=teamBar(t);body={rosa:rosaView,cal:calView,cls:clsView,imp:impView}[S.tab](t,mgr)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}${k==="imp"&&mgr&&pend.length?'<i class="dot"></i>':""}</button>`).join("")}</nav>`}
 function rosaGroups(ms){
   const pl=ms.filter(m=>m.role==="giocatore"),srt=(a,b)=>(b.captain?1:0)-(a.captain?1:0)||(parseInt(a.num)||999)-(parseInt(b.num)||999)||(a.nick||"").localeCompare(b.nick||"");
@@ -745,7 +745,7 @@ async function updatePassword(){
   const r=await sb.auth.updateUser({password:p1});
   if(r.error){$("rm").textContent=r.error.message;return}
   try{window.history.replaceState({},document.title,window.location.pathname)}catch(e){}
-  S.tab="home";
+  S.tab="cal";
   $("app").innerHTML=plain('<div class="card"><b>Password aggiornata.</b><p class="mu">Accesso effettuato. Ti porto alle partite…</p></div>');
   setTimeout(()=>boot(),400);
 }
@@ -755,7 +755,7 @@ async function boot(){
   const recovery=window.location.hash.includes("type=recovery");
   if(recovery)return resetPasswordView();
   if(!session)return loginView();
-  S.tab="home";
+  S.tab="cal";
   makeClaude(session.user.id);init()}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();

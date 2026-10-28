@@ -22,25 +22,6 @@ html.bigtap .ib{width:50px;height:50px;min-height:50px}
 html.bigtap .mtabs button{min-height:54px}
 html.bigtap input[type=checkbox],html.bigtap input[type=radio]{transform:scale(1.35);margin:4px}
 
-/* ---- carta che brilla ---- */
-@property --mx{syntax:'<percentage>';inherits:false;initial-value:30%}
-@property --my{syntax:'<percentage>';inherits:false;initial-value:20%}
-@property --rx{syntax:'<angle>';inherits:false;initial-value:0deg}
-@property --ry{syntax:'<angle>';inherits:false;initial-value:0deg}
-.fut{--holo:.2;--m1:#f4f6f9;--m2:#d5dbe3;--m3:#9aa5b1;transform:perspective(650px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .25s ease-out;will-change:transform}
-.fut.t-b{--holo:.34;--m1:#e3a46b;--m2:#cd7f32;--m3:#8a5420}
-.fut.t-s{--holo:.38;--m1:#f4f6f9;--m2:#d5dbe3;--m3:#9aa5b1}
-.fut.t-g{--holo:.46;--m1:#ffe69a;--m2:#ffd54a;--m3:#b8860b}
-.fut.t-x{--holo:.55;--m1:#fff3a8;--m2:#ffd54a;--m3:#c9962b}
-.fut.act{transition:transform .06s linear}
-.fut::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:hard-light;opacity:var(--holo);
- background:linear-gradient(115deg,var(--m3) 0%,var(--m1) 22%,var(--m2) 40%,var(--m1) 58%,var(--m3) 80%,var(--m2) 100%);
- background-size:260% 260%;background-position:var(--mx) var(--my)}
-.fut::after{background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.62),rgba(255,255,255,0) 46%),linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 46%,transparent 60%)}
-@keyframes holo{0%{--mx:12%;--my:8%}100%{--mx:88%;--my:82%}}
-.fut.vis:not(.act){animation:holo 2.6s ease-in-out 1 both}
-html.gyro .fut:not(.act){animation:none!important;--mx:calc(50% + var(--gx,0)*45%);--my:calc(45% + var(--gy,0)*45%);--ry:calc(var(--gx,0)*9deg);--rx:calc(var(--gy,0)*-9deg)}
-@media (prefers-reduced-motion:reduce){.fut{transform:none!important;transition:none}.fut.vis:not(.act){animation:none}}
 @media (prefers-reduced-motion:reduce){#boot img{animation:none}button,.mrow,.hero2,.nxt,.tcard{transition:none}button:active,.mrow:active,.hero2:active,.nxt:active,.tcard:active{transform:none}}
 `;document.head.append(st)})();
 
