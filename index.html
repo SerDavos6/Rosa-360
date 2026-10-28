@@ -6,7 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Squadra – gestione calcio e calcetto</title>
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0d1014">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121826" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,9 +27,9 @@
 :root:root:root{--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#222c3c;--ac:#f5c518;--acf:#f5c518;--ac2:#2a2615;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
-html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-text-size-adjust:100%;background:var(--bg);min-height:100%;min-height:-webkit-fill-available}
 body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
-#app{position:fixed;inset:0;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;height:100vh;height:100dvh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
 @media (min-width:761px){#app{border-left:1px solid var(--bd);border-right:1px solid var(--bd)}}
 .view{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .pg{max-width:760px;margin:0 auto;padding:14px 14px 32px}
@@ -676,4 +677,4 @@ async function boot(){
   S.tab="cal";
   makeClaude(session.user.id);init()}
 boot();
-</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
+</script><script>(function(){var st=navigator.standalone||matchMedia("(display-mode: standalone)").matches;if(!st)return;var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);function fit(){var a=document.getElementById("app");if(!a)return;var h=Math.max(innerHeight,document.documentElement.clientHeight);if(ios&&!document.body.classList.contains("kb")){var sh=Math.max(screen.height,screen.width);if(innerWidth<=screen.width+1&&h<sh)h=sh}a.style.height=h+"px"}fit();addEventListener("resize",fit);addEventListener("orientationchange",function(){setTimeout(fit,200)});addEventListener("pageshow",fit)})()</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script></body></html>
