@@ -368,15 +368,38 @@ const isDir=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||!!m.admin
 const plain=h=>`<div class="view plain"><div class="pg">${h}</div></div>`;
 let lastKey="";
 function toTop(){const v=document.querySelector("#app .view");if(v)v.scrollTop=0}
-function keepScroll(k,t){const v=document.querySelector("#app .view");if(!v)return;if(k===lastKey)v.scrollTop=t;lastKey=k}
+function keepScroll(k,t){const v=document.querySelector("#app .view");if(!v)return;if(k===lastKey)v.scrollTop=t;else v.scrollTop=0;lastKey=k}
+// Aggiorna la pagina cambiando solo ciò che è diverso (niente più "sfarfallio" a ogni gol: immagini, scorrimenti e animazioni restano al loro posto).
+function morphInto(root,html){
+  const t=document.createElement("template");t.innerHTML=html;
+  const sync=(o,n)=>{
+    if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName)return false;
+    if(n.nodeType!==1){if(o.nodeValue!==n.nodeValue)o.nodeValue=n.nodeValue;return true}
+    for(const at of [...o.attributes])if(!n.hasAttribute(at.name))o.removeAttribute(at.name);
+    for(const at of n.attributes)if(o.getAttribute(at.name)!==at.value)o.setAttribute(at.name,at.value);
+    const tag=o.nodeName;
+    if(tag==="TEXTAREA"){if(o!==document.activeElement&&o.value!==n.value)o.value=n.value;return true}
+    kids(o,n);
+    if(tag==="INPUT"){const ty=(o.type||"").toLowerCase();
+      if(ty==="checkbox"||ty==="radio"){if(o.checked!==n.checked)o.checked=n.checked}
+      else if(ty!=="file"&&o!==document.activeElement&&o.value!==n.value)o.value=n.value}
+    else if(tag==="SELECT"&&o.value!==n.value)o.value=n.value;
+    return true};
+  const kids=(o,n)=>{
+    const nk=[...n.childNodes];
+    nk.forEach((c,i)=>{const e=o.childNodes[i];
+      if(!e)o.appendChild(c);
+      else if(!sync(e,c))o.replaceChild(c,e)});
+    while(o.childNodes.length>nk.length)o.lastChild.remove()};
+  kids(root,t.content)}
 function render(){
   if(!S.db)return;const a=$("app"),old=a.querySelector(".view"),oldTop=old?old.scrollTop:0,fx=fxBefore();
-  if(!S.profile){applyTheme(null,null);applyMode();syncBar();a.innerHTML=plain(regView());keepScroll("reg",oldTop);return}
+  if(!S.profile){applyTheme(null,null);applyMode();syncBar();morphInto(a,plain(regView()));keepScroll("reg",oldTop);return}
   const mine=S.members.filter(m=>m.uid===S.uid);
   const team=S.teams.find(t=>t.id===S.tid);
   applyTheme(team&&myMember()?team.color:null,team&&myMember()?team.bg:null);applyMode();syncBar();
-  if(!team||!myMember()){a.innerHTML=plain(homeView(mine));keepScroll("home",oldTop);return}
-  a.innerHTML=teamView(team);
+  if(!team||!myMember()){morphInto(a,plain(homeView(mine)));keepScroll("home",oldTop);return}
+  morphInto(a,teamView(team));
   keepScroll([S.tab,S.mid||"",S.cs||"",S.ps||""].join("|"),oldTop);fxAfter(fx);
   if(S.err){toast(S.err);S.err=""}
 }
