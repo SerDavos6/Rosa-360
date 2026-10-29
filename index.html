@@ -230,7 +230,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=1"></script>
+<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=3"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -333,9 +333,9 @@ async function init(){
   if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi a claude.ai per usare l’app.</b><p class="mu">Servono un account e il database condiviso.</p></div>');return}
   S.db=(typeof fluidDb==="function"?fluidDb(db):db);S.uid=await user.id();
   if(typeof lvSync==="function")lvSync();
-  const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.filter(d=>/^[\w.:@+~-]{1,120}$/.test(d.id)).map(d=>({id:d.id,...d.data()}));
-    if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
-  db.doc("profiles/"+S.uid).onSnapshot(s=>{S.profile=s.exists?s.data():null;render()});
+  const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{(S.stash||S)[k]=s.docs.filter(d=>/^[\w.:@+~-]{1,120}$/.test(d.id)).map(d=>({id:d.id,...d.data()}));
+    if(S.stash)return;if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
+  db.doc("profiles/"+S.uid).onSnapshot(s=>{const d=s.exists?s.data():null;if(d&&d.fan&&!S.fan){location.reload();return}S.profile=d&&d.role?d:null;render()});
   sub("teams","teams");sub("members","members");sub("requests","reqs");sub("matches","matches",{recent:curSeason().slice(0,4)+"-09-01"});
 }
 const set=(p,d)=>S.db.doc(p).set(d).catch(e=>{S.err="Salvataggio non riuscito ("+e.code+"). Serve il livello Contributor.";render()});
@@ -429,7 +429,7 @@ function render(){
 document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.matches&&t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.add("kb")});
 document.addEventListener("focusout",()=>setTimeout(()=>{const t=document.activeElement;if(!t||!t.matches||!t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.remove("kb")},80));
 function posFields(pre){return `<div id="${pre}pf"><div class="row"><div><label>Ruolo in campo</label><select id="${pre}pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="${pre}num" type="number" min="0" max="99"></div></div></div>`}
-function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1><div class="card">
+function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1>${S.members.some(m=>m.uid===S.uid)?"":`<div class="card"><b>Sei solo un tifoso?</b><p class="mu">Segui le squadre senza farne parte: le tue squadre preferite restano salvate sul tuo account.</p><button class="p" onclick="saveFanProfile()">Continua come tifoso</button></div><p class="mu" style="text-align:center">oppure, se giochi o dirigi una squadra:</p>`}<div class="card">
  <p class="mu">Il tuo account claude.ai è l’accesso. Qui completi i dati da usare nelle squadre.</p>
  <label>Email di contatto</label><input id="em" type="email" autocomplete="email">
  <label>Soprannome (sulla carta)</label><input id="nk"><label>Nome e cognome</label><input id="nm">
@@ -438,10 +438,12 @@ function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1><div class=
  <label>Foto</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
  <div class="err">${esc(S.err)}</div><p><button class="p" onclick="saveProfile()">Salva profilo</button></p></div>`}
 function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8);const mine=photoData;sbUpload(mine,"foto").then(u=>{if(photoData===mine)photoData=u})};img.src=URL.createObjectURL(f)}
+function goFan(){if(!confirm("Passare al profilo tifoso? Le tue squadre e i tuoi dati restano salvati: potrai tornare a giocatore o dirigente quando vuoi."))return;S.db.doc("profiles/"+S.uid).update({fan:true,favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]}).then(()=>location.reload()).catch(e=>{S.err="Operazione non riuscita ("+e.code+")";render()})}
+function saveFanProfile(){S.err="";S.db.doc("profiles/"+S.uid).set({fan:true,nick:"Tifoso",favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]}).then(()=>location.reload()).catch(e=>{S.err="Salvataggio non riuscito ("+e.code+")";render()})}
 function saveProfile(){
   const rl=v("rl");if(!v("em")||!v("nk"))return S.err="Email e soprannome sono obbligatori.",render();
   if(rl==="giocatore"&&!v("rnum"))return S.err="Indica il numero di maglia.",render();
-  S.err="";set("profiles/"+S.uid,{email:v("em"),nick:v("nk"),name:v("nm"),role:rl,pos:rl==="giocatore"?v("rpos"):"",num:rl==="giocatore"?v("rnum"):"",photo:photoData||""})}
+  S.err="";set("profiles/"+S.uid,{email:v("em"),nick:v("nk"),name:v("nm"),role:rl,pos:rl==="giocatore"?v("rpos"):"",num:rl==="giocatore"?v("rnum"):"",photo:photoData||"",favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]})}
 
 function homeView(mine){
   const myTeams=mine.map(m=>S.teams.find(t=>t.id===m.tid)).filter(Boolean);
@@ -449,10 +451,11 @@ function homeView(mine){
   return `<div class="row"><h1 style="flex:1">Le tue squadre</h1><button onclick="S.profile=null;render()">Modifica profilo</button></div>
   ${myTeams.map(t=>{const n=S.members.filter(m=>m.tid===t.id&&m.role==="giocatore").length,nx=upNext(t.id);
     return `<div class="card tcard" onclick="openTeam('${t.id}')">${crest(t.logo,ic("ball"))}<div class="mid"><b class="hd" style="font-size:20px">${esc(t.name)}</b><div class="mu">${n} giocator${n===1?"e":"i"}</div><div class="gold">${nx?"Prossima: vs "+esc(nx.opp)+" · "+esc(dt(nx.date).f):"Nessuna partita in programma"}</div></div>${ic("chev")}</div>`}).join("")||'<p class="mu">Non fai ancora parte di nessuna squadra.</p>'}
+  <div class="card tcard" onclick="fanBrowse()"><div class="crest">${ic("trophy")}</div><div class="mid"><b class="hd" style="font-size:18px">Cerca squadre e tornei</b><div class="mu">Segui altre squadre: partite, risultati e classifiche</div></div>${ic("chev")}</div>
   ${pend.map(r=>`<div class="card mu">Richiesta inviata a ${esc(S.teams.find(t=>t.id===r.tid)?.name||"squadra")} – in attesa dei dirigenti.</div>`).join("")}
   <details class="card add" ${myTeams.length?"":"open"}><summary>${ic("plus")} Entra o crea una squadra</summary><div class="in"><div class="card"><h2 style="margin-top:0">Entra con un codice invito</h2><div class="row"><input id="jc" placeholder="Codice (es. K3F9QA)"><button class="p" onclick="joinTeam()">Invia richiesta</button></div></div>
   ${`<div class="card"><h2 style="margin-top:0">Crea una squadra</h2><div class="row"><input id="tn" placeholder="Nome squadra"><button class="p" onclick="createTeam()">Crea</button></div><p class="mu">Diventerai dirigente di questa squadra e verrà generato un codice invito da condividere.</p></div>`}</div></details>
-  <div class="card"><b>Account</b><div class="pbtns"><button onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button><button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
+  <div class="card"><b>Account</b><div class="pbtns"><button onclick="goFan()">Passa a profilo tifoso</button><button onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button><button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
   <div class="err">${esc(S.err)}</div>`}
 function upNext(tid){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
   return S.matches.filter(m=>m.tid===tid&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0]}
@@ -829,7 +832,10 @@ async function boot(){
   if(recovery)return resetPasswordView();
   if(!session){try{if(localStorage.getItem("fan")==="1"&&typeof fanStart==="function")return fanStart()}catch(e){}return loginView()}
   S.tab="cal";
-  makeClaude(session.user.id);init()}
+  makeClaude(session.user.id);
+  try{const r=await sb.from("docs").select("data").eq("collection","profiles").eq("id",session.user.id).maybeSingle(),pf=r&&r.data&&r.data.data;
+    if(pf&&pf.fan&&typeof fanStart==="function")return fanStart(pf,session.user.id)}catch(e){}
+  init()}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
 </script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>

@@ -6,7 +6,10 @@ const F={q:"",res:null,loading:false,tour:null,busy:false,sig:{},tick:0,wrapped:
 const ID=s=>/^[\w.:@+~-]{1,120}$/.test(String(s));
 const SRCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 const favs=()=>{try{const a=JSON.parse(localStorage.getItem("favs")||"[]");return Array.isArray(a)?a.filter(f=>f&&ID(f.id)):[]}catch(e){return[]}};
-const saveFavs=a=>{try{localStorage.setItem("favs",JSON.stringify(a))}catch(e){}};
+const saveLocal=a=>{try{localStorage.setItem("favs",JSON.stringify(a))}catch(e){}};
+// con un profilo tifoso le squadre preferite si salvano anche sull'account, così le ritrovi su ogni telefono
+const saveFavs=a=>{saveLocal(a);if(F.dbo&&F.uid)F.dbo.doc("profiles/"+F.uid).update({favs:a}).catch(()=>toast("Preferiti non salvati sull’account. Riprova."))};
+window.fanFavsRaw=()=>favs();
 const isFav=id=>favs().some(f=>f.id===id);
 const rpc=async(n,a)=>{const r=await sb.rpc(n,a);if(r.error)throw r.error;return r.data};
 const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -38,17 +41,38 @@ async function poll(){
     else if(!F.tour&&F.tick%4===0&&favs().length&&F.q.trim().length<2){if(await refreshFavs())render()}}catch(e){}}
 
 // ---- ingresso / uscita ----
-window.fanStart=function(){
-  try{localStorage.setItem("fan","1")}catch(e){}
-  S.fan=1;S.uid="tifoso";S.profile={fan:1,nick:"Tifoso"};S.teams=[];S.members=[];S.matches=[];S.reqs=[];
-  S.tid=null;S.tab="cal";S.mid=null;S.pd=null;S.flt="";S.mf="";
+function core(){
+  F.sig={};F.tour=null;F.res=null;F.q="";
+  S.teams=[];S.members=[];S.matches=[];S.reqs=[];S.tid=null;S.tab="cal";S.mid=null;S.pd=null;S.flt="";S.mf="";S.cs="sq";
   const no=()=>Promise.resolve();   // in sola lettura nessuna scrittura può partire
   S.db={doc:()=>({set:no,update:no,delete:no,onSnapshot:()=>()=>{}}),collection:()=>({onSnapshot:()=>()=>{}})};
   if(!F.wrapped){F.wrapped=true;const r0=render;render=function(){return S.fan?fanRender():r0.apply(this,arguments)}}
   if(typeof lvSync==="function")try{lvSync()}catch(e){}
-  if(!F.timer)F.timer=setInterval(poll,15000);
-  render();refreshFavs().then(c=>{if(c&&!S.tid)render()})};
+  if(!F.timer)F.timer=setInterval(poll,15000)}
+window.fanStart=async function(pf,uid){
+  try{localStorage.setItem("fan","1")}catch(e){}
+  F.uid=uid||null;F.dbo=null;F.pf=pf||null;S.fan=1;S.browse=0;S.uid=uid||"tifoso";S.profile={fan:1,nick:"Tifoso"};
+  if(uid){try{F.dbo=await claude.use("db")}catch(e){}
+    if(pf&&Array.isArray(pf.favs))saveLocal(pf.favs.filter(f=>f&&ID(f.id)));else saveFavs(favs())}
+  core();render();refreshFavs().then(c=>{if(c&&!S.tid)render()})};
+// Dal profilo giocatore/dirigente: cerca altre squadre e tornei senza uscire dal proprio profilo.
+window.fanBrowse=async function(){
+  if(S.fan)return;
+  S.stash={teams:S.teams,members:S.members,matches:S.matches,reqs:S.reqs,tid:S.tid,tab:S.tab,mid:S.mid,pd:S.pd,flt:S.flt,mf:S.mf,db:S.db,cs:S.cs,rq:S.rq,rf:S.rf};
+  S.fan=1;S.browse=1;F.uid=S.uid;F.pf=S.profile;F.dbo=null;
+  try{F.dbo=await claude.use("db")}catch(e){}
+  if(S.profile&&Array.isArray(S.profile.favs))saveLocal(S.profile.favs.filter(f=>f&&ID(f.id)));
+  core();render();refreshFavs().then(c=>{if(c&&!S.tid)render()})};
+window.fanLeave=function(){
+  const k=S.stash;if(!k)return;Object.assign(S,k);S.stash=null;S.fan=0;S.browse=0;
+  F.tour=null;F.uid=null;F.dbo=null;F.sig={};render()};
 window.fanExit=function(){try{localStorage.removeItem("fan")}catch(e){}location.reload()};
+window.fanSignOut=function(){try{localStorage.removeItem("fan")}catch(e){}sb.auth.signOut().then(()=>location.reload())};
+window.fanToPlayer=async function(){
+  const has=F.pf&&F.pf.role;
+  if(!confirm(has?"Tornare al tuo profilo da giocatore o dirigente? Le tue squadre ti aspettano come prima.":"Creare un profilo da giocatore o dirigente? Ti chiederemo i tuoi dati. Le squadre preferite restano salvate."))return;
+  try{await F.dbo.doc("profiles/"+F.uid).update({fan:false})}catch(e){toast("Operazione non riuscita. Riprova.");return}
+  try{localStorage.removeItem("fan")}catch(e){}location.reload()};
 
 // ---- navigazione ----
 window.fanOpen=async function(id,mid){
@@ -109,10 +133,15 @@ function bodyHtml(){
   return (r.teams.length?`<h2>Squadre</h2>${r.teams.map(t=>tcard(t,false)).join("")}`:"")
     +(r.tours.length?`<h2>Tornei</h2>${r.tours.map((t,i)=>`<div class="card tcard" onclick="fanTour(${i})"><div class="crest">${ic("trophy")}</div><div class="mid"><b class="hd" style="font-size:20px">${esc(t.name)}</b><div class="mu">${t.n} squadr${t.n===1?"a":"e"}</div></div>${ic("chev")}</div>`).join("")}`:"")}
 function homeHtml(){
-  return `<div class="row"><h1 style="flex:1">${ic("ball")} Tifoso</h1><button class="s" onclick="fanExit()">Accedi</button></div>
+  return `<div class="row"><h1 style="flex:1">${ic(S.browse?"trophy":"ball")} ${S.browse?"Cerca":"Tifoso"}</h1>${S.browse?'<button class="s" onclick="fanLeave()">Chiudi</button>':F.uid?"":'<button class="s" onclick="fanExit()">Accedi</button>'}</div>
   <p class="mu" style="margin:0 0 10px;white-space:normal">Cerca una squadra o un torneo per seguire partite, risultati, dirette, rosa e classifiche.</p>
   <input id="fq" type="search" placeholder="Cerca una squadra o un torneo…" aria-label="Cerca" autocomplete="off" value="${esc(F.q)}" oninput="fanSearch(this.value)">
-  ${F.busy?'<p class="mu">Carico…</p>':""}<div id="fres" style="margin-top:10px">${bodyHtml()}</div>`}
+  ${F.busy?'<p class="mu">Carico…</p>':""}<div id="fres" style="margin-top:10px">${bodyHtml()}</div>${S.browse?"":settingsHtml()}`}
+function settingsHtml(){
+  const seg=`<div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>`;
+  const acc=F.uid?`<div class="card"><b>Account</b><p class="mu" style="white-space:normal">Profilo tifoso: le squadre preferite sono salvate sul tuo account e le ritrovi su ogni telefono.${F.pf&&F.pf.role?" Il tuo profilo da giocatore o dirigente resta salvato.":""}</p><div class="pbtns"><button onclick="fanSignOut()">Esci dall’account</button><button onclick="fanToPlayer()">Passa a giocatore o dirigente</button></div></div>`
+    :`<div class="card"><b>Account</b><p class="mu" style="white-space:normal">Crea un profilo tifoso per ritrovare le squadre preferite su ogni telefono. Se hai già un profilo, accedi.</p><button class="p" onclick="fanExit()">Accedi o crea un profilo</button></div>`;
+  return `<div style="margin-top:22px"><div class="card"><b>Aspetto</b>${seg}<p class="mu" style="margin-bottom:0;white-space:normal">Vale solo su questo telefono. “Squadra” usa i colori della squadra che stai guardando.</p></div>${acc}</div>`}
 function tourHtml(){
   const T=F.tour,seasons=[...new Set(T.matches.filter(m=>m.date).map(m=>seasonOf(m.date)))].sort().reverse(),se=seasons.includes(F.ts)?F.ts:seasons[0];
   const ms=T.matches.filter(m=>!se||(m.date&&seasonOf(m.date)===se)),by={};
@@ -131,7 +160,7 @@ function tourHtml(){
   ${todo.length?`<h2>Prossime partite</h2><div class="card" style="padding:4px 12px">${todo.map(line).join("")}</div>`:""}
   ${done.length?`<h2>Ultimi risultati</h2><div class="card" style="padding:4px 12px">${done.map(line).join("")}</div>`:""}`}
 function teamBar(t){
-  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
+  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button><button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
   const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
   const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
