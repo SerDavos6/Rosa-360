@@ -503,7 +503,7 @@ function lvClockSet(id,c){
   const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0});
   x.clock=c;o.n++;o.taps++;o.pend=Object.assign(o.pend||{},{clock:c});rq();lvPump(id)}
 function liveSel(p){LIVE.p=LIVE.p===p?null:p;LIVE.assist=false;LIVE.pick=null;rq()}
-function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:Date.now(),...lvM(id)})});LIVE.assist=true;rq()}
+function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:lvNow(),...lvM(id)})});LIVE.assist=true;rq()}
 function liveAssist(id,a){
   if(a)lvApply(id,d=>{const e=d.events[d.events.length-1];if(e&&e.k==='g'&&!e.a){e.a=a;lvStat(d,a).a++}});
   LIVE.p=null;LIVE.assist=false;rq()}
@@ -512,14 +512,14 @@ function liveOpp(id){const base=S.matches.find(m=>m.id===id);if(!base)return;con
 function liveOwn(id){const p=LIVE.p;if(!p)return;const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.pick='og';
   if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
 function liveGk(id,gk){const k=LIVE.pick,p=LIVE.p;LIVE.pick=null;
-  if(k==='opp')lvApply(id,d=>{d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'opp',gk:gk||null,t:Date.now(),...lvM(id)})});
-  else if(k==='og'&&p)lvApply(id,d=>{lvStat(d,p).og++;d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'og',p,gk:gk||null,t:Date.now(),...lvM(id)})});
-  else if(k==='ps')lvApply(id,d=>{if(gk){const s=lvStat(d,gk);s.ps=(+s.ps||0)+1}d.events.push({k:'ps',gk:gk||null,t:Date.now(),...lvM(id)})});
+  if(k==='opp')lvApply(id,d=>{d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'opp',gk:gk||null,t:lvNow(),...lvM(id)})});
+  else if(k==='og'&&p)lvApply(id,d=>{lvStat(d,p).og++;d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'og',p,gk:gk||null,t:lvNow(),...lvM(id)})});
+  else if(k==='ps')lvApply(id,d=>{if(gk){const s=lvStat(d,gk);s.ps=(+s.ps||0)+1}d.events.push({k:'ps',gk:gk||null,t:lvNow(),...lvM(id)})});
   LIVE.p=null;rq()}
 function liveSave(id){const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.p=null;LIVE.assist=false;LIVE.pick='ps';
   if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
 function liveGkCancel(){LIVE.pick=null;rq()}
-function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:Date.now(),...lvM(id)})});LIVE.p=null;rq()}
+function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:lvNow(),...lvM(id)})});LIVE.p=null;rq()}
 function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
   if(e.k==='g'){lvDec(d.stats[e.p],'g');d.gf=Math.max(0,d.gf-1);if(e.a)lvDec(d.stats[e.a],'a')}
   else if(e.k==='opp'){d.ga=Math.max(0,d.ga-1);if(e.gk)lvDec(d.stats[e.gk],'gs')}
@@ -540,14 +540,20 @@ function liveCardHtml(x){
   if(LIVE.pick){const ks=lvKeepers(x);bar=`<div class="lvbar"><b>${LIVE.pick==='og'?'Autogol: chi era in porta?':LIVE.pick==='ps'?'Rigore parato: chi era in porta?':'Gol avversario: chi era in porta?'}</b><div class="chips">${ks.map(i=>`<button class="chip" onclick="liveGk('${id}','${i}')">${esc(S.members.find(m=>m.id===i)?.nick||'?')}</button>`).join('')}<button class="chip" onclick="liveGk('${id}',null)">Nessuno</button><button class="chip" onclick="liveGkCancel()">Annulla</button></div></div>`}
   else if(sel&&LIVE.assist)bar=`<div class="lvbar"><b>Gol di ${esc(sel.nick)}! Assist?</b><div class="chips">${ps.filter(m=>m.id!==sel.id).map(m=>`<button class="chip" onclick="liveAssist('${id}','${m.id}')">${esc(m.nick)}</button>`).join('')}<button class="chip" onclick="liveAssist('${id}',null)">Nessuno</button></div></div>`;
   else if(sel)bar=`<div class="lvbar"><b>${esc(sel.nick)}</b><div class="row"><button class="p" onclick="liveGoal('${id}')">${ic('ball')} Gol</button><button onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')}</button><button onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')}</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div></div>`;
-  const cl=x.clock||{},clk=`<div class="lvclk"><b id="lvclock" data-id="${id}">${lvFmt(lvElapsed(x))}</b><button class="s" onclick="liveClock('${id}')">${cl.since?'Pausa':(+cl.base?'Riprendi':'Avvia')}</button>${cl.since||+cl.base?`<button class="s" onclick="liveClockReset('${id}')">Azzera</button>`:''}</div>`;const sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=Date.now();LIVE.sc=sc;const pop=Date.now()-(LIVE.popAt||0)<900?' pop':'';
+  const cl=x.clock||{},clk=`<div class="lvclk"><b id="lvclock" data-id="${id}">${lvFmt(lvElapsed(x))}</b><button class="s" onclick="liveClock('${id}')">${cl.since?'Pausa':(+cl.base?'Riprendi':'Avvia')}</button>${cl.since||+cl.base?`<button class="s" onclick="liveClockReset('${id}')">Azzera</button>`:''}</div>`;const sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=lvNow();LIVE.sc=sc;const pop=lvNow()-(LIVE.popAt||0)<900?' pop':'';
   return `<div class="card live"><div class="lvh"><b class="hd">${ic('ball')} Gol in diretta</b><span class="lvs${pop}">${esc(x.gf)} – ${esc(x.ga)}</span></div>${clk}<div class="chips">${chips}</div>${bar}<div class="row" style="margin-top:10px"><button onclick="liveOpp('${id}')">${ic('plus')} Gol avversario</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div><p style="margin:8px 0 0"><button style="width:100%" onclick="liveUndo('${id}')">${ic('undo')} Annulla ultimo</button></p>${x.played?'':`<p style="margin:10px 0 0"><button class="p" onclick="liveEnd('${id}')">Fine partita</button></p>`}<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>${liveLog(x)}</div>`}
 
 // Cronometro: salvato nella partita (clock:{base,since}), così lo vedono tutti e il minuto finisce nella cronaca.
-const lvElapsed=x=>{const c=x&&x.clock;return c?(+c.base||0)+(c.since?Date.now()-c.since:0):0};
+// Ora del server: ogni telefono corregge il proprio orologio, così il cronometro è uguale per tutti.
+let LVOFF=0,LVAT=0;const lvNow=()=>Date.now()+LVOFF;
+async function lvSync(){try{let best=null;for(let i=0;i<3;i++){const t0=Date.now(),r=await sb.rpc('server_time'),t1=Date.now(),s=Number(r&&r.data);
+  if(!r||r.error||!isFinite(s)||s<1e12)return;const rtt=t1-t0;if(!best||rtt<best.rtt)best={rtt,off:s+rtt/2-t1}}
+  if(best){LVOFF=Math.abs(best.off)<120?0:Math.round(best.off);LVAT=Date.now()}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&LVAT&&Date.now()-LVAT>600000)lvSync()});
+const lvElapsed=x=>{const c=x&&x.clock;return c?(+c.base||0)+(c.since?lvNow()-c.since:0):0};
 const lvFmt=ms=>{const t=Math.floor(ms/1000);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
 const lvM=id=>{const x=S.matches.find(m=>m.id===id);return x&&x.clock?{m:Math.floor(lvElapsed(x)/60000)+1}:{}};
-function liveClock(id){const x=S.matches.find(m=>m.id===id),c=(x&&x.clock)||{base:0,since:null},now=Date.now();
+function liveClock(id){const x=S.matches.find(m=>m.id===id),c=(x&&x.clock)||{base:0,since:null},now=lvNow();
   lvClockSet(id,c.since?{base:(+c.base||0)+now-c.since,since:null}:{base:+c.base||0,since:now})}
 function liveClockStop(id){const x=S.matches.find(m=>m.id===id);if(x&&x.clock&&x.clock.since)lvClockSet(id,{base:lvElapsed(x),since:null})}
 function liveClockReset(id){ask({title:'Azzerare il cronometro?',msg:'Riparte da 00:00. I minuti già scritti nella cronaca restano.',ok:'Azzera',danger:1,fn:()=>lvClockSet(id,{base:0,since:null})})}
