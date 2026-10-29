@@ -1,7 +1,7 @@
 // Service worker v9: le pagine vanno "rete prima" (attesa massima 4 secondi, poi la copia salvata);
 // i file fissi (script, icone, font, libreria) escono subito dalla copia salvata e si aggiornano dietro le quinte.
 // Non tocca Supabase né le richieste non-GET, così i dati restano sempre aggiornati.
-const V = 'squadra-v23';
+const V = 'squadra-v24';
 const SUPA = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
 const SHELL = ['./', 'index.html', 'ui-extra.js?v=9', 'match-report.js?v=11', 'fluido.js?v=9', 'restyle.js?v=9', 'rinnova.js?v=12', 'tifoso.js?v=6', 'manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
 const EXT = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];

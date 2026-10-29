@@ -603,6 +603,8 @@ function impView(t,mgr){
   <div class="card"><b>Codice invito</b><div class="code" onclick="copyCode()" title="Tocca per copiare">${esc(t.code)}</div>
   <div class="pbtns"><button class="p" onclick="shareCode()">${ic("share")} Condividi</button><button onclick="copyCode()">${ic("copy")} Copia</button></div>
   <p class="mu">Condividilo con i giocatori (per esempio su WhatsApp): potranno inviare la richiesta di accesso, che dirigenti e capitano approvano.</p></div>
+  ${mgr?`<div class="card"><b>Link per i tifosi</b><p class="mu" style="margin-top:6px">Chi lo apre vede subito la squadra (partite, risultati, rosa, classifiche) senza dover cercarla e senza registrarsi.</p>
+  <div class="pbtns"><button class="p" onclick="shareFanLink()">${ic("share")} Condividi</button><button onclick="copyFanLink()">${ic("copy")} Copia link</button></div></div>`:""}
   <div class="card mu">Capitano: ${esc(S.members.find(m=>m.tid===t.id&&m.captain)?.nick||"non ancora scelto")}. Il capitano lo nominano i dirigenti dalla scheda Rosa.</div>
   <p class="mu">Overall = base 55 + gol e assist (pesati per ruolo) + presenze − autogol e cartellini; i portieri perdono punti per i gol subiti.</p>`;
   const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}${migCard(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>${shareStyleCard(t)}`:"";
@@ -612,6 +614,13 @@ function inviteText(){const t=S.teams.find(x=>x.id===S.tid);return "Unisciti a "
 async function shareCode(){const text=inviteText();
   if(navigator.share){try{await navigator.share({title:"Rosa 360",text})}catch(e){if(e.name!=="AbortError")toast("Condivisione non riuscita. Prova a copiare il codice.")}return}
   window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank")}
+function fanLink(){const t=S.teams.find(x=>x.id===S.tid);return t?location.origin+location.pathname+"?squadra="+encodeURIComponent(t.id):""}
+async function shareFanLink(){const t=S.teams.find(x=>x.id===S.tid),l=fanLink();if(!t||!l)return;
+  const text="Segui "+t.name+" su Rosa 360: partite, risultati e classifiche.\n"+l;
+  if(navigator.share){try{await navigator.share({title:"Rosa 360",text})}catch(e){if(e.name!=="AbortError")toast("Condivisione non riuscita. Prova a copiare il link.")}return}
+  window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank")}
+async function copyFanLink(){const l=fanLink();if(!l)return;
+  try{await navigator.clipboard.writeText(l);toast("Link copiato",true)}catch(e){toast("Non riesco a copiare il link.")}}
 async function copyCode(){const t=S.teams.find(x=>x.id===S.tid);if(!t)return;
   try{await navigator.clipboard.writeText(t.code);toast("Codice copiato",true)}catch(e){toast("Non riesco a copiare: seleziona il codice a mano.")}}
 function allPresent(v){document.querySelectorAll(".pc").forEach(e=>{if(!e.disabled)e.checked=v});markDirty()}
@@ -829,17 +838,23 @@ async function updatePassword(){
   $("app").innerHTML=plain('<div class="card"><b>Password aggiornata.</b><p class="mu">Accesso effettuato. Ti porto alle partite…</p></div>');
   setTimeout(()=>boot(),400);
 }
+// Link per i tifosi (?squadra=ID): apre direttamente la squadra in sola lettura. Il parametro si toglie dall'indirizzo appena letto.
+let LINK=(()=>{try{const v=new URLSearchParams(location.search).get("squadra");return v&&/^[\w.:@+~-]{1,120}$/.test(v)?v:null}catch(e){return null}})();
+function openLink(){const id=LINK;if(!id)return;LINK=null;
+  try{const u=new URL(location.href);u.searchParams.delete("squadra");history.replaceState({},"",u.pathname+u.search+u.hash)}catch(e){}
+  if(typeof fanOpen==="function")fanOpen(id)}
 async function boot(){
   if(SB_URL.startsWith("INCOLLA")){$("app").innerHTML=plain('<div class="card"><b>Configurazione mancante.</b><p class="mu">Inserisci Project URL e anon key di Supabase all\u2019inizio dello script.</p></div>');return}
   const{data:{session}}=await sb.auth.getSession();
   const recovery=window.location.hash.includes("type=recovery");
   if(recovery)return resetPasswordView();
-  if(!session){try{if(localStorage.getItem("fan")==="1"&&typeof fanStart==="function")return fanStart()}catch(e){}return loginView()}
+  if(!session){try{if((LINK||localStorage.getItem("fan")==="1")&&typeof fanStart==="function")return fanStart().then(openLink)}catch(e){}return loginView()}
   S.tab="cal";
   makeClaude(session.user.id);
   try{const r=await sb.from("docs").select("data").eq("collection","profiles").eq("id",session.user.id).maybeSingle(),pf=r&&r.data&&r.data.data;
-    if(pf&&pf.fan&&typeof fanStart==="function")return fanStart(pf,session.user.id)}catch(e){}
-  init()}
+    if(pf&&pf.fan&&typeof fanStart==="function")return fanStart(pf,session.user.id).then(openLink)}catch(e){}
+  await init();
+  if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
 </script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
