@@ -229,7 +229,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script>
+<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -730,10 +730,19 @@ function stp(id,d){const e=$(id);if(!e||e.disabled)return;e.value=Math.max(0,(+e
 // il giocatore segna da solo la propria presenza (salvataggio immediato, solo partite non ancora giocate)
 async function myPresence(mid,memId,on){
   const x=S.matches.find(k=>k.id===mid),m=S.members.find(k=>k.id===memId);
-  if(!x||!m||m.uid!==S.uid||x.played||canManage())return;
-  const cur=(x.present||[]).filter(i=>i!==memId);
-  try{await S.db.doc("matches/"+mid).update({present:on?[...cur,memId]:cur});toast(on?"Presenza segnata":"Presenza tolta",true)}
-  catch(e){toast("Non sono riuscito a salvare la presenza ("+(e.code||e.message||"errore")+").")}}
+  if(!x||!m||m.uid!==S.uid||x.played)return;
+  const prev=x.present||[],cur=prev.filter(i=>i!==memId),next=on?[...cur,memId]:cur;
+  x.present=next;render();
+  let err=null;
+  try{
+    // prima la funzione sul database (vedi set_presence.sql); se non è ancora stata creata, salvataggio diretto
+    const r=await sb.rpc("set_presence",{mid:mid,memid:memId,on_:on});
+    if(r.error){
+      if(r.error.code==="PGRST202"||/could not find the function/i.test(r.error.message||""))await S.db.doc("matches/"+mid).update({present:next});
+      else err=r.error}
+  }catch(e){err=e}
+  if(err){x.present=prev;render();toast("Presenza non salvata: "+(err.message||err.code||"errore")+".")}
+  else toast(on?"Presenza segnata":"Presenza tolta",true)}
 function markDirty(){const b=$("sbar");if(b)b.hidden=false}
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
 document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
