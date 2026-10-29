@@ -230,7 +230,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script>
+<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=9"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=1"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -795,7 +795,7 @@ function makeClaude(uid){
   window.refreshAll=()=>Promise.all([...fulls].map(f=>f()));
   window.claude={use:async k=>k==="db"?dbo:k==="user"?{id:async()=>uid}:null};
 }
-function loginView(msg){$("app").innerHTML=plain(`<div class="logo0"><img src="icon-192.png" alt=""><h1>Rosa 360</h1><div class="mu">Rosa, partite e statistiche della tua squadra</div></div><div class="card"><label>Email</label><input id="le" type="email" autocomplete="email"><label>Password (almeno 6 caratteri)</label><input id="lp" type="password" autocomplete="current-password"><div style="text-align:right;margin-top:6px"><button style="border:0;background:none;padding:4px;color:var(--ac);font-weight:600" onclick="forgotPassword()">Password dimenticata?</button></div><div class="err" id="lm">${msg||""}</div><div class="row" style="margin-top:12px"><button class="p" onclick="doAuth(false)">Accedi</button><button onclick="doAuth(true)">Registrati</button></div></div>`)}
+function loginView(msg){$("app").innerHTML=plain(`<div class="logo0"><img src="icon-192.png" alt=""><h1>Rosa 360</h1><div class="mu">Rosa, partite e statistiche della tua squadra</div></div><div class="card"><label>Email</label><input id="le" type="email" autocomplete="email"><label>Password (almeno 6 caratteri)</label><input id="lp" type="password" autocomplete="current-password"><div style="text-align:right;margin-top:6px"><button style="border:0;background:none;padding:4px;color:var(--ac);font-weight:600" onclick="forgotPassword()">Password dimenticata?</button></div><div class="err" id="lm">${msg||""}</div><div class="row" style="margin-top:12px"><button class="p" onclick="doAuth(false)">Accedi</button><button onclick="doAuth(true)">Registrati</button></div></div><div class="mu" style="text-align:center;margin:2px 0 10px">oppure</div><button class="s" style="width:100%" onclick="fanStart()">${ic("ball")} Entra come tifoso</button>`)}
 async function doAuth(up){const email=v("le"),password=$("lp").value;
   if(!email||password.length<6){$("lm").textContent="Inserisci email e una password di almeno 6 caratteri.";return}
   const r=up?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
@@ -827,7 +827,7 @@ async function boot(){
   const{data:{session}}=await sb.auth.getSession();
   const recovery=window.location.hash.includes("type=recovery");
   if(recovery)return resetPasswordView();
-  if(!session)return loginView();
+  if(!session){try{if(localStorage.getItem("fan")==="1"&&typeof fanStart==="function")return fanStart()}catch(e){}return loginView()}
   S.tab="cal";
   makeClaude(session.user.id);init()}
 if(typeof fluidoStart==="function")fluidoStart();
