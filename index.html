@@ -563,7 +563,7 @@ function clsView(t){
 function editCard(m){if(!m)return"";const g=m.role==="giocatore";
   return `<div><h2 style="margin-top:0">Modifica carta</h2>
   <label>Soprannome</label><input id="en" value="${esc(m.nick)}"><label>Nome e cognome</label><input id="eq" value="${esc(m.name||"")}">
-  ${isDir()?`<label>Descrizione del soprannome</label><textarea id="edesc" maxlength="300" rows="3" placeholder="Perché si chiama così? (facoltativa)">${esc(m.desc||"")}</textarea>`:""}
+  ${isDir()?`<label>Descrizione del soprannome</label><textarea id="edesc" rows="4" placeholder="Perché si chiama così? (facoltativa)">${esc(m.desc||"")}</textarea>`:""}
   ${isDir()?`<label>Ruolo nella squadra</label><select id="er" onchange="$('epf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore" ${g?"selected":""}>Giocatore</option><option value="dirigente" ${g?"":"selected"}>Dirigente</option></select>`:""}
   <div id="epf" style="display:${g?"block":"none"}"><div class="row"><div><label>Ruolo in campo</label><select id="epos">${Object.entries(POS).map(([k,n])=>`<option value="${k}" ${m.pos===k?"selected":""}>${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="enum" type="number" min="0" max="99" value="${esc(m.num||"")}"></div></div></div>
   <label>Nuova foto (facoltativa)</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
@@ -575,7 +575,7 @@ function saveEdit(id){const m=S.members.find(x=>x.id===id),t=S.teams.find(x=>x.i
   S.err="";const d={nick:v("en"),name:v("eq"),role:r,pos:r==="giocatore"?v("epos"):(m.pos||""),num:r==="giocatore"?v("enum"):(m.num||"")};
   if(r==="dirigente")d.captain=false;else d.admin=!!(m.admin||(t&&t.owner===m.uid));
   if(photoData)d.photo=photoData;
-  if(isDir()&&$("edesc"))d.desc=v("edesc").slice(0,300);
+  if(isDir()&&$("edesc"))d.desc=v("edesc");
   S.db.doc("members/"+id).update(d);closeSheet();photoData=null;render()}
 function reqView(t){
   const rq=S.reqs.filter(r=>r.tid===t.id),free=S.members.filter(m=>m.tid===t.id&&!m.uid);
