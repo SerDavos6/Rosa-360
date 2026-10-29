@@ -24,7 +24,7 @@ st.textContent=`.favon{color:var(--ac)}.favon svg{fill:currentColor}
 .ftb .crest{width:28px;height:28px;min-width:28px;flex:none;border-radius:8px;font-size:14px}.ftb .crest .ic{width:16px;height:16px}.ftb{table-layout:fixed;min-width:0}.ftb td,.ftb th{border-bottom:0}.ftb .n{width:29px}.ftb .k{width:20px}.ftb .pt{width:34px}.ftb th,.ftb td{padding:9px 2px}.ftb td:first-child{padding-left:2px}
 .ftb tbody tr{cursor:pointer}.ftb .t{display:flex;align-items:center;gap:8px;min-width:0}.ftb .t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frs{display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.frs+.frs{border-top:1px solid var(--bd)}.frs .sc{font-weight:800;min-width:48px;text-align:center}.frs .mid{flex:1;min-width:0}
-.sbx{position:relative}.sbx>.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mu);pointer-events:none}.sbx input{padding-left:40px;margin:0}.shint{margin:8px 2px 0;white-space:normal}`;
+.sbx{position:relative}.sbx>.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mu);pointer-events:none}.sbx input{padding-left:40px;margin:0}.shint{margin:8px 2px 0;white-space:normal}.bar .tn.fn{overflow-wrap:normal;word-break:normal;hyphens:none}`;
 document.head.appendChild(st);
 
 // ---- dati ----
@@ -165,7 +165,8 @@ function tourHtml(){
   ${todo.length?`<h2>Prossime partite</h2><div class="card" style="padding:4px 12px">${todo.map(line).join("")}</div>`:""}
   ${done.length?`<h2>Ultimi risultati</h2><div class="card" style="padding:4px 12px">${done.map(line).join("")}</div>`:""}`}
 function teamBar(t){
-  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button><button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
+  // nome grande per intero (si rimpicciolisce se serve, mai spezzato a metà parola); il tasto tema qui non serve: sta già in Aspetto
+  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn fn" style="font-size:${nameFs(t.name,17,12)}px">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
   const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
   const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
