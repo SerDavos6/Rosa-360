@@ -58,7 +58,7 @@ window.fanStart=async function(pf,uid){
 // Dal profilo giocatore/dirigente: cerca altre squadre e tornei senza uscire dal proprio profilo.
 window.fanBrowse=async function(){
   if(S.fan)return;
-  S.stash={teams:S.teams,members:S.members,matches:S.matches,reqs:S.reqs,tid:S.tid,tab:S.tab,mid:S.mid,pd:S.pd,flt:S.flt,mf:S.mf,db:S.db,cs:S.cs,rq:S.rq,rf:S.rf};
+  S.stash={teams:S.teams,members:S.members,matches:S.matches,reqs:S.reqs,tid:S.tid,tab:S.tab,mid:S.mid,pd:S.pd,flt:S.flt,mf:S.mf,db:S.db,cs:S.cs,rq:S.rq,rf:S.rf,season:S.season};
   S.fan=1;S.browse=1;F.uid=S.uid;F.pf=S.profile;F.dbo=null;
   try{F.dbo=await claude.use("db")}catch(e){}
   if(S.profile&&Array.isArray(S.profile.favs))saveLocal(S.profile.favs.filter(f=>f&&ID(f.id)));

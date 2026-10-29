@@ -530,8 +530,15 @@ function liveEnd(id){ask({title:'Fine partita?',msg:'La partita viene segnata co
 function liveLog(x){
   const nm=id=>esc(S.members.find(m=>m.id===id)?.nick||'?'),ev=x.events||[];
   if(!ev.length)return '';
-  const mn=e=>e.m?'<b>'+e.m+"'</b> ":'',txt=e=>mn(e)+(e.k==='g'?ic('ball')+' '+nm(e.p)+(e.a?' <span class="mu">(assist '+nm(e.a)+')</span>':''):e.k==='opp'?ic('ball')+' Gol avversario':e.k==='og'?ic('og')+' Autogol '+nm(e.p):e.k==='ps'?ic('glove')+' Rigore parato'+(e.gk?' '+nm(e.gk):''):(e.k==='y'?ic('card','y'):ic('card','r'))+' '+nm(e.p));
-  return '<ol class="lvlog">'+ev.map(txt).reverse().map(t=>'<li>'+t+'</li>').join('')+'</ol>'}
+  // Cronaca a due colonne: a sinistra la nostra squadra, a destra l'avversario (gol avversari e autogol), minuto al centro.
+  const T=S.teams.find(t=>t.id===x.tid)||{},mine=e=>e.k!=='opp'&&e.k!=='og';
+  const txt=e=>e.k==='g'?ic('ball')+' <b>'+nm(e.p)+'</b>'+(e.a?'<div class="mu">assist '+nm(e.a)+'</div>':'')
+    :e.k==='opp'?ic('ball')+' <b>Gol</b>'
+    :e.k==='og'?ic('og')+' <b>Autogol</b><div class="mu">'+nm(e.p)+'</div>'
+    :e.k==='ps'?ic('glove')+' <b>Rigore parato</b>'+(e.gk?'<div class="mu">'+nm(e.gk)+'</div>':'')
+    :(e.k==='y'?ic('card','y'):ic('card','r'))+' <b>'+nm(e.p)+'</b>';
+  const row=e=>'<li class="lve"><div class="lvc l">'+(mine(e)?txt(e):'')+'</div><span class="lvm">'+(e.m?e.m+"'":'•')+'</span><div class="lvc r">'+(mine(e)?'':txt(e))+'</div></li>';
+  return '<div class="lvt"><div class="lvc l">'+esc(T.name||'Noi')+'</div><span class="lvm"></span><div class="lvc r">'+esc(x.opp||'Avversari')+'</div></div><ol class="lvlog">'+ev.map(row).reverse().join('')+'</ol>'}
 function liveCardHtml(x){
   const ps=(x.present||[]).map(i=>S.members.find(m=>m.id===i)).filter(m=>m&&m.role==='giocatore'),id=x.id;
   if(!ps.length)return '<div class="card"><b class="hd">Gol in diretta</b><p class="mu">Segna prima le presenze (scheda Info) e premi Salva: poi potrai registrare i gol con un tocco.</p></div>';
