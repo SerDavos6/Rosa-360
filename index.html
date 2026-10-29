@@ -15,13 +15,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Rosa 360">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=Oswald:wght@500;700&display=swap" media="print" onload="this.media='all'">
 <style>
 /* ===== Squadra · nuova interfaccia =====
    Struttura: intestazione fissa in alto, contenuto che scorre al centro, barra di navigazione fissa in basso.
    Barre piene (niente trasparenze né elementi fluttuanti): il contenuto scorre sempre e solo nella zona centrale. */
 :root{--ui:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--num:Oswald,"Arial Narrow",sans-serif;--navh:60px;--r:16px;
- --bg:#f4f6fa;--sf:#ffffff;--tx:#0f172a;--mu:#64748b;--bd:#e5e9f0;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e8f3ec;--on:#ffffff;--dg:#c62828;color-scheme:light}
+ --bg:#f4f6fa;--sf:#ffffff;--tx:#0f172a;--mu:#55637a;--bd:#e5e9f0;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e8f3ec;--on:#ffffff;--dg:#c62828;color-scheme:light}
 :root:root:root{--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#222c3c;--ac:#f5c518;--acf:#f5c518;--ac2:#2a2615;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
@@ -53,7 +53,7 @@ body{font:15px/1.45 var(--ui);background:var(--bg);color:var(--tx);-webkit-font-
 
 /* --- navigazione fissa in basso --- */
 .bn{flex:none;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
-.bn button{flex:1;position:relative;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;border:0;border-radius:0;background:transparent;color:var(--mu);font-size:11px;font-weight:700}
+.bn button{flex:1;position:relative;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;border:0;border-radius:0;background:transparent;color:var(--mu);font-size:12px;font-weight:700}
 .bn button span{display:block;font-size:24px;line-height:1}
 .bn .on{color:var(--ac)}
 .bn .on::before{content:"";position:absolute;top:0;left:24%;right:24%;height:3px;border-radius:0 0 3px 3px;background:var(--acf)}
@@ -100,7 +100,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text-align:center;border-bottom:1px solid var(--bd);font-size:13px}td:first-child,th:first-child{text-align:left}td input{width:52px;min-height:0;padding:5px;text-align:center;font-size:14px}
 
 /* --- selettori: segmentato, pillole --- */
-.seg{display:flex;overflow-x:auto;scrollbar-width:none;gap:4px;padding:4px;background:color-mix(in srgb,var(--tx) 9%,var(--bg));border-radius:14px;margin:6px 0}
+.seg{display:flex;overflow-x:auto;scrollbar-width:none;gap:4px;padding:4px;background:var(--bd);background:color-mix(in srgb,var(--tx) 9%,var(--bg));border-radius:14px;margin:6px 0}
 .seg button{flex:1 0 auto;min-height:42px;padding:6px 8px;border:0;background:transparent;border-radius:10px;font-size:14px;color:var(--tx);white-space:nowrap}
 .seg .on{background:var(--acf);color:var(--on)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
@@ -115,7 +115,7 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 .tool .seg{margin:0;flex:0 0 auto}.tool .seg button{flex:0 0 auto;min-width:46px}
 
 /* --- partite --- */
-.nxt{cursor:pointer;border:0;color:var(--on);background:linear-gradient(135deg,var(--acf),color-mix(in srgb,var(--acf) 62%,#000));position:relative;overflow:hidden}
+.nxt{cursor:pointer;border:0;color:var(--on);background:var(--acf);background:linear-gradient(135deg,var(--acf),color-mix(in srgb,var(--acf) 62%,#000));position:relative;overflow:hidden}
 .nxt::after{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.13)}
 .nxt>*{position:relative;z-index:1}.nxt .hd{font-size:26px;margin:6px 0 4px;color:inherit}.nxt .mu{color:inherit;opacity:.85;font-size:13px}
 .eb{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}.nxt .eb{color:inherit;opacity:.85}
@@ -157,7 +157,7 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 
 /* --- rosa, carte giocatore --- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-.fut{position:relative;overflow:hidden;color:var(--on);text-align:center;border:2px solid rgba(255,255,255,.42);border-radius:24px 24px 46px 46px;padding:12px 10px 14px;background:linear-gradient(165deg,color-mix(in srgb,var(--acf) 84%,#fff),var(--acf) 48%,color-mix(in srgb,var(--acf) 80%,#000));box-shadow:0 12px 24px -12px rgba(0,0,0,.5)}
+.fut{position:relative;overflow:hidden;color:var(--on);text-align:center;border:2px solid rgba(255,255,255,.42);border-radius:24px 24px 46px 46px;padding:12px 10px 14px;background:var(--acf);background:linear-gradient(165deg,color-mix(in srgb,var(--acf) 84%,#fff),var(--acf) 48%,color-mix(in srgb,var(--acf) 80%,#000));box-shadow:0 12px 24px -12px rgba(0,0,0,.5)}
 .fut::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.26) 46%,transparent 60%)}
 .fut .ov{position:absolute;left:12px;top:10px;font:700 36px/1 var(--num)}
 .fut .ps{position:absolute;left:12px;top:46px;font-size:12px;font-weight:800;letter-spacing:.08em;opacity:.85}
@@ -180,7 +180,7 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 
 /* --- classifiche, tessere, podio --- */
 .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.pgrid .tl{min-width:0}
-.tl{background:var(--bg);border-radius:12px;padding:10px 2px;text-align:center;font-size:10.5px;font-weight:600;color:var(--mu)}
+.tl{background:var(--bg);border-radius:12px;padding:10px 2px;text-align:center;font-size:11.5px;font-weight:600;color:var(--mu)}
 .tl b{display:block;font:700 22px/1.1 var(--num);color:var(--tx)}
 .lr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}.lr:last-child{border:0}.rk{width:22px;color:var(--mu);font-weight:800}
 .pod{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:6px 0 14px}.pod>div{flex:1;max-width:130px;text-align:center}
@@ -229,13 +229,15 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js"></script><script src="match-report.js"></script><script src="fluido.js"></script><script src="restyle.js"></script>
+<script src="ui-extra.js?v=8"></script><script src="match-report.js?v=8"></script><script src="fluido.js?v=8"></script><script src="restyle.js?v=8"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
 const S={uid:null,db:null,profile:null,teams:[],members:[],reqs:[],matches:[],tid:null,tab:"cal",mid:null,flt:"",err:""};
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
+const safeSrc=s=>{s=String(s??"");return /^(https:\/\/[^\s"'<>`]+|data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+)$/.test(s)?s:""};
+let _cav;const ensureCaveat=()=>_cav||(_cav=new Promise(r=>{const l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap";l.onload=l.onerror=()=>r();document.head.append(l);setTimeout(r,4000)}).then(()=>document.fonts&&document.fonts.load("700 40px Caveat").catch(()=>{})));
 const v=id=>($(id)?.value||"").trim();
 const rid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
 // ---- icone disegnate (uguali su ogni telefono) ----
@@ -266,20 +268,21 @@ function ic(n,c=""){return `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none"
 let toastT;
 function toast(msg,ok){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.setAttribute("role",ok?"status":"alert");d.textContent=msg;document.body.append(d);{const n=document.querySelector(".bn"),sb=$("sbar");if(n){let h=innerHeight-n.getBoundingClientRect().top;if(sb&&!sb.hidden)h+=sb.offsetHeight;d.style.bottom=(h+12)+"px"}}clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),ok?2200:4500)}
 // ---- tema: Squadra / Chiaro / Scuro ----
-function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}S.mode=m==="light"||m==="dark"?m:"team"}return S.mode}
+function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}S.mode=m==="light"||m==="dark"||m==="auto"?m:"team"}return S.mode}
 function setMode(m){S.mode=m;try{localStorage.setItem("mode",m)}catch(e){}render()}
 function isDarkNow(){const b=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();return /^#[0-9a-f]{6}$/i.test(b)?lum(b)<.25:true}
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(getMode()==="auto")render()})}catch(e){}
 function toggleMode(){setMode(isDarkNow()?"light":"dark")}
-function applyMode(){const m=getMode();if(m==="team")return;const s=document.documentElement.style,cs=getComputedStyle(document.documentElement);
+function applyMode(){let m=getMode();if(m==="team")return;if(m==="auto")m=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";const s=document.documentElement.style,cs=getComputedStyle(document.documentElement);
   let f=cs.getPropertyValue("--acf").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f=cs.getPropertyValue("--ac").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f="#f5c518";
   let o;
   if(m==="light"){const L=lum(f),ink=L>.4?mix(f,"#000000",42):f,on=L>.4?"#111111":"#ffffff";
-    o={"--bg":"#f4f6fa","--sf":"#ffffff","--tx":"#0f172a","--mu":"#64748b","--bd":"#e5e9f0","--dg":"#c62828","--ac":ink,"--acf":f,"--ac2":mix(f,"#ffffff",16),"--on":on,"--hero":heroGrad(f),"--hx":on,"--hi":on,"--hc":f,"color-scheme":"light"}}
+    o={"--bg":"#f4f6fa","--sf":"#ffffff","--tx":"#0f172a","--mu":"#55637a","--bd":"#e5e9f0","--dg":"#c62828","--ac":ink,"--acf":f,"--ac2":mix(f,"#ffffff",16),"--on":on,"--hero":heroGrad(f),"--hx":on,"--hi":on,"--hc":f,"color-scheme":"light"}}
   else{let a=f;if(lum(a)<.08)a=mix(a,"#ffffff",55);const on=lum(a)>.4?"#111111":"#ffffff";
     o={"--bg":"#0b0f17","--sf":"#121826","--tx":"#f1f5f9","--mu":"#94a3b8","--bd":"#1f2937","--dg":"#ff6b6b","--ac":a,"--acf":a,"--ac2":mix(a,"#0b0f17",20),"--on":on,"--hero":heroGrad(a),"--hx":on,"--hi":on,"--hc":a,"color-scheme":"dark"}}
   for(const k in o)s.setProperty(k,o[k])}
 let photoData=null,logoTmp=null;
-const crest=(src,fb,cls="")=>src?`<img class="crest ${cls}" src="${src}" alt="">`:`<div class="crest ${cls}">${fb}</div>`;
+const crest=(src,fb,cls="")=>(src=safeSrc(src))?`<img class="crest ${cls}" src="${src}" alt="">`:`<div class="crest ${cls}">${fb}</div>`;
 const mix=(a,b,p)=>{const f=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16)),x=f(a),y=f(b);return "#"+x.map((v,i)=>Math.round(v*p/100+y[i]*(100-p)/100).toString(16).padStart(2,"0")).join("")};
 function lum(h){const n=parseInt(h.slice(1),16),f=c=>{c/=255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f((n>>8)&255)+.0722*f(n&255)}
 function setBg(s,b){if(!/^#[0-9a-f]{6}$/i.test(b||""))return;const d=lum(b)<.25;s.setProperty("--bg",b);
@@ -292,7 +295,7 @@ function applyTheme(c,b){const s=document.documentElement.style;
   const L=lum(c),ink=L>.4?mix(c,"#000000",42):c,on=L>.4?"#111111":"#ffffff";
   s.setProperty("--acf",c);s.setProperty("--ac",ink);s.setProperty("color-scheme","light");
   s.setProperty("--bg",mix(c,"#f4f6fa",5));s.setProperty("--sf","#ffffff");s.setProperty("--tx","#0f172a");s.setProperty("--dg","#c62828");
-  s.setProperty("--bd",mix(c,"#e5e9f0",8));s.setProperty("--mu","#64748b");s.setProperty("--ac2",mix(c,"#ffffff",16));
+  s.setProperty("--bd",mix(c,"#e5e9f0",8));s.setProperty("--mu","#55637a");s.setProperty("--ac2",mix(c,"#ffffff",16));
   s.setProperty("--on",on);s.setProperty("--hero",heroGrad(c));s.setProperty("--hx",on);s.setProperty("--hi",on);s.setProperty("--hc",c);setBg(s,b)}
 function syncBar(){const c=getComputedStyle(document.documentElement).getPropertyValue("--sf").trim(),m=document.querySelector("meta[name=theme-color]");if(m&&/^#[0-9a-f]{6}$/i.test(c))m.setAttribute("content",c)}
 function dominant(img){const c=document.createElement("canvas");c.width=c.height=48;const x=c.getContext("2d");x.drawImage(img,0,0,48,48);const d=x.getImageData(0,0,48,48).data,b={};
@@ -328,7 +331,7 @@ async function init(){
   const user=await claude.use("user"),db=await claude.use("db");
   if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi a claude.ai per usare l’app.</b><p class="mu">Servono un account e il database condiviso.</p></div>');return}
   S.db=(typeof fluidDb==="function"?fluidDb(db):db);S.uid=await user.id();
-  const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));
+  const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{S[k]=s.docs.filter(d=>/^[\w.:@+~-]{1,120}$/.test(d.id)).map(d=>({id:d.id,...d.data()}));
     if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
   db.doc("profiles/"+S.uid).onSnapshot(s=>{S.profile=s.exists?s.data():null;render()});
   sub("teams","teams");sub("members","members");sub("requests","reqs");sub("matches","matches",{recent:curSeason().slice(0,4)+"-09-01"});
@@ -370,10 +373,10 @@ function ovr(m){
   return Math.max(40,Math.min(99,Math.round(o)))}
 function fut(m,ctl){
   const t=stats(m),player=m.role==="giocatore",ini=esc((m.nick||"?").slice(0,1).toUpperCase());
-  const ph=m.photo?`<img class="ph" src="${m.photo}" alt="">`:`<div class="ph">${ini}</div>`;
+  const ph=m.photo?`<img class="ph" src="${safeSrc(m.photo)}" alt="">`:`<div class="ph">${ini}</div>`;
   const ps=m.role==="dirigente"?"DIR":m.pos,o=player?ovr(m):0,tier=!player?"":o>=88?"t-x":o>=75?"t-g":o>=65?"t-s":"t-b";
   return `<div class="card" style="padding:0;border:0;background:none"><div class="fut ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
-  ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img class="cr" src="${l}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
+  ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
   ${ph}<div class="nk">${esc(m.nick)}${m.captain?" ©":""}</div>
   ${player?`<div class="st"><div><b>${t.g}</b>GOL</div><div><b>${t.a}</b>ASS</div><div><b>${t.p}</b>PRES</div></div>${badgeIcons(m)}`:""}</div>
   <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${m.uid?"":" · senza account"}</div>${ctl||""}</div>`}
@@ -477,7 +480,7 @@ function rosaBody(ms,ctl){
   const gs=rosaGroups(ms),f=gs.some(g=>g[0]===S.rf)?S.rf:"";
   const bar=`<div class="rfl"><button class="chip${f?"":" on"}" onclick="setRf('')">Tutti <i>${ms.length}</i></button>${gs.map(([k,n,l])=>`<button class="chip${f===k?" on":""}" onclick="setRf('${k}')">${n} <i>${l.length}</i></button>`).join("")}</div>`;
   const lv=getRv()==="list",sw=`<div class="seg"><button class="${lv?"":"on"}" onclick="setRv('cards')" aria-label="Carte">${ic("grid")}</button><button class="${lv?"on":""}" onclick="setRv('list')" aria-label="Lista">${ic("list")}</button></div>`;
-  const row=m=>{const pl=m.role==="giocatore",ph=m.photo?`<img class="crest sm" src="${m.photo}" alt="">`:`<div class="crest sm">${esc((m.nick||"?")[0].toUpperCase())}</div>`;
+  const row=m=>{const pl=m.role==="giocatore",ph=m.photo?`<img class="crest sm" src="${safeSrc(m.photo)}" alt="">`:`<div class="crest sm">${esc((m.nick||"?")[0].toUpperCase())}</div>`;
     return `<div class="pl" data-q="${esc(rosaQ(m))}" onclick="S.pd='${m.id}';render()"><span class="n">${pl?esc(m.num||"–"):""}</span>${ph}<span class="nk2">${esc(m.nick)}${m.captain?" ©":""}</span><span class="tag">${pl?esc(m.pos||"?"):"DIR"}</span><span class="o">${pl?ovr(m):""}</span></div>`};
   const q=(S.rq||"").trim().toLowerCase(),vis=l=>q?l.filter(m=>rosaQ(m).includes(q)):l,srch=`<input id="rq" type="search" placeholder="Cerca nella rosa…" aria-label="Cerca nella rosa" autocomplete="off" value="${esc(S.rq||"")}" oninput="rosaSearch(this.value)" style="margin:8px 0">`;
   return `<div class="tool"><h2>Rosa · ${ms.length}</h2>${sw}</div>${srch}`+bar+(gs.filter(g=>!f||g[0]===f).map(([k,n,l0])=>{const l=vis(l0);return l.length?`<h2 class="rh">${n} · ${l.length}</h2>${lv?`<div class="card" style="padding:4px 10px">${l.map(row).join("")}</div>`:`<div class="grid">${l.map(m=>`<div data-q="${esc(rosaQ(m))}">${fut(m,ctl(m))}</div>`).join("")}</div>`}`:""}).join("")||(q?`<p class="mu">Nessun risultato.</p>`:emptyState("users","Rosa vuota","Condividi il codice invito dal Profilo oppure aggiungi i membri a mano.","")))+`<p class="mu" id="rnone2" style="display:none">Nessun risultato.</p>`}
@@ -508,10 +511,10 @@ function scorerList(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).
 function scorers(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[S.members.find(m=>m.id===id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" x"+g:"")).join(", ")}
 function dt(d){const o=new Date(d+"T12:00");return{d:o.getDate(),m:o.toLocaleString("it-IT",{month:"short"}).toUpperCase().replace(".",""),f:o.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}).toUpperCase().replace(/\./g,"")}}
 function heroMatch(x,t){const mv=mvp(x),sc=scorerList(x);
-  return `<div class="hero2" onclick="S.mid='${x.id}';render()">${t.logo?`<img class="wm" src="${t.logo}" alt="">`:""}<div class="eb">Ultima partita · ${dt(x.date).f}</div><div class="big"><span class="t">${esc(t.name)}</span><b>${esc(x.gf)} – ${esc(x.ga)}</b><span class="t">${esc(x.opp)}</span></div>${sc.length?`<ul class="scl">${sc.map(n=>`<li>${ic("ball")}${esc(n)}</li>`).join("")}</ul>`:""}${mv?`<span class="mvp">${ic("trophy")} MVP ${esc(mv.m.nick)} · ${mv.r.toFixed(1)}</span>`:""}</div>`}
+  return `<div class="hero2" onclick="S.mid='${x.id}';render()">${t.logo?`<img class="wm" src="${safeSrc(t.logo)}" alt="">`:""}<div class="eb">Ultima partita · ${dt(x.date).f}</div><div class="big"><span class="t">${esc(t.name)}</span><b>${esc(x.gf)} – ${esc(x.ga)}</b><span class="t">${esc(x.opp)}</span></div>${sc.length?`<ul class="scl">${sc.map(n=>`<li>${ic("ball")}${esc(n)}</li>`).join("")}</ul>`:""}${mv?`<span class="mvp">${ic("trophy")} MVP ${esc(mv.m.nick)} · ${mv.r.toFixed(1)}</span>`:""}</div>`}
 function clsView(t){
   const ms=S.members.filter(m=>m.tid===t.id&&m.role==="giocatore").map(m=>({m,s:stats(m),o:ovr(m)}));
-  const av=(m,c)=>m.photo?`<img class="crest ${c}" src="${m.photo}" alt="">`:`<div class="crest ${c}">${esc((m.nick||"?")[0].toUpperCase())}</div>`;
+  const av=(m,c)=>m.photo?`<img class="crest ${c}" src="${safeSrc(m.photo)}" alt="">`:`<div class="crest ${c}">${esc((m.nick||"?")[0].toUpperCase())}</div>`;
   const blk=(fn,podio)=>{const l=ms.map(a=>({m:a.m,v:fn(a)})).filter(a=>a.v>0).sort((a,b)=>b.v-a.v);
     const top=podio?l.slice(0,3):[],rest=podio?l.slice(3):l,off=podio?4:1,order=[1,0,2].filter(i=>top[i]);
     const pod=top.length?`<div class="pod">${order.map(i=>{const a=top[i];return `<div class="p${i+1}">${av(a.m,"")}<div class="pn">${esc(a.m.nick)}</div><div class="st2"><div class="pl2">${i+1}°</div><div class="pv">${a.v}</div></div></div>`}).join("")}</div>`:"";
@@ -548,7 +551,7 @@ function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
 function impView(t,mgr){
   const pend=S.reqs.filter(r=>r.tid===t.id),ps=mgr&&S.ps==="sq"?"sq":"io";
   const io=`<div class="card pcard">${crest(myMember().photo,ic("user"),"xl")}<div class="nm2">${esc(myMember().nick)}</div>${S.profile.name?`<div>${esc(S.profile.name)}</div>`:""}<div class="mu">${esc(S.profile.email||"")}</div><div class="pbtns"><button onclick="S.profile=null;render()">Modifica profilo</button><button onclick="S.tid=null;render()">Cambia squadra</button></div><button class="out" onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button></div>
-  <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>${typeof aspettoExtra==="function"?aspettoExtra():""}<p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
+  <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>${typeof aspettoExtra==="function"?aspettoExtra():""}<p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
   <div class="card"><b>Codice invito</b><div class="code" onclick="copyCode()" title="Tocca per copiare">${esc(t.code)}</div>
   <div class="pbtns"><button class="p" onclick="shareCode()">${ic("share")} Condividi</button><button onclick="copyCode()">${ic("copy")} Copia</button></div>
   <p class="mu">Condividilo con i giocatori (per esempio su WhatsApp): potranno inviare la richiesta di accesso, che dirigenti e capitano approvano.</p></div>
@@ -697,7 +700,7 @@ function makeClaude(uid){
   const T=()=>sb.from("docs"),P=p=>{const a=p.split("/");return{c:a[0],id:a[1]}};
   const snap=r=>({id:r.id,exists:true,data:()=>r.data});
   const chk=r=>{if(r.error)throw{code:r.error.code||"errore",message:r.error.message};return r};
-  let n=0,mergeOk=true;
+  let n=0,mergeOk=true;const fulls=new Set();
   const listen=(c,fn)=>{const ch=sb.channel("ch"+c+(++n)).on("postgres_changes",{event:"*",schema:"public",table:"docs"},p=>{const o=(p.new&&p.new.collection)||(p.old&&p.old.collection);if(!o||o===c)fn(p)}).subscribe();return()=>sb.removeChannel(ch)};
   const get1=(c,id)=>T().select("data").eq("collection",c).eq("id",id).maybeSingle();
   const dbo={
@@ -714,12 +717,13 @@ function makeClaude(uid){
       const soon=()=>{if(!tf)tf=setTimeout(emit,60)};
       const full=async()=>{const r=await T().select("id,data").eq("collection",c);if(r.error)return e&&e({code:r.error.code});rows=new Map(r.data.map(x=>[x.id,x]));emit()};
       const boot=async()=>{if(opt&&opt.recent){const r=await T().select("id,data").eq("collection",c).gte("data->>date",opt.recent);if(!r.error&&!rows){rows=new Map(r.data.map(x=>[x.id,x]));emit()}}await full()};
-      boot();
+      fulls.add(full);boot();
       return listen(c,p=>{
         if(rows&&(p.eventType==="INSERT"||p.eventType==="UPDATE")&&p.new&&p.new.collection===c&&p.new.id!=null&&p.new.data!==undefined){rows.set(p.new.id,{id:p.new.id,data:p.new.data});soon()}
         else if(rows&&p.eventType==="DELETE"&&p.old&&p.old.collection===c&&p.old.id!=null){rows.delete(p.old.id);soon()}
         else{clearTimeout(tm);tm=setTimeout(full,300)}})}})
   };
+  window.refreshAll=()=>Promise.all([...fulls].map(f=>f()));
   window.claude={use:async k=>k==="db"?dbo:k==="user"?{id:async()=>uid}:null};
 }
 function loginView(msg){$("app").innerHTML=plain(`<div class="logo0"><img src="icon-192.png" alt=""><h1>Rosa 360</h1><div class="mu">Rosa, partite e statistiche della tua squadra</div></div><div class="card"><label>Email</label><input id="le" type="email" autocomplete="email"><label>Password (almeno 6 caratteri)</label><input id="lp" type="password" autocomplete="current-password"><div style="text-align:right;margin-top:6px"><button style="border:0;background:none;padding:4px;color:var(--ac);font-weight:600" onclick="forgotPassword()">Password dimenticata?</button></div><div class="err" id="lm">${msg||""}</div><div class="row" style="margin-top:12px"><button class="p" onclick="doAuth(false)">Accedi</button><button onclick="doAuth(true)">Registrati</button></div></div>`)}

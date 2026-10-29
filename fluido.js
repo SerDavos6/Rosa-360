@@ -95,36 +95,10 @@ function fluidoStart(){
   syncBar=function(){sb0.apply(this,arguments);const m=document.querySelector('meta[name=theme-color]'),c=m&&m.getAttribute('content');
     if(!c||c===lastBar||!/^#[0-9a-f]{6}$/i.test(c))return;lastBar=c;try{localStorage.setItem('bar',c)}catch(e){}
     const n=m.cloneNode();n.setAttribute('content',c);m.replaceWith(n)};
-  // Carte che brillano: la luce segue il dito (o il mouse); su Android segue anche l'inclinazione del telefono;
-  // in più un lampo di luce quando la carta compare e ogni tanto mentre è visibile.
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const seen=new WeakSet(),vis=new WeakSet(),dly=new WeakMap();
-  const io=new IntersectionObserver(es=>es.forEach(en=>{en.isIntersecting?vis.add(en.target):vis.delete(en.target);en.target.classList.toggle('vis',en.isIntersecting&&!reduce)}),{threshold:.15});
-  const reapply=()=>document.querySelectorAll('.fut').forEach(c=>{
-    if(!seen.has(c)){seen.add(c);dly.set(c,(Math.random()*.7).toFixed(2));io.observe(c)}
-    c.classList.toggle('vis',vis.has(c)&&!reduce);c.style.animationDelay=dly.get(c)+'s'});
-  setInterval(()=>{if(document.hidden||reduce)return;document.querySelectorAll('.fut.vis').forEach(c=>{c.classList.remove('vis');void c.offsetWidth;c.classList.add('vis')})},9000);
-  const aim=(c,x,y)=>{const r=c.getBoundingClientRect(),px=Math.min(1,Math.max(0,(x-r.left)/r.width)),py=Math.min(1,Math.max(0,(y-r.top)/r.height));
-    c.classList.add('act');c.style.setProperty('--mx',(px*100)+'%');c.style.setProperty('--my',(py*100)+'%');
-    if(!reduce){c.style.setProperty('--ry',((px-.5)*16)+'deg');c.style.setProperty('--rx',((.5-py)*16)+'deg')}};
-  const rest=c=>{['--mx','--my','--rx','--ry'].forEach(k=>c.style.removeProperty(k));c.classList.remove('act')};
-  let held=null,hov=null;
-  document.addEventListener('touchstart',e=>{const c=e.target.closest&&e.target.closest('.fut');if(c){held=c;aim(c,e.touches[0].clientX,e.touches[0].clientY)}},{passive:true});
-  document.addEventListener('touchmove',e=>{if(held)aim(held,e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
-  const lift=()=>{if(held){rest(held);held=null}};
-  document.addEventListener('touchend',lift,{passive:true});document.addEventListener('touchcancel',lift,{passive:true});
-  document.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const c=e.target.closest&&e.target.closest('.fut');
-    if(hov&&hov!==c)rest(hov);hov=c||null;if(c)aim(c,e.clientX,e.clientY)},{passive:true});
-  if(!reduce&&window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission!=='function'){
-    let n=0,raf=0,gx=0,gy=0;const cl=v=>Math.max(-1,Math.min(1,v));
-    addEventListener('deviceorientation',e=>{if(e.gamma==null)return;gx=cl(e.gamma/30);gy=cl(((e.beta||0)-45)/30);
-      if(++n===3)document.documentElement.classList.add('gyro');
-      if(!raf)raf=requestAnimationFrame(()=>{raf=0;const s=document.documentElement.style;s.setProperty('--gx',gx.toFixed(3));s.setProperty('--gy',gy.toFixed(3))})},{passive:true})}
-
   const r0=render;
   render=function(){
     if(!sc&&S.profile&&S.teams.length&&S.members.length){sc=true;S.tab=qv;S.mid=null;S.pd=null;try{history.replaceState({},document.title,location.pathname)}catch(e){}}
-    const out=r0.apply(this,arguments);sync();reapply();return out};
+    const out=r0.apply(this,arguments);sync();return out};
   const s0=sheet,c0=closeSheet;
   sheet=function(){const r=s0.apply(this,arguments);sync();return r};
   closeSheet=function(){const r=c0.apply(this,arguments);sync();return r};
@@ -146,7 +120,7 @@ function fluidoStart(){
     if(!g)return;const t=e.changedTouches[0],dx=t.clientX-g.x,dy=t.clientY-g.y,m=g.mode;g=null;
     if(m==='back'&&dx>80&&Math.abs(dy)<70){if(pushed){history.back()}else goBack()}
     const p=document.getElementById('ptr');
-    if(m==='pull'){if(dy>=80){p.textContent='';p.classList.add('spin');p.style.opacity=1;p.style.transform='translateY(60px)';setTimeout(()=>location.reload(),350)}else if(p){p.remove()}}
+    if(m==='pull'){if(dy>=80){p.textContent='';p.classList.add('spin');p.style.opacity=1;p.style.transform='translateY(60px)';Promise.all([window.refreshAll?refreshAll():0,new Promise(r=>setTimeout(r,600))]).catch(()=>{}).finally(()=>{const q=document.getElementById('ptr');if(q)q.remove()})}else if(p){p.remove()}}
     else if(p&&!p.classList.contains('spin'))p.remove()},{passive:true});
   document.addEventListener('touchcancel',()=>{g=null;const p=document.getElementById('ptr');if(p&&!p.classList.contains('spin'))p.remove()},{passive:true});
 }

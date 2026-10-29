@@ -55,7 +55,7 @@ function reportFit(ctx,text,width){
 // Instagram Stories format: 1080×1920 (9:16). Content stays between ~220px and ~1700px,
 // clear of the areas Instagram covers with the profile header and the reply bar.
 async function matchReportBlob(x,options={}){
-  if(document.fonts){await Promise.all([document.fonts.load('700 148px Caveat'),document.fonts.load('700 124px Oswald')]).catch(()=>{});await document.fonts.ready;}
+  if(document.fonts){await Promise.all([ensureCaveat(),document.fonts.load('700 124px Oswald')]).catch(()=>{});await document.fonts.ready;}
   const {team}=reportLines(x),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
   const palette=options.palette||await reportPalette(team);
   const {accent,background,text}=palette;
@@ -264,7 +264,7 @@ function drawBench(ctx,bench,P,top,o={}){
 }
 function formationFooter(ctx,color,y=1838,text='Forza ragazzi'){const W=1080;ctx.textAlign='center';ctx.fillStyle=color;ctx.font='700 italic 78px Caveat, cursive';ctx.fillText(text,W/2,y);ctx.strokeStyle=color;ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(380,y+16);ctx.quadraticCurveTo(540,y+34,700,y+16);ctx.stroke();ctx.lineCap='butt'}
 async function formationStoryBlob(x,options={}){
-  if(document.fonts){await Promise.all([document.fonts.load('700 150px Oswald'),document.fonts.load('500 30px Oswald'),document.fonts.load('700 100px Caveat')]).catch(()=>{});await document.fonts.ready;}
+  if(document.fonts){await Promise.all([document.fonts.load('700 150px Oswald'),document.fonts.load('500 30px Oswald'),ensureCaveat()]).catch(()=>{});await document.fonts.ready;}
   const {team}=reportLines(x),W=1080,H=1920,canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');canvas.width=W;canvas.height=H;
   const P=options.palette||formationDefaults(team,await reportPalette(team)),layout=options.layout||'campo',bench=formationBench(x),logos=await Promise.all([reportLogo(team.logo),reportLogo(x.oppLogo)]);
   const bg=P.background;ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
@@ -403,7 +403,7 @@ function resultPresent(ctx,R,P,top){
   const ls=wrapReport(ctx,names,900).slice(0,3);ls.forEach((l,i)=>ctx.fillText(l,540,top+44+i*40));ctx.globalAlpha=1;return top+44+ls.length*40;
 }
 async function resultStoryBlob(x,options={}){
-  if(document.fonts){await Promise.all([document.fonts.load('700 150px Oswald'),document.fonts.load('500 30px Oswald'),document.fonts.load('700 100px Caveat')]).catch(()=>{});await document.fonts.ready;}
+  if(document.fonts){await Promise.all([document.fonts.load('700 150px Oswald'),document.fonts.load('500 30px Oswald'),ensureCaveat()]).catch(()=>{});await document.fonts.ready;}
   const {team}=reportLines(x),W=1080,H=1920,canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');canvas.width=W;canvas.height=H;
   const P=options.palette||formationDefaults(team,await reportPalette(team)),layout=options.layout||'campo',R=resultData(x),O=resultOutcome(R),bg=P.background;
   const logos=await Promise.all([reportLogo(team.logo),reportLogo(x.oppLogo)]),kick=(x.tourn||'Amichevole').toUpperCase().slice(0,28);
@@ -551,7 +551,7 @@ function liveClock(id){const x=S.matches.find(m=>m.id===id),c=(x&&x.clock)||{bas
   lvClockSet(id,c.since?{base:(+c.base||0)+now-c.since,since:null}:{base:+c.base||0,since:now})}
 function liveClockStop(id){const x=S.matches.find(m=>m.id===id);if(x&&x.clock&&x.clock.since)lvClockSet(id,{base:lvElapsed(x),since:null})}
 function liveClockReset(id){ask({title:'Azzerare il cronometro?',msg:'Riparte da 00:00. I minuti già scritti nella cronaca restano.',ok:'Azzera',danger:1,fn:()=>lvClockSet(id,{base:0,since:null})})}
-setInterval(()=>{if(document.hidden)return;const e=document.getElementById('lvclock');if(e&&S.matches)e.textContent=lvFmt(lvElapsed(S.matches.find(m=>m.id===e.dataset.id)))},1000);
+(function tick(){let d=500;const e=document.getElementById('lvclock');if(!document.hidden&&e&&S.matches){const x=S.matches.find(m=>m.id===e.dataset.id),el=lvElapsed(x);e.textContent=lvFmt(el);if(x&&x.clock&&x.clock.since)d=1000-(el%1000)+20}setTimeout(tick,d)})();
 
 // ===== Selettore colore con cursore, uguale su iOS e Android =====
 // Il <input type="color"> lo disegna il sistema (iOS e Android lo mostrano in modo diverso): qui lo sostituiamo con uno nostro.

@@ -10,4 +10,7 @@
 .bn button .ic{width:24px;height:24px}
 .add .card{box-shadow:none;border:0;padding:0;background:none;margin:12px 0 0}
 .add .card h2{font-size:16px}
+.fut.t-s::before,.fut.t-g::before,.fut.t-x::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 55% at 50% 0,rgba(255,255,255,.22),transparent 62%)}
+.fut.t-g::before{background:radial-gradient(120% 55% at 50% 0,rgba(255,236,150,.4),transparent 62%)}
+.fut.t-x::before{background:radial-gradient(circle at 18% 14%,#fff 0 1.5px,transparent 3px),radial-gradient(circle at 82% 26%,#fff 0 1.5px,transparent 3px),radial-gradient(circle at 64% 10%,#fff 0 1px,transparent 3px),radial-gradient(120% 55% at 50% 0,rgba(255,244,170,.5),transparent 62%)}
 `;document.head.append(st)})();
