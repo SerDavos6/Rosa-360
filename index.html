@@ -428,14 +428,19 @@ function render(){
 document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.matches&&t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.add("kb")});
 document.addEventListener("focusout",()=>setTimeout(()=>{const t=document.activeElement;if(!t||!t.matches||!t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.remove("kb")},80));
 function posFields(pre){return `<div id="${pre}pf"><div class="row"><div><label>Ruolo in campo</label><select id="${pre}pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="${pre}num" type="number" min="0" max="99"></div></div></div>`}
-function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1><div class="card">
- <p class="mu">Il tuo account claude.ai è l’accesso. Qui completi i dati da usare nelle squadre.</p>
- <label>Email di contatto</label><input id="em" type="email" autocomplete="email">
- <label>Soprannome (sulla carta)</label><input id="nk"><label>Nome e cognome</label><input id="nm">
- <label>Ruolo nella squadra</label><select id="rl" onchange="$('rpf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select>
- <div id="rpf">${posFields("r")}</div>
- <label>Foto</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
- <div class="err">${esc(S.err)}</div><p><button class="p" onclick="saveProfile()">Salva profilo</button></p></div>`}
+function regView(){const n=S.rs||1,sh=k=>`style="display:${n===k?"block":"none"}"`;return `<h1>${ic("ball")} Crea la tua carta</h1><div class="rn-prog"><i style="width:${n*33.4}%"></i></div><div class="card">
+ <div class="rn-st" data-n="1" ${sh(1)}><p class="mu">Passo 1 di 3 · Chi sei</p><label>Email di contatto</label><input id="em" type="email" autocomplete="email"><label>Soprannome (sulla carta)</label><input id="nk"><label>Nome e cognome</label><input id="nm"></div>
+ <div class="rn-st" data-n="2" ${sh(2)}><p class="mu">Passo 2 di 3 · In campo</p><label>Ruolo nella squadra</label><select id="rl" onchange="$('rpf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select><div id="rpf">${posFields("r")}</div></div>
+ <div class="rn-st" data-n="3" ${sh(3)}><p class="mu">Passo 3 di 3 · La tua foto</p><label>Foto (facoltativa)</label><input type="file" accept="image/*" onchange="pickPhoto(this)"></div>
+ <div class="err">${esc(S.err)}</div><div class="row" style="margin-top:12px"><button id="rnb" onclick="rnStep(-1)" style="display:${n===1?"none":"block"}">Indietro</button><button class="p" id="rnn" onclick="rnStep(1)">${n===3?"Salva profilo":"Avanti"}</button></div></div>`}
+function rnStep(d){const n=S.rs||1;
+ if(d>0&&n===1&&(!v("em")||!v("nk")))return toast("Email e soprannome sono obbligatori.");
+ if(d>0&&n===2&&v("rl")==="giocatore"&&!v("rnum"))return toast("Indica il numero di maglia.");
+ if(d>0&&n===3)return saveProfile();
+ S.rs=Math.max(1,Math.min(3,n+d));
+ document.querySelectorAll(".rn-st").forEach(e=>e.style.display=+e.dataset.n===S.rs?"block":"none");
+ const bb=$("rnb"),nx=$("rnn"),pg=document.querySelector(".rn-prog i");
+ if(bb)bb.style.display=S.rs===1?"none":"block";if(nx)nx.textContent=S.rs===3?"Salva profilo":"Avanti";if(pg)pg.style.width=S.rs*33.4+"%"}
 function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8);const mine=photoData;sbUpload(mine,"foto").then(u=>{if(photoData===mine)photoData=u})};img.src=URL.createObjectURL(f)}
 function saveProfile(){
   const rl=v("rl");if(!v("em")||!v("nk"))return S.err="Email e soprannome sono obbligatori.",render();
@@ -466,13 +471,13 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
 function teamBar(t){return `<header class="bar">${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button></header>`}
 function teamView(t){
   const mgr=canManage(),pend=S.reqs.filter(r=>r.tid===t.id);
-  const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"],["imp",ic("user"),"Profilo"]];
+  const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Squadra"],["imp",ic("user"),"Profilo"]];
   const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;
   if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body={rosa:rosaView,cal:calView,cls:clsView,imp:impView}[S.tab](t,mgr)}
-  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}${k==="imp"&&mgr&&pend.length?'<i class="dot"></i>':""}</button>`).join("")}</nav>`}
+  else{head=teamBar(t);body=(S.tab==="rosa"||S.tab==="cls"?`<div class="seg" style="margin-bottom:12px"><button class="${S.tab==="rosa"?"on":""}" onclick="S.tab='rosa';render()">Rosa</button><button class="${S.tab==="cls"?"on":""}" onclick="S.tab='cls';render()">Classifiche</button></div>`:"")+{rosa:rosaView,cal:calView,cls:clsView,imp:impView}[S.tab](t,mgr)}
+  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k||(k==="rosa"&&S.tab==="cls")?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}${k==="imp"&&mgr&&pend.length?'<i class="dot"></i>':""}</button>`).join("")}</nav>`}
 function rosaGroups(ms){
   const pl=ms.filter(m=>m.role==="giocatore"),srt=(a,b)=>(b.captain?1:0)-(a.captain?1:0)||(parseInt(a.num)||999)-(parseInt(b.num)||999)||(a.nick||"").localeCompare(b.nick||"");
   return [["P","Portieri"],["D","Difensori"],["C","Centrocampisti"],["A","Attaccanti"]].map(([k,n])=>[k,n,pl.filter(m=>m.pos===k).sort(srt)])

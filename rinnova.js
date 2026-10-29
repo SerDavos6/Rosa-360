@@ -20,6 +20,9 @@ h1{font-size:30px;letter-spacing:-.01em}
 .rn-in.on{background:#fff;color:#0b7a43}
 .fut{transition:transform .2s ease,box-shadow .2s ease}.fut:active{transform:scale(.97)}
 .chip{border-radius:999px}
+.pmw:not(#sheet){align-items:stretch;background:var(--bg)}
+.pmw:not(#sheet) .pm{max-width:none;height:100%;max-height:100%;border-radius:0;padding-top:calc(18px + env(safe-area-inset-top,0px));animation:rnUp .3s both}
+.rn-prog{height:6px;border-radius:9px;background:var(--bd);margin:8px 0 14px;overflow:hidden}.rn-prog i{display:block;height:100%;background:var(--ac);transition:width .3s}
 @media (prefers-reduced-motion:reduce){.view .pg>.card,.view .pg>div>.card{animation:none}.card,.fut{transition:none}}
 `;document.head.append(st);
 const installa=()=>{window.nextMatch=function(ms){
