@@ -532,11 +532,13 @@ function liveLog(x){
   if(!ev.length)return '';
   // Cronaca a due colonne: a sinistra la nostra squadra, a destra l'avversario (gol avversari e autogol), minuto al centro.
   const T=S.teams.find(t=>t.id===x.tid)||{},mine=e=>e.k!=='opp'&&e.k!=='og';
-  const txt=e=>e.k==='g'?ic('ball')+' <b>'+nm(e.p)+'</b>'+(e.a?'<div class="mu">assist '+nm(e.a)+'</div>':'')
-    :e.k==='opp'?ic('ball')+' <b>Gol</b>'
-    :e.k==='og'?ic('og')+' <b>Autogol</b><div class="mu">'+nm(e.p)+'</div>'
-    :e.k==='ps'?ic('glove')+' <b>Rigore parato</b>'+(e.gk?'<div class="mu">'+nm(e.gk)+'</div>':'')
-    :(e.k==='y'?ic('card','y'):ic('card','r'))+' <b>'+nm(e.p)+'</b>';
+  // Riga con icona + testo che può andare a capo: i nomi lunghi si leggono per intero invece di essere tagliati.
+  const ln=(i,t,c)=>'<div class="lvn'+(c?' '+c:'')+'">'+i+'<span>'+t+'</span></div>';
+  const txt=e=>e.k==='g'?ln(ic('ball'),'<b>'+nm(e.p)+'</b>')+(e.a?ln(ic('assist'),nm(e.a),'as'):'')
+    :e.k==='opp'?ln(ic('ball'),'<b>Gol</b>')
+    :e.k==='og'?ln(ic('og'),'<b>Autogol</b>')+ln('',nm(e.p),'as')
+    :e.k==='ps'?ln(ic('glove'),'<b>Rigore parato</b>')+(e.gk?ln('',nm(e.gk),'as'):'')
+    :ln(e.k==='y'?ic('card','y'):ic('card','r'),'<b>'+nm(e.p)+'</b>');
   const row=e=>'<li class="lve"><div class="lvc l">'+(mine(e)?txt(e):'')+'</div><span class="lvm">'+(e.m?e.m+"'":'•')+'</span><div class="lvc r">'+(mine(e)?'':txt(e))+'</div></li>';
   return '<div class="lvt"><div class="lvc l">'+esc(T.name||'Noi')+'</div><span class="lvm"></span><div class="lvc r">'+esc(x.opp||'Avversari')+'</div></div><ol class="lvlog">'+ev.map(row).reverse().join('')+'</ol>'}
 function liveCardHtml(x){

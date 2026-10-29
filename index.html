@@ -153,7 +153,7 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 .lvh{display:flex;justify-content:space-between;align-items:center}.lvs{font:700 52px/1 var(--num);color:var(--ac);display:inline-block}
 .lvs.pop{animation:lvpop .5s ease-out}@keyframes lvpop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
-.live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
 /* --- rosa, carte giocatore --- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
@@ -230,7 +230,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=10"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=4"></script>
+<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=11"></script><script src="fluido.js?v=9"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=5"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -331,7 +331,7 @@ try{S.tid=localStorage.getItem("tid")}catch(e){}
 
 async function init(){
   const user=await claude.use("user"),db=await claude.use("db");
-  if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi a claude.ai per usare l’app.</b><p class="mu">Servono un account e il database condiviso.</p></div>');return}
+  if(!user||!db){$("app").innerHTML=plain('<div class="card"><b>Accedi per usare l’app.</b><p class="mu">Serve un account e il database condiviso: riprova a entrare o ricarica la pagina.</p></div>');return}
   S.db=(typeof fluidDb==="function"?fluidDb(db):db);S.uid=await user.id();
   if(typeof lvSync==="function")lvSync();
   const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{(S.stash||S)[k]=s.docs.filter(d=>/^[\w.:@+~-]{1,120}$/.test(d.id)).map(d=>({id:d.id,...d.data()}));
@@ -431,7 +431,7 @@ document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.matches&&t.matc
 document.addEventListener("focusout",()=>setTimeout(()=>{const t=document.activeElement;if(!t||!t.matches||!t.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),textarea"))document.body.classList.remove("kb")},80));
 function posFields(pre){return `<div id="${pre}pf"><div class="row"><div><label>Ruolo in campo</label><select id="${pre}pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="${pre}num" type="number" min="0" max="99"></div></div></div>`}
 function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1>${S.members.some(m=>m.uid===S.uid)?"":`<div class="card"><b>Sei solo un tifoso?</b><p class="mu">Segui le squadre senza farne parte: le tue squadre preferite restano salvate sul tuo account.</p><button class="p" onclick="saveFanProfile()">Continua come tifoso</button></div><p class="mu" style="text-align:center">oppure, se giochi o dirigi una squadra:</p>`}<div class="card">
- <p class="mu">Il tuo account claude.ai è l’accesso. Qui completi i dati da usare nelle squadre.</p>
+ <p class="mu">Ti sei registrato con la tua email: ora completa i dati che vedranno le squadre.</p>
  <label>Email di contatto</label><input id="em" type="email" autocomplete="email">
  <label>Soprannome (sulla carta)</label><input id="nk"><label>Nome e cognome</label><input id="nm">
  <label>Ruolo nella squadra</label><select id="rl" onchange="$('rpf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select>

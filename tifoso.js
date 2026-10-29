@@ -4,6 +4,8 @@
 (function(){
 const F={q:"",res:null,loading:false,tour:null,busy:false,sig:{},tick:0,wrapped:false,ts:null};
 const ID=s=>/^[\w.:@+~-]{1,120}$/.test(String(s));
+const XI='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const focusQ=()=>setTimeout(()=>{const e=document.getElementById("fq");if(e)e.focus()},80);
 const SRCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 const favs=()=>{try{const a=JSON.parse(localStorage.getItem("favs")||"[]");return Array.isArray(a)?a.filter(f=>f&&ID(f.id)):[]}catch(e){return[]}};
 const saveLocal=a=>{try{localStorage.setItem("favs",JSON.stringify(a))}catch(e){}};
@@ -21,7 +23,8 @@ st.textContent=`.favon{color:var(--ac)}.favon svg{fill:currentColor}
 .ftb th{color:var(--mu);font-size:12px;font-weight:700}.ftb .l{text-align:left}.ftb tbody tr+tr td{border-top:1px solid var(--bd)}
 .ftb .crest{width:28px;height:28px;min-width:28px;flex:none;border-radius:8px;font-size:14px}.ftb .crest .ic{width:16px;height:16px}.ftb{table-layout:fixed;min-width:0}.ftb td,.ftb th{border-bottom:0}.ftb .n{width:29px}.ftb .k{width:20px}.ftb .pt{width:34px}.ftb th,.ftb td{padding:9px 2px}.ftb td:first-child{padding-left:2px}
 .ftb tbody tr{cursor:pointer}.ftb .t{display:flex;align-items:center;gap:8px;min-width:0}.ftb .t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.frs{display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.frs+.frs{border-top:1px solid var(--bd)}.frs .sc{font-weight:800;min-width:48px;text-align:center}.frs .mid{flex:1;min-width:0}`;
+.frs{display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.frs+.frs{border-top:1px solid var(--bd)}.frs .sc{font-weight:800;min-width:48px;text-align:center}.frs .mid{flex:1;min-width:0}
+.sbx{position:relative}.sbx>.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mu);pointer-events:none}.sbx input{padding-left:40px;margin:0}.shint{margin:8px 2px 0;white-space:normal}`;
 document.head.appendChild(st);
 
 // ---- dati ----
@@ -62,7 +65,7 @@ window.fanBrowse=async function(){
   S.fan=1;S.browse=1;F.uid=S.uid;F.pf=S.profile;F.dbo=null;
   try{F.dbo=await claude.use("db")}catch(e){}
   if(S.profile&&Array.isArray(S.profile.favs))saveLocal(S.profile.favs.filter(f=>f&&ID(f.id)));
-  core();render();refreshFavs().then(c=>{if(c&&!S.tid)render()})};
+  core();render();focusQ();refreshFavs().then(c=>{if(c&&!S.tid)render()})};
 window.fanLeave=function(){
   const k=S.stash;if(!k)return;Object.assign(S,k);S.stash=null;S.fan=0;S.browse=0;
   F.tour=null;F.uid=null;F.dbo=null;F.sig={};render()};
@@ -85,7 +88,7 @@ window.fanOpen=async function(id,mid){
   S.tid=id;S.tab="cal";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
   render()};
 window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
-window.fanHome=function(){S.tid=null;S.mid=null;S.pd=null;F.tour=null;render()};
+window.fanHome=function(){S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
 window.fanTour=async function(i){
   const t=F.res&&F.res.tours[i];if(!t)return;F.busy=true;render();
   try{const d=await rpc("fan_tournament",{n:t.name});F.tour={name:t.name,teams:d.teams||[],matches:d.matches||[]};F.ts=null}
@@ -122,10 +125,11 @@ function tcard(t,withInfo){
   return `<div class="card tcard" data-fid="${esc(t.id)}" onclick="fanOpen(this.dataset.fid)">${crest(t.logo,ic("ball"))}<div class="mid"><b class="hd" style="font-size:20px">${esc(t.name)}</b>${withInfo?info(t.id):""}</div>${star}</div>`}
 function bodyHtml(){
   const q=F.q.trim();
+  if(q.length===1)return `<p class="mu shint">Scrivi almeno 2 lettere per cercare.</p>`;
   if(q.length<2){
     const fv=favs().map(f=>S.teams.find(t=>t.id===f.id)||f);
     return fv.length?`<h2>Le tue squadre preferite</h2>${fv.map(t=>tcard(t,true)).join("")}`
-      :`<div class="card mu" style="white-space:normal">Non hai ancora squadre preferite. Cerca una squadra e tocca la stella per ritrovarla qui, con la prossima partita e la diretta.</div>`}
+      :`<div class="card mu" style="white-space:normal">Nessuna squadra preferita per ora. Cerca una squadra qui sopra e tocca la stella ${ic("star")} per ritrovarla qui, con la prossima partita e la diretta.</div>`}
   if(F.loading&&!F.res)return `<p class="mu">Cerco…</p>`;
   const r=F.res||{teams:[],tours:[]};
   if(r.err)return `<div class="card" style="white-space:normal">${r.err==="PGRST202"?"La modalità tifoso non è ancora attiva: va eseguito lo script <b>tifoso.sql</b> su Supabase.":"Ricerca non riuscita. Controlla la connessione e riprova."}</div>`;
@@ -133,9 +137,10 @@ function bodyHtml(){
   return (r.teams.length?`<h2>Squadre</h2>${r.teams.map(t=>tcard(t,false)).join("")}`:"")
     +(r.tours.length?`<h2>Tornei</h2>${r.tours.map((t,i)=>`<div class="card tcard" onclick="fanTour(${i})"><div class="crest">${ic("trophy")}</div><div class="mid"><b class="hd" style="font-size:20px">${esc(t.name)}</b><div class="mu">${t.n} squadr${t.n===1?"a":"e"}</div></div>${ic("chev")}</div>`).join("")}`:"")}
 function homeHtml(){
-  return `<div class="row"><h1 style="flex:1">${ic(S.browse?"trophy":"ball")} ${S.browse?"Cerca":"Tifoso"}</h1>${S.browse?'<button class="s" onclick="fanLeave()">Chiudi</button>':F.uid?"":'<button class="s" onclick="fanExit()">Accedi</button>'}</div>
-  <p class="mu" style="margin:0 0 10px;white-space:normal">Cerca una squadra o un torneo per seguire partite, risultati, dirette, rosa e classifiche.</p>
-  <input id="fq" type="search" placeholder="Cerca una squadra o un torneo…" aria-label="Cerca" autocomplete="off" value="${esc(F.q)}" oninput="fanSearch(this.value)">
+  const top=S.browse?`<button class="s" onclick="fanLeave()">${XI} Chiudi</button>`:F.uid?"":'<button class="s" onclick="fanExit()">Accedi</button>';
+  return `<div class="row"><h1 style="flex:1">${ic(S.browse?"search":"ball")} ${S.browse?"Cerca":"Tifoso"}</h1>${top}</div>
+  <div class="sbx">${SRCH}<input id="fq" type="search" enterkeyhint="search" placeholder="Nome di una squadra o di un torneo" aria-label="Cerca squadre e tornei" autocomplete="off" value="${esc(F.q)}" oninput="fanSearch(this.value)"></div>
+  <p class="mu shint">Trova una squadra o un torneo per seguire partite, risultati, dirette e classifiche.</p>
   ${F.busy?'<p class="mu">Carico…</p>':""}<div id="fres" style="margin-top:10px">${bodyHtml()}</div>${S.browse?"":settingsHtml()}`}
 function settingsHtml(){
   const seg=`<div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>`;
@@ -167,7 +172,7 @@ function teamHtml(t){
   let head,body,foot="";
   if(mx){const p=matchParts(mx,false);head=p.head;body=p.body;foot=p.foot}
   else{head=teamBar(t);body=({rosa:rosaView,cal:calView,cls:clsView}[S.tab]||calView)(t,false)}
-  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}</button>`).join("")}<button onclick="fanHome()"><span>${SRCH}</span>Cerca</button></nav>`}
+  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}</button>`).join("")}<button onclick="fanHome()"><span>${SRCH}</span>Cerca</button>${S.browse?`<button onclick="fanLeave()"><span>${XI}</span>Chiudi</button>`:""}</nav>`}
 
 window.fanRender=function(){
   const a=$("app"),old=a.querySelector(".view"),oldTop=old?old.scrollTop:0,fx=fxBefore();
