@@ -183,10 +183,11 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 .tl{background:var(--bg);border-radius:12px;padding:10px 2px;text-align:center;font-size:11.5px;font-weight:600;color:var(--mu)}
 .tl b{display:block;font:700 22px/1.1 var(--num);color:var(--tx)}
 .lr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}.lr:last-child{border:0}.rk{width:22px;color:var(--mu);font-weight:800}
-.pod{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:6px 0 14px}.pod>div{flex:1;max-width:130px;text-align:center}
+.pod{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin:6px 0 14px}.pod>div{flex:1;max-width:140px;text-align:center}
 .pod .crest{margin:0 auto 6px;width:64px;height:64px;border-radius:50%;font-size:28px}.pod .p1 .crest{width:84px;height:84px;border:3px solid #ffd54a}
 .pod .st2{border-radius:12px 12px 0 0;background:var(--ac2);padding:8px 4px 10px;margin-top:4px}.pod .p1 .st2{padding-bottom:22px;background:var(--acf);color:var(--on)}.pod .p3 .st2{padding-bottom:4px}
-.pod .pl2{font:700 24px/1 var(--num)}.pod .pv{font:700 22px var(--num)}.pod .pn{font-weight:800;font-size:14px;overflow-wrap:anywhere}
+.pdesc{margin:10px 0 0;padding:10px 12px;background:var(--bg);border-radius:12px;font-size:14px;line-height:1.4;font-style:italic;white-space:pre-wrap;overflow-wrap:anywhere}
+.pod .pl2{font:700 24px/1 var(--num)}.pod .pv{font:700 22px var(--num)}.pod .pn{font-weight:800;font-size:14px;line-height:1.15;min-height:2.3em;display:flex;align-items:center;justify-content:center;margin-bottom:2px;overflow-wrap:anywhere;word-break:break-word;hyphens:auto}.pod>div{min-width:0}
 
 /* --- profilo, accesso, home --- */
 .pcard{text-align:center}.pcard .nm2{font:800 24px var(--ui);letter-spacing:-.02em;margin-top:6px}
@@ -548,12 +549,13 @@ function scorers(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map
 function dt(d){const o=new Date(d+"T12:00");return{d:o.getDate(),m:o.toLocaleString("it-IT",{month:"short"}).toUpperCase().replace(".",""),f:o.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}).toUpperCase().replace(/\./g,"")}}
 function heroMatch(x,t){const mv=mvp(x),sc=scorerList(x);
   return `<div class="hero2" onclick="S.mid='${x.id}';render()">${t.logo?`<img class="wm" src="${safeSrc(t.logo)}" alt="">`:""}<div class="eb">Ultima partita · ${dt(x.date).f}</div><div class="big"><span class="t">${esc(t.name)}</span><b>${esc(x.gf)} – ${esc(x.ga)}</b><span class="t">${esc(x.opp)}</span></div>${sc.length?`<ul class="scl">${sc.map(n=>`<li>${ic("ball")}${esc(n)}</li>`).join("")}</ul>`:""}${mv?`<span class="mvp">${ic("trophy")} MVP ${esc(mv.m.nick)} · ${mv.r.toFixed(1)}</span>`:""}</div>`}
+function pnFs(n){const l=[...String(n||"")].length;return l<=9?14:Math.max(9,Math.round(14*9/l*10)/10)}
 function clsView(t){
   const ms=S.members.filter(m=>m.tid===t.id&&m.role==="giocatore").map(m=>({m,s:stats(m),o:ovr(m)}));
   const av=(m,c)=>m.photo?`<img class="crest ${c}" src="${safeSrc(m.photo)}" alt="">`:`<div class="crest ${c}">${esc((m.nick||"?")[0].toUpperCase())}</div>`;
   const blk=(fn,podio)=>{const l=ms.map(a=>({m:a.m,v:fn(a)})).filter(a=>a.v>0).sort((a,b)=>b.v-a.v);
     const top=podio?l.slice(0,3):[],rest=podio?l.slice(3):l,off=podio?4:1,order=[1,0,2].filter(i=>top[i]);
-    const pod=top.length?`<div class="pod">${order.map(i=>{const a=top[i];return `<div class="p${i+1}">${av(a.m,"")}<div class="pn">${esc(a.m.nick)}</div><div class="st2"><div class="pl2">${i+1}°</div><div class="pv">${a.v}</div></div></div>`}).join("")}</div>`:"";
+    const pod=top.length?`<div class="pod">${order.map(i=>{const a=top[i];return `<div class="p${i+1}">${av(a.m,"")}<div class="pn" style="font-size:${pnFs(a.m.nick)}px"><span>${esc(a.m.nick)}</span></div><div class="st2"><div class="pl2">${i+1}°</div><div class="pv">${a.v}</div></div></div>`}).join("")}</div>`:"";
     return `<div class="card">${pod}${rest.map((a,i)=>`<div class="lr"><span class="rk">${i+off}</span>${av(a.m,"sm")}<b style="flex:1">${esc(a.m.nick)}</b><b class="gold hd">${a.v}</b></div>`).join("")||(l.length?"":emptyState("trophy","Ancora nessun dato","La classifica si riempie con le partite giocate.",""))}</div>`};
   const tabs=[["sq","Squadra"],["ov","Overall"],["g","Marcatori"],["a","Assist"],["p","Presenze"]],cs=tabs.some(x=>x[0]===S.cs)?S.cs:"sq";
   const body=cs==="sq"?squadBlock(t):cs==="ov"?blk(a=>a.m.role==="giocatore"?a.o:0,true):cs==="g"?blk(a=>a.s.g):cs==="a"?blk(a=>a.s.a):blk(a=>a.s.p);
@@ -561,6 +563,7 @@ function clsView(t){
 function editCard(m){if(!m)return"";const g=m.role==="giocatore";
   return `<div><h2 style="margin-top:0">Modifica carta</h2>
   <label>Soprannome</label><input id="en" value="${esc(m.nick)}"><label>Nome e cognome</label><input id="eq" value="${esc(m.name||"")}">
+  ${isDir()?`<label>Descrizione del soprannome</label><textarea id="edesc" maxlength="300" rows="3" placeholder="Perché si chiama così? (facoltativa)">${esc(m.desc||"")}</textarea>`:""}
   ${isDir()?`<label>Ruolo nella squadra</label><select id="er" onchange="$('epf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore" ${g?"selected":""}>Giocatore</option><option value="dirigente" ${g?"":"selected"}>Dirigente</option></select>`:""}
   <div id="epf" style="display:${g?"block":"none"}"><div class="row"><div><label>Ruolo in campo</label><select id="epos">${Object.entries(POS).map(([k,n])=>`<option value="${k}" ${m.pos===k?"selected":""}>${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="enum" type="number" min="0" max="99" value="${esc(m.num||"")}"></div></div></div>
   <label>Nuova foto (facoltativa)</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
@@ -572,6 +575,7 @@ function saveEdit(id){const m=S.members.find(x=>x.id===id),t=S.teams.find(x=>x.i
   S.err="";const d={nick:v("en"),name:v("eq"),role:r,pos:r==="giocatore"?v("epos"):(m.pos||""),num:r==="giocatore"?v("enum"):(m.num||"")};
   if(r==="dirigente")d.captain=false;else d.admin=!!(m.admin||(t&&t.owner===m.uid));
   if(photoData)d.photo=photoData;
+  if(isDir()&&$("edesc"))d.desc=v("edesc").slice(0,300);
   S.db.doc("members/"+id).update(d);closeSheet();photoData=null;render()}
 function reqView(t){
   const rq=S.reqs.filter(r=>r.tid===t.id),free=S.members.filter(m=>m.tid===t.id&&!m.uid);
@@ -617,6 +621,7 @@ function playerModal(id){
     return `<div class="lr"><span class="mu" style="width:64px">${esc(dt(x.date).f.slice(0,6))}</span><b style="flex:1">vs ${esc(x.opp)} <span class="mu">${esc(x.gf)}–${esc(x.ga)}</span></b><span>${bits||"–"}</span></div>`}).join("");
   return `<div class="pmw" onclick="if(event.target===this){S.pd=null;render()}"><div class="pm"><button class="s" style="float:right" onclick="S.pd=null;render()">✕ Chiudi</button>
   <h2 style="margin-top:0">${esc(m.nick)}${m.captain?" ©":""}</h2><div class="mu">${esc([m.name,m.role==="dirigente"?"Dirigente":POS[m.pos],pl&&m.num?"#"+m.num:""].filter(Boolean).join(" · "))}</div>
+  ${m.desc?`<div class="pdesc">${esc(m.desc)}</div>`:""}
   <div class="pgrid">${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
   ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}</div></div>`}
 function calView(t,mgr){
