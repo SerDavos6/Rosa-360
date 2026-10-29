@@ -385,7 +385,7 @@ function fut(m,ctl){
 // ---- ruoli ----
 const myMember=()=>S.members.find(m=>m.tid===S.tid&&m.uid===S.uid);
 const canManage=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||m.captain||m.admin)};
-const isDir=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||!!m.admin)};
+const isDir=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||!!m.captain||!!m.admin)};
 
 const plain=h=>`<div class="view plain"><div class="pg">${h}</div></div>`;
 let lastKey="";
@@ -451,6 +451,7 @@ function homeView(mine){
   ${pend.map(r=>`<div class="card mu">Richiesta inviata a ${esc(S.teams.find(t=>t.id===r.tid)?.name||"squadra")} – in attesa dei dirigenti.</div>`).join("")}
   <details class="card add" ${myTeams.length?"":"open"}><summary>${ic("plus")} Entra o crea una squadra</summary><div class="in"><div class="card"><h2 style="margin-top:0">Entra con un codice invito</h2><div class="row"><input id="jc" placeholder="Codice (es. K3F9QA)"><button class="p" onclick="joinTeam()">Invia richiesta</button></div></div>
   ${`<div class="card"><h2 style="margin-top:0">Crea una squadra</h2><div class="row"><input id="tn" placeholder="Nome squadra"><button class="p" onclick="createTeam()">Crea</button></div><p class="mu">Diventerai dirigente di questa squadra e verrà generato un codice invito da condividere.</p></div>`}</div></details>
+  <div class="card"><b>Account</b><div class="pbtns"><button onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button><button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
   <div class="err">${esc(S.err)}</div>`}
 function upNext(tid){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
   return S.matches.filter(m=>m.tid===tid&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0]}
@@ -497,15 +498,49 @@ function rosaView(t,mgr){
   <label>Ruolo</label><select id="ar" onchange="$('apf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select>
   <div id="apf">${posFields("a")}</div><p><button class="p" onclick="addManual()">Aggiungi</button></p></div></details>`:""}`}
 function rosaCtl0(m,mgr,compact){
-  const hh=(mgr||m.uid===S.uid)?`<div class="row" style="justify-content:center;margin-top:4px"><button class="s" onclick="openEdit('${m.id}')">Modifica</button>${(isDir()||m.uid===S.uid)?`<button class="s" onclick="switchRole('${m.id}')">${m.role==="dirigente"?"Diventa giocatore":"Diventa dirigente"}</button>`:""}${isDir()&&m.role==="giocatore"?`<button class="s" onclick="setCap('${m.id}')">${m.captain?"Togli ©":"Capitano"}</button>`:""}${mgr?`<button class="s d" onclick="ask({title:'Rimuovere questo membro?',msg:'Verrà tolto dalla rosa della squadra.',ok:'Rimuovi',danger:1,fn:()=>del('members/${m.id}')})">Rimuovi</button>`:""}</div>`:"";return compact&&hh?`<details class="mng"><summary>Gestisci</summary>${hh}</details>`:hh;}
+  const me=!!m.uid&&m.uid===S.uid,hh=(mgr||me)?`<div class="row" style="justify-content:center;margin-top:4px"><button class="s" onclick="openEdit('${m.id}')">Modifica</button>${isDir()?`<button class="s" onclick="switchRole('${m.id}')">${m.role==="dirigente"?"Diventa giocatore":"Diventa dirigente"}</button>`:""}${isDir()&&m.role==="giocatore"?`<button class="s" onclick="setCap('${m.id}')">${m.captain?"Togli ©":"Capitano"}</button>`:""}${mgr&&!me?`<button class="s d" onclick="ask({title:'Rimuovere questo membro?',msg:'Verrà tolto dalla rosa della squadra.',ok:'Rimuovi',danger:1,fn:()=>del('members/${m.id}')})">Rimuovi</button>`:""}</div>`:"";return compact&&hh?`<details class="mng"><summary>Gestisci</summary>${hh}</details>`:hh;}
 function addManual(){const r=v("ar");if(!v("an"))return;
   set("members/"+rid()+rid(),{tid:S.tid,uid:null,nick:v("an"),name:v("aq"),role:r,pos:r==="giocatore"?v("apos"):"",num:r==="giocatore"?v("anum"):"",photo:"",captain:false})}
-function setCap(id){S.members.filter(m=>m.tid===S.tid&&m.captain&&m.id!==id).forEach(m=>S.db.doc("members/"+m.id).update({captain:false}));
+function setCap(id){if(!isDir())return;{const c=S.members.find(x=>x.id===id);if(c&&c.captain&&c.uid===S.uid&&!c.admin&&!managersOf(c.tid,c.id).length)return toast("Sei l’unico che gestisce la squadra: nomina prima un altro dirigente.")}
+  S.members.filter(m=>m.tid===S.tid&&m.captain&&m.id!==id).forEach(m=>S.db.doc("members/"+m.id).update({captain:false}));
   const m=S.members.find(x=>x.id===id);S.db.doc("members/"+id).update({captain:!m.captain})}
 
-function switchRole(id){const m=S.members.find(x=>x.id===id);if(!m)return;
+function switchRole(id){if(!isDir())return;const m=S.members.find(x=>x.id===id);if(!m)return;
+  if(m.role==="dirigente"&&m.uid===S.uid&&!m.admin&&!managersOf(m.tid,m.id).length)return toast("Sei l’unico dirigente: nomina prima un altro dirigente.");
   if(m.role==="dirigente")becomePlayer(id);
   else S.db.doc("members/"+id).update({role:"dirigente",captain:false})}
+
+// ---- lascia squadra / elimina account ----
+const managersOf=(tid,exceptId)=>S.members.filter(m=>m.tid===tid&&m.uid&&m.id!==exceptId&&(m.role==="dirigente"||m.captain||m.admin));
+function leaveBlock(m){
+  const gest=m.role==="dirigente"||m.captain||m.admin,altri=S.members.some(x=>x.tid===m.tid&&x.uid&&x.id!==m.id);
+  if(gest&&altri&&!managersOf(m.tid,m.id).length){const t=S.teams.find(x=>x.id===m.tid);return "Sei l’unico che gestisce "+(t?"«"+t.name+"»":"la squadra")+". Prima nomina un altro dirigente o capitano dalla scheda Rosa."}
+  return ""}
+// toglie l'account dal membro: un dirigente mai usato nelle partite sparisce, gli altri restano nello storico come "senza account"
+function dropMember(m){
+  const usato=S.matches.some(x=>(x.present||[]).includes(m.id)||(x.stats&&x.stats[m.id]));
+  if(m.role==="dirigente"&&!usato)return del("members/"+m.id);
+  return S.db.doc("members/"+m.id).update({uid:null,captain:false,admin:false})}
+function leaveTeam(id){const m=S.members.find(x=>x.id===id&&x.uid===S.uid);if(!m)return;
+  const b=leaveBlock(m);if(b)return toast(b);
+  ask({title:"Lasciare la squadra?",msg:"Non farai più parte della squadra. Le tue statistiche e le partite giocate restano nello storico (i dirigenti possono rimuoverti dalla rosa). Per rientrare servirà di nuovo il codice invito.",ok:"Lascia squadra",danger:1,fn:()=>doLeave(id)})}
+async function doLeave(id){const m=S.members.find(x=>x.id===id&&x.uid===S.uid);if(!m)return;
+  try{await dropMember(m)}catch(e){return toast("Non sono riuscito a lasciare la squadra ("+(e.code||e.message||"errore")+").")}
+  S.tid=null;S.tab="cal";S.mid=null;try{localStorage.removeItem("tid")}catch(e){}render();toast("Hai lasciato la squadra",true)}
+function deleteAccount(){
+  for(const m of S.members.filter(x=>x.uid===S.uid)){const b=leaveBlock(m);if(b)return toast(b)}
+  ask({title:"Eliminare l’account?",msg:"Il tuo accesso e il tuo profilo vengono cancellati per sempre e esci da tutte le squadre. Le tue statistiche restano nello storico delle squadre, senza account collegato. Non si può annullare.",ok:"Elimina account",danger:1,fn:doDeleteAccount})}
+async function doDeleteAccount(){
+  toast("Elimino l’account…",true);
+  try{
+    for(const m of S.members.filter(x=>x.uid===S.uid))await dropMember(m);
+    for(const r of S.reqs.filter(x=>x.uid===S.uid))await del("requests/"+r.id);
+    await del("profiles/"+S.uid);
+    const q=await sb.rpc("delete_account");
+    if(q.error){await sb.auth.signOut();try{localStorage.removeItem("tid")}catch(e){}
+      alert("I tuoi dati sono stati cancellati, ma l’accesso non si è eliminato del tutto ("+(q.error.message||q.error.code)+"). Chi gestisce l’app deve attivare la funzione delete_account su Supabase.");location.reload();return}
+  }catch(e){return toast("Eliminazione non riuscita ("+(e.code||e.message||"errore")+").")}
+  await sb.auth.signOut();try{localStorage.removeItem("tid")}catch(e){}location.reload()}
 const rate=s=>Math.max(4,Math.min(10,6+(s.g||0)+.6*(s.a||0)-(s.og||0)-.3*(s.y||0)-1.5*(s.r||0)+.8*(s.ps||0)));
 function mvp(x){let b=null;for(const id of x.present||[]){const m=S.members.find(k=>k.id===id),s=(x.stats||{})[id];if(!m||!s)continue;let r=rate(s);if(m.pos==="P"&&!(s.gs>0))r+=1;r=Math.min(10,r);if(!b||r>b.r)b={r,m}}return b}
 function scorerList(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[S.members.find(m=>m.id===id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" ×"+g:""))}
@@ -526,13 +561,14 @@ function clsView(t){
 function editCard(m){if(!m)return"";const g=m.role==="giocatore";
   return `<div><h2 style="margin-top:0">Modifica carta</h2>
   <label>Soprannome</label><input id="en" value="${esc(m.nick)}"><label>Nome e cognome</label><input id="eq" value="${esc(m.name||"")}">
-  <label>Ruolo nella squadra</label><select id="er" onchange="$('epf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore" ${g?"selected":""}>Giocatore</option><option value="dirigente" ${g?"":"selected"}>Dirigente</option></select>
+  ${isDir()?`<label>Ruolo nella squadra</label><select id="er" onchange="$('epf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore" ${g?"selected":""}>Giocatore</option><option value="dirigente" ${g?"":"selected"}>Dirigente</option></select>`:""}
   <div id="epf" style="display:${g?"block":"none"}"><div class="row"><div><label>Ruolo in campo</label><select id="epos">${Object.entries(POS).map(([k,n])=>`<option value="${k}" ${m.pos===k?"selected":""}>${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="enum" type="number" min="0" max="99" value="${esc(m.num||"")}"></div></div></div>
   <label>Nuova foto (facoltativa)</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
   <div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="p" onclick="saveEdit('${m.id}')">Salva</button><button onclick="closeSheet()">Annulla</button></div></div>`}
-function saveEdit(id){const m=S.members.find(x=>x.id===id),t=S.teams.find(x=>x.id===m.tid),r=v("er");
+function saveEdit(id){const m=S.members.find(x=>x.id===id),t=S.teams.find(x=>x.id===m.tid),r=isDir()&&$("er")?v("er"):m.role;
   if(!v("en"))return sheetErr("Il soprannome è obbligatorio.");
   if(r==="giocatore"&&!v("enum"))return sheetErr("Indica il numero di maglia.");
+  if(m.uid===S.uid&&m.role==="dirigente"&&r==="giocatore"&&!m.admin&&!managersOf(m.tid,m.id).length)return sheetErr("Sei l’unico dirigente: nomina prima un altro dirigente.");
   S.err="";const d={nick:v("en"),name:v("eq"),role:r,pos:r==="giocatore"?v("epos"):(m.pos||""),num:r==="giocatore"?v("enum"):(m.num||"")};
   if(r==="dirigente")d.captain=false;else d.admin=!!(m.admin||(t&&t.owner===m.uid));
   if(photoData)d.photo=photoData;
@@ -552,6 +588,7 @@ function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
 function impView(t,mgr){
   const pend=S.reqs.filter(r=>r.tid===t.id),ps=mgr&&S.ps==="sq"?"sq":"io";
   const io=`<div class="card pcard">${crest(myMember().photo,ic("user"),"xl")}<div class="nm2">${esc(myMember().nick)}</div>${S.profile.name?`<div>${esc(S.profile.name)}</div>`:""}<div class="mu">${esc(S.profile.email||"")}</div><div class="pbtns"><button onclick="S.profile=null;render()">Modifica profilo</button><button onclick="S.tid=null;render()">Cambia squadra</button></div><button class="out" onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button></div>
+  <div class="card"><b>Squadra e account</b><p class="mu">Se lasci la squadra le tue statistiche restano nello storico. Eliminando l’account cancelli il tuo accesso per sempre.</p><div class="pbtns"><button onclick="leaveTeam('${myMember().id}')">Lascia squadra</button><button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
   <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>${typeof aspettoExtra==="function"?aspettoExtra():""}<p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
   <div class="card"><b>Codice invito</b><div class="code" onclick="copyCode()" title="Tocca per copiare">${esc(t.code)}</div>
   <div class="pbtns"><button class="p" onclick="shareCode()">${ic("share")} Condividi</button><button onclick="copyCode()">${ic("copy")} Copia</button></div>
