@@ -702,7 +702,7 @@ function matchParts(x,mgr){
   const info=`<div class="card"><b>Risultato</b><div class="row"><div><label>Gol nostri</label><input id="gf" type="number" inputmode="numeric" min="0" value="${x.gf}" ${mgr?"":"disabled"}></div><div><label>Gol avversari</label><input id="ga" type="number" inputmode="numeric" min="0" value="${x.ga}" ${mgr?"":"disabled"}></div></div>
   <label class="chk"><input type="checkbox" id="pl" ${x.played?"checked":""} ${mgr?"":"disabled"}> Partita giocata</label></div>
   <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div>
-  ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label><input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr?"":"disabled"}> <span>${esc(m.nick)}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
+  ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label>${(()=>{const own=!mgr&&!!m.uid&&m.uid===S.uid&&!x.played;return `<input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr||own?"":"disabled"} ${own?`onchange="myPresence('${x.id}','${m.id}',this.checked)"`:""}>`})()} <span>${esc(m.nick)}${!mgr&&m.uid===S.uid&&!x.played?" (tu)":""}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
   </div>
   ${h2hCard(x.tid,x.opp,x.id)}<div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
   <div id="formation-holder">${formationCard(x,mgr)}</div>
@@ -717,6 +717,13 @@ function matchParts(x,mgr){
   const foot=mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"";
   return {head,body:panel("info",info)+panel("live",live)+panel("stats",st),foot}}
 function stp(id,d){const e=$(id);if(!e||e.disabled)return;e.value=Math.max(0,(+e.value||0)+d);markDirty()}
+// il giocatore segna da solo la propria presenza (salvataggio immediato, solo partite non ancora giocate)
+async function myPresence(mid,memId,on){
+  const x=S.matches.find(k=>k.id===mid),m=S.members.find(k=>k.id===memId);
+  if(!x||!m||m.uid!==S.uid||x.played||canManage())return;
+  const cur=(x.present||[]).filter(i=>i!==memId);
+  try{await S.db.doc("matches/"+mid).update({present:on?[...cur,memId]:cur});toast(on?"Presenza segnata":"Presenza tolta",true)}
+  catch(e){toast("Non sono riuscito a salvare la presenza ("+(e.code||e.message||"errore")+").")}}
 function markDirty(){const b=$("sbar");if(b)b.hidden=false}
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
 document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
