@@ -65,5 +65,41 @@
   window.aspettoExtra = () => (typeof prev === 'function' ? prev() : '') + pushCard();
   // nota: nella schermata del tifoso la scheda "Notifiche" è aggiunta da tifoso.js (solo con un account)
 
-  addEventListener('load', () => { if (supported()) setTimeout(refresh, 800); });
+  // ---- invito ad attivare le notifiche ----
+  // Chi apre l'app e non le ha ancora attivate riceve una volta una finestra che lo chiede, senza dover cercare il Profilo.
+  // Se la ignora si ripresenta dopo 1 giorno; "Più tardi" la rimanda di 7 giorni; "Non chiedere più" la spegne su questo dispositivo.
+  const ASK_KEY = 'pushAsk';
+  const askBlocked = () => { try { const v = localStorage.getItem(ASK_KEY); return v === 'never' || Date.now() < (+v || 0); } catch (e) { return false; } };
+  const askSet = v => { try { localStorage.setItem(ASK_KEY, String(v)); } catch (e) {} };
+  const isMemberNow = () => { try { return !!(S.members && S.members.some(m => m.uid === S.uid)); } catch (e) { return false; } };
+  const eligible = () => {
+    try {
+      if (!S || !S.uid || S.uid === 'tifoso' || !S.profile) return false;   // niente invito a chi non ha un account o non ha finito di registrarsi
+      if (isMemberNow()) return true;
+      return !!S.fan && !S.browse && typeof fanFavsRaw === 'function' && fanFavsRaw().length > 0;
+    } catch (e) { return false; }
+  };
+  window.pushAskYes = () => { closeSheet(); pushEnable(); };
+  window.pushAskLater = () => { askSet(Date.now() + 7 * 864e5); closeSheet(); };
+  window.pushAskNever = () => { askSet('never'); closeSheet(); toast('Va bene. Potrai attivarle da Profilo → Aspetto.', true); };
+
+  let askTimer = 0, tries = 0;
+  function maybeAsk() {
+    if (++tries > 60 || !supported() || askBlocked() || state === 'denied' || state === 'on') return clearInterval(askTimer);
+    if (state !== 'off' || !eligible() || document.hidden) return;
+    if (document.getElementById('sheet') || document.getElementById('a2hs') || typeof sheet !== 'function') return;   // non sovrapporre altre finestre
+    clearInterval(askTimer);
+    askSet(Date.now() + 864e5);   // se la chiude toccando fuori, non la rivede prima di domani
+    const txt = isMemberNow() ? 'Ti avvisiamo quando la tua squadra fissa una partita o inserisce un risultato.'
+                              : 'Ti avvisiamo quando una delle tue squadre preferite fissa una partita o inserisce un risultato.';
+    sheet('<h2 style="margin-top:0">Vuoi ricevere gli avvisi?</h2><p class="mu">' + txt + ' Puoi cambiare idea quando vuoi da Profilo → Aspetto.</p>'
+      + '<div class="row" style="margin-top:14px"><button class="p" onclick="pushAskYes()">Attiva notifiche</button><button onclick="pushAskLater()">Più tardi</button></div>'
+      + '<p style="margin:12px 0 0;text-align:center"><button class="s" onclick="pushAskNever()">Non chiedere più</button></p>');
+  }
+
+  addEventListener('load', () => {
+    if (!supported()) return;
+    setTimeout(refresh, 800);
+    askTimer = setInterval(maybeAsk, 3000);
+  });
 })();
