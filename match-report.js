@@ -383,19 +383,29 @@ function drawPill(ctx,O,cx,cy,size){ctx.font=`700 ${size}px Oswald, sans-serif`;
 function resultReport(ctx,x,R,P,top,limit,o={}){
   const L=170,Rt=910,nick=id=>(S.members.find(m=>String(m.id)===String(id))||{}).nick||'?',known=id=>S.members.some(m=>String(m.id)===String(id)),
     evx=x.events||[],stx=x.stats||{},goalRows=[],cardRows=[],saveRows=[];
-  // Gol: una riga per gol, in ordine di partita, con minuto e assist. Gol senza cronaca: una riga con il numero.
-  R.scorers.forEach(e=>{const id=String(e.m.id);let c=0;
-    evx.forEach((v,i)=>{if(v.k==='g'&&String(v.p)===id&&c<e.g){c++;goalRows.push({k:'g',name:(e.m.nick||e.m.name||'').toUpperCase(),min:v.m,cnt:0,i,as:v.a?nick(v.a).toUpperCase():''})}});
-    if(e.g>c)goalRows.push({k:'g',name:(e.m.nick||e.m.name||'').toUpperCase(),min:0,cnt:e.g-c,i:1e6,as:''})});
-  evx.forEach((v,i)=>{
-    if((v.k==='y'||v.k==='r')&&known(v.p))cardRows.push({k:v.k,name:nick(v.p).toUpperCase(),min:v.m,i});
-    else if(v.k==='ps')saveRows.push({k:'ps',name:known(v.gk)?nick(v.gk).toUpperCase():'PORTIERE',min:v.m,i});
-  });
-  // Eventi inseriti a mano (solo statistiche, senza cronaca): restano visibili, senza minuto.
-  Object.keys(stx).forEach(id=>{if(!known(id))return;
-    for(const k of ['y','r']){const have=evx.filter(v=>v.k===k&&String(v.p)===String(id)).length;for(let c=have;c<(+stx[id][k]||0);c++)cardRows.push({k,name:nick(id).toUpperCase(),min:0,i:1e6})}
-    const hs=evx.filter(v=>v.k==='ps'&&String(v.gk)===String(id)).length;for(let c=hs;c<(+stx[id].ps||0);c++)saveRows.push({k:'ps',name:nick(id).toUpperCase(),min:0,i:1e6})});
-  [goalRows,cardRows,saveRows].forEach(a=>a.sort((p,q)=>p.i-q.i));
+  const MIN=o.minutes!==false,up=t=>String(t||'').toUpperCase();
+  if(MIN){
+    // Con i minuti: una riga per evento, in ordine di partita. Eventi senza cronaca: una riga con il numero.
+    R.scorers.forEach(e=>{const id=String(e.m.id);let c=0;
+      evx.forEach((v,i)=>{if(v.k==='g'&&String(v.p)===id&&c<e.g){c++;goalRows.push({k:'g',name:up(e.m.nick||e.m.name),bt:v.m?v.m+"'":'•',i,as:v.a?up(nick(v.a)):''})}});
+      if(e.g>c)goalRows.push({k:'g',name:up(e.m.nick||e.m.name),bt:String(e.g-c),i:1e6,as:''})});
+    evx.forEach((v,i)=>{
+      if((v.k==='y'||v.k==='r')&&known(v.p))cardRows.push({k:v.k,name:up(nick(v.p)),bt:v.m?v.m+"'":'•',i});
+      else if(v.k==='ps')saveRows.push({k:'ps',name:known(v.gk)?up(nick(v.gk)):'PORTIERE',bt:v.m?v.m+"'":'•',i});
+    });
+    // Eventi inseriti a mano (solo statistiche, senza cronaca): restano visibili, senza minuto.
+    Object.keys(stx).forEach(id=>{if(!known(id))return;
+      for(const k of ['y','r']){const have=evx.filter(v=>v.k===k&&String(v.p)===String(id)).length;for(let c=have;c<(+stx[id][k]||0);c++)cardRows.push({k,name:up(nick(id)),bt:'•',i:1e6})}
+      const hs=evx.filter(v=>v.k==='ps'&&String(v.gk)===String(id)).length;for(let c=hs;c<(+stx[id].ps||0);c++)saveRows.push({k:'ps',name:up(nick(id)),bt:'•',i:1e6})});
+    [goalRows,cardRows,saveRows].forEach(a=>a.sort((p,q)=>p.i-q.i));
+  }else{
+    // Senza minuti: una riga per giocatore, con il numero di gol / cartellini / parate e gli assist.
+    R.scorers.forEach(e=>{const id=String(e.m.id),as=evx.filter(v=>v.k==='g'&&String(v.p)===id&&v.a).map(v=>up(nick(v.a)));
+      goalRows.push({k:'g',name:up(e.m.nick||e.m.name),bt:String(e.g),as:as.join(', ')})});
+    const cnt=n=>n>1?'×'+n:'';
+    for(const k of ['y','r'])Object.keys(stx).forEach(id=>{const n=+stx[id][k]||0;if(n>0&&known(id))cardRows.push({k,name:up(nick(id)),bt:cnt(n)})});
+    Object.keys(stx).forEach(id=>{const n=+stx[id].ps||0;if(n>0&&known(id))saveRows.push({k:'ps',name:up(nick(id)),bt:cnt(n)})});
+  }
   const secs=[{t:'MARCATORI',rows:goalRows,hid:0},{t:'CARTELLINI',rows:cardRows,hid:0},{t:'RIGORI PARATI',rows:saveRows,hid:0}].filter((q,n)=>n===0||q.rows.length);
   const rh=r=>r.k==='g'?(r.as?94:64):54;
   // Altezza totale per un certo numero di colonne e scala.
@@ -424,9 +434,9 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
     let p=px*.8;while(p>px*.4&&meas(p)>w)p*=.95;ctx.font=fa(wt,p);return {px:p,lines:[reportFit(ctx,text,w)]}};
   const drawRow=(r,cx,y,h)=>{
     ctx.textAlign='left';
-    const bt=r.min?r.min+"'":r.cnt?String(r.cnt):'•',big=r.k==='g';
-    ctx.font=f('700',big?32:28);const bw=Math.max((big?56:52)*sc,ctx.measureText(bt).width+(big?28:26)*sc),bh=(big?52:44)*sc;
-    const nx=cx+(big?68:52)*sc,maxW=cw-(nx-cx)-bw-14*sc;
+    const bt=r.bt||'',big=r.k==='g';
+    ctx.font=f('700',big?32:28);const bw=bt?Math.max((big?56:52)*sc,ctx.measureText(bt).width+(big?28:26)*sc):0,bh=(big?52:44)*sc;
+    const nx=cx+(big?68:52)*sc,maxW=cw-(nx-cx)-bw-(bt?14*sc:0);
     if(big){drawBall(ctx,cx+26*sc,y+30*sc,22*sc)}
     else if(r.k==='ps'){ctx.fillStyle='#2fbf71';reportRoundRect(ctx,cx,y+6*sc,38*sc,38*sc,19*sc);ctx.fill();ctx.fillStyle='#101216';ctx.font=f('700',24);ctx.textAlign='center';ctx.fillText('P',cx+19*sc,y+33*sc)}
     else{ctx.fillStyle=r.k==='y'?'#f5c518':'#e5484d';reportRoundRect(ctx,cx+5*sc,y+6*sc,28*sc,38*sc,5*sc);ctx.fill()}
@@ -436,8 +446,8 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
     if(two){const sp=nf.px*1.06,c=(big?30:25)*sc,b1=c-sp/2+nf.px*.35;nf.lines.forEach((l,k)=>ctx.fillText(l,nx,y+b1+k*sp))}
     else ctx.fillText(nf.lines[0],nx,y+(big?43:36)*sc);
     if(big&&r.as){const aw=cw-(nx-cx)-14*sc,af=fitName('ASSIST: '+r.as,24*sc,aw,'500',false);ctx.globalAlpha=.7;ctx.font=fa('500',af.px);ctx.fillText(af.lines[0],nx,y+(two?76:70)*sc);ctx.globalAlpha=1}
-    ctx.font=f('700',big?32:28);ctx.fillStyle=P.accent;reportRoundRect(ctx,cx+cw-bw,y+(big?4:3)*sc,bw,bh,bh/2);ctx.fill();
-    ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,cx+cw-bw/2,y+(big?41:34)*sc);
+    if(bt){ctx.font=f('700',big?32:28);ctx.fillStyle=P.accent;reportRoundRect(ctx,cx+cw-bw,y+(big?4:3)*sc,bw,bh,bh/2);ctx.fill();
+      ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,cx+cw-bw/2,y+(big?41:34)*sc)}
     if(big){ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(cx,y+h*sc-6*sc,cw,2);ctx.globalAlpha=1}};
   let y=top;
   secs.forEach((q,n)=>{
@@ -472,14 +482,14 @@ async function resultStoryBlob(x,options={}){
     const pt=chalk?py+325:py+290;ctx.save();ctx.globalAlpha=chalk?.88:1;ctx.fillStyle=chalk?bg:'rgba(8,10,12,.55)';reportRoundRect(ctx,120,pt,840,py+ph-30-pt,28);ctx.fill();ctx.restore();
     if(chalk){drawScore(ctx,R,P,W/2,py+230,240,P.text);drawPill(ctx,O,W/2,py+290,32)}
     else{ctx.fillStyle='rgba(8,10,12,.8)';reportRoundRect(ctx,170,py+25,740,210,34);ctx.fill();ctx.strokeStyle=P.accent;ctx.lineWidth=4;ctx.stroke();drawScore(ctx,R,P,W/2,py+190,170,P.text);drawPill(ctx,O,W/2,py+235,30)}
-    resultReport(ctx,x,R,P,pt+46,py+ph-50,{empty});pres(1480);formationFooter(ctx,P.accent,1838,O.foot);
+    resultReport(ctx,x,R,P,pt+46,py+ph-50,{empty,minutes:options.minutes});pres(1480);formationFooter(ctx,P.accent,1838,O.foot);
   }else if(layout==='spogliatoio'){
     for(let i=0;i<W;i+=180){ctx.fillStyle=i/180%2?'rgba(255,255,255,.035)':'rgba(0,0,0,.12)';ctx.fillRect(i,0,180,H);ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(i,0,3,H)}
     const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,'rgba(0,0,0,.35)');shade.addColorStop(.4,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.4)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
     formationHeader(ctx,x,team,P,logos,140,P.text,true,kick);
     const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;reportRoundRect(ctx,190,410,700,220,30);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=5;ctx.stroke();
     drawScore(ctx,R,P,W/2,570,170,ink,ink);drawPill(ctx,O,W/2,632,30);
-    resultReport(ctx,x,R,P,730,1500,{empty});pres(1540);formationFooter(ctx,P.accent,1838,O.foot);
+    resultReport(ctx,x,R,P,730,1500,{empty,minutes:options.minutes});pres(1540);formationFooter(ctx,P.accent,1838,O.foot);
   }else{
     const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,560);ctx.lineTo(0,720);ctx.closePath();ctx.fill();
     ctx.save();ctx.globalAlpha=.12;ctx.fillStyle=ink;ctx.font='700 300px Oswald, sans-serif';ctx.textAlign='left';ctx.fillText('FULL',-20,330);ctx.fillText('TIME',560,640);ctx.restore();
@@ -487,14 +497,14 @@ async function resultStoryBlob(x,options={}){
     ctx.save();ctx.translate(W/2,150);ctx.rotate(-.05);ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 italic 110px Caveat, cursive';ctx.fillText(R.played?'Result':'Matchday',0,0);ctx.restore();
     formationHeader(ctx,x,team,P,logos,210,ink,false,kick);
     drawScore(ctx,R,P,W/2,870,220,P.text,P.accent);drawPill(ctx,O,W/2,940,32);
-    const b=resultReport(ctx,x,R,P,1030,1760,{empty});if(options.full&&b+40<1660)resultPresent(ctx,R,P,b+40);formationFooter(ctx,P.accent,1850,O.foot);
+    const b=resultReport(ctx,x,R,P,1030,1760,{empty,minutes:options.minutes});if(options.full&&b+40<1660)resultPresent(ctx,R,P,b+40);formationFooter(ctx,P.accent,1850,O.foot);
   }
   return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Immagine non disponibile')),'image/png'));
 }
 async function previewMatch(id){
   document.getElementById('report-dialog')?.close();
   const picker=([k,l])=>`<label>${l}<input id="report-${k}" type="color"></label>`,dialog=document.createElement('dialog');dialog.id='report-dialog';
-  dialog.innerHTML=`<h2 style="margin:0">Condividi risultato</h2><p class="mu">Storia 9:16 con risultato, elenco marcatori e cartellini, nello stesso stile della formazione.</p><div class="seg" id="report-layouts">${RESULT_LAYOUTS.map(([k,n])=>`<button type="button" data-l="${k}">${n}</button>`).join('')}</div><fieldset class="report-colors"><legend>Colori dell’immagine</legend>${FORMATION_COLORS.slice(0,3).map(picker).join('')}</fieldset><fieldset class="report-colors" style="display:none"><legend>Colori delle maglie</legend>${FORMATION_COLORS.slice(3).map(picker).join('')}</fieldset><button id="report-reset" class="s">Ripristina lo stile del profilo</button><label class="report-full"><input id="report-full" type="checkbox"> Mostra anche l’elenco dei presenti</label><p id="report-status" role="status">Generazione immagine…</p><div id="report-image" aria-busy="true"></div><div class="row"><button id="report-share" class="p" disabled>Condividi immagine</button><button id="report-download" disabled>Scarica PNG</button><button id="report-close">Chiudi</button></div>`;
+  dialog.innerHTML=`<h2 style="margin:0">Condividi risultato</h2><p class="mu">Storia 9:16 con risultato, elenco marcatori e cartellini, nello stesso stile della formazione.</p><div class="seg" id="report-layouts">${RESULT_LAYOUTS.map(([k,n])=>`<button type="button" data-l="${k}">${n}</button>`).join('')}</div><fieldset class="report-colors"><legend>Colori dell’immagine</legend>${FORMATION_COLORS.slice(0,3).map(picker).join('')}</fieldset><fieldset class="report-colors" style="display:none"><legend>Colori delle maglie</legend>${FORMATION_COLORS.slice(3).map(picker).join('')}</fieldset><button id="report-reset" class="s">Ripristina lo stile del profilo</button><label class="report-full"><input id="report-min" type="checkbox"> Mostra i minuti di gol e cartellini</label><p class="mu" style="margin:-6px 0 8px">Se lo togli, i gol e i cartellini dello stesso giocatore sono raggruppati in una riga sola: utile nelle partite con tanti eventi.</p><label class="report-full"><input id="report-full" type="checkbox"> Mostra anche l’elenco dei presenti</label><p id="report-status" role="status">Generazione immagine…</p><div id="report-image" aria-busy="true"></div><div class="row"><button id="report-share" class="p" disabled>Condividi immagine</button><button id="report-download" disabled>Scarica PNG</button><button id="report-close">Chiudi</button></div>`;
   document.body.append(dialog);const q=s=>dialog.querySelector(s);q('#report-close').onclick=()=>dialog.close();dialog.showModal();
   let url,file,version=0;dialog.addEventListener('close',()=>{version++;if(url)URL.revokeObjectURL(url);dialog.remove()},{once:true});
   try{
@@ -502,16 +512,16 @@ async function previewMatch(id){
     const team=S.teams.find(t=>t.id===x.tid)||{},defaults=formationDefaults(team,await reportPalette(team));if(!dialog.open)return;
     const pref=teamShareStyle(team,'result');
     let layout=RESULT_LAYOUTS.some(([k])=>k===pref.layout)?pref.layout:'campo';
-    const setColors=c=>{for(const [k] of FORMATION_COLORS)q('#report-'+k).value=/^#[0-9a-f]{6}$/i.test(c[k]||'')?c[k]:defaults[k]};setColors(pref.palette||defaults);q('#report-full').checked=!!pref.full;
+    const setColors=c=>{for(const [k] of FORMATION_COLORS)q('#report-'+k).value=/^#[0-9a-f]{6}$/i.test(c[k]||'')?c[k]:defaults[k]};setColors(pref.palette||defaults);q('#report-full').checked=!!pref.full;let minPref=true;try{minPref=localStorage.getItem('reportMinutes')!=='0'}catch(e){}q('#report-min').checked=minPref;
     const markLayout=()=>dialog.querySelectorAll('#report-layouts button').forEach(b=>b.classList.toggle('on',b.dataset.l===layout));markLayout();
     const filename='risultato-'+x.date+'-'+String(x.opp||'').replace(/[^a-zA-Z0-9à-ÿ_-]/g,'-')+'.png';
     const download=()=>{if(!url)return;const a=document.createElement('a');a.href=url;a.download=filename;a.click()};q('#report-download').onclick=download;
     const renderImage=async()=>{
       const current=++version;q('#report-share').disabled=q('#report-download').disabled=true;q('#report-image').setAttribute('aria-busy','true');q('#report-status').textContent='Aggiornamento immagine…';
       try{
-        const palette=Object.fromEntries(FORMATION_COLORS.map(([k])=>[k,q('#report-'+k).value])),full=q('#report-full').checked;
+        const palette=Object.fromEntries(FORMATION_COLORS.map(([k])=>[k,q('#report-'+k).value])),full=q('#report-full').checked,minutes=q('#report-min').checked;
         
-        const blob=await resultStoryBlob(x,{palette,layout,full});if(!dialog.open||current!==version)return;
+        const blob=await resultStoryBlob(x,{palette,layout,full,minutes});if(!dialog.open||current!==version)return;
         const previous=url;url=URL.createObjectURL(blob);file=new File([blob],filename,{type:'image/png'});
         const img=new Image();img.src=url;img.alt='Risultato '+(team.name||'Squadra')+' – '+(x.opp||'')+' in formato storia';img.style.cssText='display:block;height:min(60vh,640px);width:auto;max-width:100%;margin:0 auto;border-radius:12px';
         q('#report-image').replaceChildren(img);if(previous)URL.revokeObjectURL(previous);
@@ -522,7 +532,7 @@ async function previewMatch(id){
       finally{if(dialog.open&&current===version)q('#report-image').setAttribute('aria-busy','false')}
     };
     dialog.querySelectorAll('#report-layouts button').forEach(b=>b.onclick=()=>{layout=b.dataset.l;markLayout();renderImage()});
-    FORMATION_COLORS.forEach(([k])=>q('#report-'+k).addEventListener('input',renderImage));q('#report-full').onchange=renderImage;q('#report-reset').onclick=()=>{setColors(pref.palette||defaults);renderImage()};
+    FORMATION_COLORS.forEach(([k])=>q('#report-'+k).addEventListener('input',renderImage));q('#report-full').onchange=renderImage;q('#report-min').onchange=()=>{try{localStorage.setItem('reportMinutes',q('#report-min').checked?'1':'0')}catch(e){}renderImage()};q('#report-reset').onclick=()=>{setColors(pref.palette||defaults);renderImage()};
     await renderImage();
   }catch{if(dialog.open)q('#report-status').textContent='Impossibile generare l’immagine. Chiudi e riprova.'}
 }
