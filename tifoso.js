@@ -12,6 +12,10 @@ const saveLocal=a=>{try{localStorage.setItem("favs",JSON.stringify(a))}catch(e){
 // con un profilo tifoso le squadre preferite si salvano anche sull'account, così le ritrovi su ogni telefono
 const saveFavs=a=>{saveLocal(a);if(F.dbo&&F.uid)F.dbo.doc("profiles/"+F.uid).update({favs:a}).catch(()=>toast("Preferiti non salvati sull’account. Riprova."))};
 window.fanFavsRaw=()=>favs();
+// ultime 3 squadre/tornei aperti dalla ricerca (solo su questo dispositivo)
+const recents=()=>{try{const a=JSON.parse(localStorage.getItem("recent")||"[]");return Array.isArray(a)?a.filter(r=>r&&((r.k==="t"&&ID(r.id))||(r.k==="c"&&typeof r.name==="string"&&r.name))).slice(0,3):[]}catch(e){return[]}};
+const addRecent=r=>{try{const key=x=>x.k+"|"+(x.k==="t"?x.id:x.name);const a=[r].concat(recents().filter(x=>key(x)!==key(r))).slice(0,3);localStorage.setItem("recent",JSON.stringify(a))}catch(e){}};
+window.fanClearRecent=function(){try{localStorage.removeItem("recent")}catch(e){}upd()};
 const isFav=id=>favs().some(f=>f.id===id);
 const rpc=async(n,a)=>{const r=await sb.rpc(n,a);if(r.error)throw r.error;return r.data};
 const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -83,17 +87,19 @@ window.fanOpen=async function(id,mid){
   try{await load(id)}catch(e){F.busy=false;render();
     if(!S.teams.some(t=>t.id===id)){toast("Squadra non disponibile. Controlla la connessione.");return}}
   F.busy=false;
+  {const tt=S.teams.find(x=>x.id===id);if(tt)addRecent({k:"t",id,name:String(tt.name||"Squadra").slice(0,80),logo:/^https:\/\//.test(tt.logo||"")?tt.logo:""})}
   const ss=[...new Set(S.matches.filter(x=>x.tid===id&&x.date).map(x=>seasonOf(x.date)))].sort().reverse(),a=activeSeason();
   if(ss.length&&a!=="all"&&!ss.includes(a))S.season=ss[0];
   S.tid=id;S.tab="cal";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
   render()};
 window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
 window.fanHome=function(){S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
-window.fanTour=async function(i){
-  const t=F.res&&F.res.tours[i];if(!t)return;F.busy=true;render();
-  try{const d=await rpc("fan_tournament",{n:t.name});F.tour={name:t.name,teams:d.teams||[],matches:d.matches||[]};F.ts=null}
+window.fanTourName=async function(name){
+  if(!name)return;F.busy=true;render();
+  try{const d=await rpc("fan_tournament",{n:name});F.tour={name,teams:d.teams||[],matches:d.matches||[]};F.ts=null;addRecent({k:"c",name:String(name).slice(0,80)})}
   catch(e){toast("Torneo non disponibile. Controlla la connessione.")}
   F.busy=false;render()};
+window.fanTour=function(i){const t=F.res&&F.res.tours[i];if(t)return window.fanTourName(t.name)};
 window.fanTs=function(s){F.ts=s;render()};
 window.fanFav=function(id){
   let a=favs();
@@ -127,9 +133,12 @@ function bodyHtml(){
   const q=F.q.trim();
   if(q.length===1)return `<p class="mu shint">Scrivi almeno 2 lettere per cercare.</p>`;
   if(q.length<2){
-    const fv=favs().map(f=>S.teams.find(t=>t.id===f.id)||f);
-    return fv.length?`<h2>Le tue squadre preferite</h2>${fv.map(t=>tcard(t,true)).join("")}`
-      :`<div class="card mu" style="white-space:normal">Nessuna squadra preferita per ora. Cerca una squadra qui sopra e tocca la stella ${ic("star")} per ritrovarla qui, con la prossima partita e la diretta.</div>`}
+    const fa=favs(),fv=fa.map(f=>S.teams.find(t=>t.id===f.id)||f),rc=recents().filter(r=>r.k==="c"||!fa.some(f=>f.id===r.id));
+    const rcard=r=>r.k==="t"?tcard(S.teams.find(t=>t.id===r.id)||r,false)
+      :`<div class="card tcard" data-n="${esc(r.name)}" onclick="fanTourName(this.dataset.n)"><div class="crest">${ic("trophy")}</div><div class="mid"><b class="hd" style="font-size:20px">${esc(r.name)}</b><div class="mu">Torneo</div></div>${ic("chev")}</div>`;
+    const rh=rc.length?`<div class="row" style="align-items:center"><h2 style="flex:1">Ricerche recenti</h2><button class="s" onclick="fanClearRecent()">Cancella</button></div>${rc.map(rcard).join("")}`:"";
+    const fh=fv.length?`<h2>Le tue squadre preferite</h2>${fv.map(t=>tcard(t,true)).join("")}`:"";
+    return rh+fh||`<div class="card mu" style="white-space:normal">Nessuna squadra preferita per ora. Cerca una squadra qui sopra e tocca la stella ${ic("star")} per ritrovarla qui, con la prossima partita e la diretta.</div>`}
   if(F.loading&&!F.res)return `<p class="mu">Cerco…</p>`;
   const r=F.res||{teams:[],tours:[]};
   if(r.err)return `<div class="card" style="white-space:normal">${r.err==="PGRST202"?"La modalità tifoso non è ancora attiva: va eseguito lo script <b>tifoso.sql</b> su Supabase.":"Ricerca non riuscita. Controlla la connessione e riprova."}</div>`;

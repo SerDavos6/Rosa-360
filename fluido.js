@@ -4,7 +4,7 @@
 
 // ---------- stile ----------
 (function(){const st=document.createElement('style');st.textContent=`
-#boot{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#fdd30b;pointer-events:none;transition:opacity .3s ease}
+#boot{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#0d1014;pointer-events:none;transition:opacity .3s ease}
 #boot img{width:132px;height:132px;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,.18);animation:bootp 1.4s ease-in-out infinite}
 #boot.off{opacity:0}
 @keyframes bootp{50%{transform:scale(1.05)}}
@@ -67,10 +67,10 @@ function fluidDb(db){
 
 // ---------- tutto il resto parte quando la pagina è pronta ----------
 function fluidoStart(){
-  // Avvio giallo con il logo, finché compare la prima schermata vera.
-  const boot=document.createElement('div');boot.id='boot';try{const c=localStorage.getItem('bar');if(/^#[0-9a-f]{6}$/i.test(c||''))boot.style.background=c}catch(e){}boot.innerHTML='<img src="icon-192.png" alt="">';document.body.append(boot);
+  // Avvio scuro con il logo (non giallo: Safari tinge le barre con il colore degli elementi a tutto schermo), finché compare la prima schermata vera.
+  const boot=document.createElement('div');boot.id='boot';boot.innerHTML='<img src="icon-192.png" alt="">';document.body.append(boot);
   const t0=Date.now();let gone=false;
-  const hide=()=>{if(gone)return;gone=true;setTimeout(()=>{boot.classList.add('off');setTimeout(()=>boot.remove(),350)},Math.max(0,450-(Date.now()-t0)))};
+  const hide=()=>{if(gone)return;gone=true;setTimeout(()=>{boot.classList.add('off');setTimeout(()=>{boot.remove();try{const m=document.querySelector('meta[name=theme-color]');if(m)m.replaceWith(m.cloneNode())}catch(e){}},350)},Math.max(0,450-(Date.now()-t0)))};
   const app=document.getElementById('app');
   const mo=new MutationObserver(()=>{if(app.querySelector('.pg:not([aria-busy])'))hide()});
   mo.observe(app,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-busy']});
