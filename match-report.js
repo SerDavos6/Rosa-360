@@ -381,46 +381,59 @@ function drawScore(ctx,R,P,cx,base,size,ink,dash){
 }
 function drawPill(ctx,O,cx,cy,size){ctx.font=`700 ${size}px Oswald, sans-serif`;ctx.textAlign='center';const w=ctx.measureText(O.label).width+size*2.2,h=size*1.9;ctx.fillStyle=O.color;reportRoundRect(ctx,cx-w/2,cy-h/2,w,h,h/2);ctx.fill();ctx.fillStyle='#101216';ctx.fillText(O.label,cx,cy+size*.36)}
 function resultReport(ctx,x,R,P,top,limit,o={}){
-  const L=170,Rt=910,nick=id=>(S.members.find(m=>String(m.id)===String(id))||{}).nick||'?',ev=(x.events||[]).filter(e=>e.k==='g'&&e.a);
-  const known=id=>S.members.some(m=>String(m.id)===String(id)),evx=x.events||[],stx=x.stats||{},cardRows=[],saveRows=[];
+  const L=170,Rt=910,nick=id=>(S.members.find(m=>String(m.id)===String(id))||{}).nick||'?',known=id=>S.members.some(m=>String(m.id)===String(id)),
+    evx=x.events||[],stx=x.stats||{},goalRows=[],cardRows=[],saveRows=[];
+  // Gol: una riga per gol, in ordine di partita, con minuto e assist. Gol senza cronaca: una riga con il numero.
+  R.scorers.forEach(e=>{const id=String(e.m.id);let c=0;
+    evx.forEach((v,i)=>{if(v.k==='g'&&String(v.p)===id&&c<e.g){c++;goalRows.push({k:'g',name:(e.m.nick||e.m.name||'').toUpperCase(),min:v.m,cnt:0,i,as:v.a?nick(v.a).toUpperCase():''})}});
+    if(e.g>c)goalRows.push({k:'g',name:(e.m.nick||e.m.name||'').toUpperCase(),min:0,cnt:e.g-c,i:1e6,as:''})});
   evx.forEach((v,i)=>{
-    if((v.k==='y'||v.k==='r')&&known(v.p))cardRows.push({k:v.k,name:nick(v.p),min:v.m,i});
-    else if(v.k==='ps')saveRows.push({k:'ps',name:known(v.gk)?nick(v.gk):'PORTIERE',min:v.m,i,gk:v.gk});
+    if((v.k==='y'||v.k==='r')&&known(v.p))cardRows.push({k:v.k,name:nick(v.p).toUpperCase(),min:v.m,i});
+    else if(v.k==='ps')saveRows.push({k:'ps',name:known(v.gk)?nick(v.gk).toUpperCase():'PORTIERE',min:v.m,i});
   });
   // Eventi inseriti a mano (solo statistiche, senza cronaca): restano visibili, senza minuto.
   Object.keys(stx).forEach(id=>{if(!known(id))return;
-    for(const k of ['y','r']){const have=evx.filter(v=>v.k===k&&String(v.p)===String(id)).length;for(let c=have;c<(+stx[id][k]||0);c++)cardRows.push({k,name:nick(id),min:0,i:1e6})}
-    const hs=evx.filter(v=>v.k==='ps'&&String(v.gk)===String(id)).length;for(let c=hs;c<(+stx[id].ps||0);c++)saveRows.push({k:'ps',name:nick(id),min:0,i:1e6})});
-  cardRows.sort((p,q)=>p.i-q.i);saveRows.sort((p,q)=>p.i-q.i);
-  const CAP=6,cardShow=cardRows.slice(0,CAP),saveShow=saveRows.slice(0,CAP),
-    sec=(a,t)=>a.length?72+a.length*54+(t>a.length?44:0):0,reserve=sec(cardShow,cardRows.length)+sec(saveShow,saveRows.length);
-  resultLabel(ctx,'MARCATORI',top,P.text);let y=top+34;ctx.textAlign='center';
-  if(!R.scorers.length){ctx.fillStyle=P.text;ctx.globalAlpha=.6;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(o.empty||'',540,y+40);ctx.globalAlpha=1;y+=80}
-  else{
-    const evAll=x.events||[],rows=[];
-    R.scorers.forEach(e=>{const id=String(e.m.id);let c=0;
-      evAll.forEach((v,i)=>{if(v.k==='g'&&String(v.p)===id&&c<e.g){c++;rows.push({e,i,min:v.m,cnt:0,as:v.a?[nick(v.a)]:[]})}});
-      if(e.g>c)rows.push({e,i:1e6,min:0,cnt:e.g-c,as:[]})});
-    rows.sort((p,q)=>p.i-q.i);rows.forEach(r=>{r.h=r.as.length?94:64});
-    let n=0,acc=0;while(n<rows.length&&y+acc+rows[n].h+(n+1<rows.length?44:0)<=limit-reserve)acc+=rows[n++].h;n=Math.max(n,1);
-    rows.slice(0,n).forEach(({e,as,h,min,cnt})=>{
-      drawBall(ctx,L+26,y+30,22);ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='700 42px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(e.m.nick||e.m.name||'').toUpperCase(),520),L+68,y+43);
-      if(as.length){ctx.globalAlpha=.7;ctx.font='500 24px Oswald, sans-serif';ctx.fillText(reportFit(ctx,'ASSIST: '+as.join(', ').toUpperCase(),620),L+68,y+70);ctx.globalAlpha=1}
-      {const bt=min?min+"'":cnt?String(cnt):'•';ctx.font='700 32px Oswald, sans-serif';const bw=Math.max(56,ctx.measureText(bt).width+28);
-        ctx.fillStyle=P.accent;reportRoundRect(ctx,Rt-bw,y+4,bw,52,26);ctx.fill();ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,Rt-bw/2,y+41)}
-      ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(L,y+h-6,Rt-L,2);ctx.globalAlpha=1;y+=h});
-    if(n<rows.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+(rows.length-n)+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}
-  }
-  const drawEv=(a,tot,title)=>{if(!a.length)return;y+=28;resultLabel(ctx,title,y+22,P.text);y+=44;
-    a.forEach(r=>{
-      if(r.k==='ps'){ctx.fillStyle='#2fbf71';reportRoundRect(ctx,L,y+6,38,38,19);ctx.fill();ctx.fillStyle='#101216';ctx.font='700 24px Oswald, sans-serif';ctx.textAlign='center';ctx.fillText('P',L+19,y+33)}
-      else{ctx.fillStyle=r.k==='y'?'#f5c518':'#e5484d';reportRoundRect(ctx,L+5,y+6,28,38,5);ctx.fill()}
-      ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(reportFit(ctx,r.name.toUpperCase(),Rt-L-170),L+52,y+36);
-      const bt=r.min?r.min+"'":'•';ctx.font='700 28px Oswald, sans-serif';const bw=Math.max(52,ctx.measureText(bt).width+26);
-      ctx.fillStyle=P.accent;reportRoundRect(ctx,Rt-bw,y+3,bw,44,22);ctx.fill();ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,Rt-bw/2,y+34);
-      y+=54});
-    if(tot>a.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+(tot-a.length)+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}};
-  drawEv(cardShow,cardRows.length,'CARTELLINI');drawEv(saveShow,saveRows.length,'RIGORI PARATI');
+    for(const k of ['y','r']){const have=evx.filter(v=>v.k===k&&String(v.p)===String(id)).length;for(let c=have;c<(+stx[id][k]||0);c++)cardRows.push({k,name:nick(id).toUpperCase(),min:0,i:1e6})}
+    const hs=evx.filter(v=>v.k==='ps'&&String(v.gk)===String(id)).length;for(let c=hs;c<(+stx[id].ps||0);c++)saveRows.push({k:'ps',name:nick(id).toUpperCase(),min:0,i:1e6})});
+  [goalRows,cardRows,saveRows].forEach(a=>a.sort((p,q)=>p.i-q.i));
+  const secs=[{t:'MARCATORI',rows:goalRows,hid:0},{t:'CARTELLINI',rows:cardRows,hid:0},{t:'RIGORI PARATI',rows:saveRows,hid:0}].filter((q,n)=>n===0||q.rows.length);
+  const rh=r=>r.k==='g'?(r.as?94:64):54;
+  // Altezza totale per un certo numero di colonne e scala.
+  const secH=(q,cols,sc,first)=>{
+    let h=first?34:72;
+    if(!q.rows.length)h+=80;
+    else if(cols===1)h+=q.rows.reduce((a,r)=>a+rh(r)*sc,0);
+    else for(let i=0;i<q.rows.length;i+=2)h+=Math.max(rh(q.rows[i]),q.rows[i+1]?rh(q.rows[i+1]):0)*sc;
+    return h+(q.hid?44:0)};
+  const total=(cols,sc)=>secs.reduce((a,q,n)=>a+secH(q,cols,sc,n===0),0),avail=limit-top;
+  // Prima si prova a stare in una colonna, poi si rimpicciolisce, poi due colonne: tutti gli eventi restano visibili.
+  const tries=[[1,1],[1,.9],[1,.8],[1,.7],[2,.9],[2,.8],[2,.7],[2,.6],[2,.5]];
+  let pick=tries.find(([c,sc])=>total(c,sc)<=avail);
+  if(!pick){pick=tries[tries.length-1];
+    // Ultima risorsa (centinaia di eventi): si nasconde l'ultimo evento della sezione più lunga con "+N ALTRI".
+    while(total(pick[0],pick[1])>avail){const q=secs.reduce((a,b)=>(b.rows.length>a.rows.length?b:a),secs[0]);if(q.rows.length<=1)break;q.rows.pop();q.hid++}}
+  const [cols,sc]=pick,gap=30,cw=cols===1?Rt-L:(Rt-L-gap)/2,f=(w,px)=>`${w} ${(px*sc).toFixed(1)}px Oswald, sans-serif`;
+  const drawRow=(r,cx,y,h)=>{
+    ctx.textAlign='left';
+    const bt=r.min?r.min+"'":r.cnt?String(r.cnt):'•',big=r.k==='g';
+    ctx.font=f('700',big?32:28);const bw=Math.max((big?56:52)*sc,ctx.measureText(bt).width+(big?28:26)*sc),bh=(big?52:44)*sc;
+    const nx=cx+(big?68:52)*sc,maxW=cw-(nx-cx)-bw-14*sc;
+    if(big){drawBall(ctx,cx+26*sc,y+30*sc,22*sc)}
+    else if(r.k==='ps'){ctx.fillStyle='#2fbf71';reportRoundRect(ctx,cx,y+6*sc,38*sc,38*sc,19*sc);ctx.fill();ctx.fillStyle='#101216';ctx.font=f('700',24);ctx.textAlign='center';ctx.fillText('P',cx+19*sc,y+33*sc)}
+    else{ctx.fillStyle=r.k==='y'?'#f5c518':'#e5484d';reportRoundRect(ctx,cx+5*sc,y+6*sc,28*sc,38*sc,5*sc);ctx.fill()}
+    ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font=f(big?'700':'500',big?42:30);ctx.fillText(reportFit(ctx,r.name,maxW),nx,y+(big?43:36)*sc);
+    if(big&&r.as){ctx.globalAlpha=.7;ctx.font=f('500',24);ctx.fillText(reportFit(ctx,'ASSIST: '+r.as,cw-(nx-cx)-14*sc),nx,y+70*sc);ctx.globalAlpha=1}
+    ctx.font=f('700',big?32:28);ctx.fillStyle=P.accent;reportRoundRect(ctx,cx+cw-bw,y+(big?4:3)*sc,bw,bh,bh/2);ctx.fill();
+    ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,cx+cw-bw/2,y+(big?41:34)*sc);
+    if(big){ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(cx,y+h*sc-6*sc,cw,2);ctx.globalAlpha=1}};
+  let y=top;
+  secs.forEach((q,n)=>{
+    if(n===0){resultLabel(ctx,q.t,y,P.text);y+=34}else{y+=28;resultLabel(ctx,q.t,y+22,P.text);y+=44}
+    if(!q.rows.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.6;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(o.empty||'',540,y+40);ctx.globalAlpha=1;y+=80}
+    else for(let i=0;i<q.rows.length;i+=cols){
+      const pair=q.rows.slice(i,i+cols),h=Math.max(...pair.map(rh));
+      pair.forEach((r,k)=>drawRow(r,L+k*(cw+gap),y,h));y+=h*sc}
+    if(q.hid){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+q.hid+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}});
   return y;
 }
 function resultPresent(ctx,R,P,top){
