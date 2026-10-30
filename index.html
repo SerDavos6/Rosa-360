@@ -590,7 +590,7 @@ function reqView(t){
   <div class="row" style="margin-top:8px"><button class="p" onclick="accept('${r.id}')">Accetta come nuovo</button><button class="d" onclick="del('requests/${r.id}')">Rifiuta</button></div>
   ${free.length?`<label>…oppure collega a un membro già inserito</label><div class="row"><select id="lk${r.id}">${free.map(m=>`<option value="${m.id}">${esc(m.nick)}</option>`).join("")}</select><button onclick="linkReq('${r.id}')">Collega</button></div>`:""}</div>`).join("")}
 function accept(id){const r=S.reqs.find(x=>x.id===id);
-  set("members/"+rid()+rid(),{tid:r.tid,uid:r.uid,nick:r.nick,name:r.name,role:r.role,pos:r.pos,num:r.num,photo:r.photo||"",captain:false});del("requests/"+id)}
+  set("members/"+rid()+rid(),{tid:r.tid,uid:r.uid,nick:r.nick,name:r.name,role:r.role==="dirigente"?"dirigente":"giocatore",pos:r.pos,num:r.num,photo:r.photo||"",captain:false});del("requests/"+id)}
 function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
   S.db.doc("members/"+m).update({uid:r.uid,photo:r.photo||S.members.find(x=>x.id===m).photo||""});del("requests/"+id)}
 
