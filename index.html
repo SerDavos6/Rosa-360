@@ -432,7 +432,7 @@ document.addEventListener("focusout",()=>setTimeout(()=>{const t=document.active
 function posFields(pre){return `<div id="${pre}pf"><div class="row"><div><label>Ruolo in campo</label><select id="${pre}pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></div><div><label>Numero maglia</label><input id="${pre}num" type="number" min="0" max="99"></div></div></div>`}
 function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1>${S.members.some(m=>m.uid===S.uid)?"":`<div class="card"><b>Sei solo un tifoso?</b><p class="mu">Segui le squadre senza farne parte: le tue squadre preferite restano salvate sul tuo account.</p><button class="p" onclick="saveFanProfile()">Continua come tifoso</button></div><p class="mu" style="text-align:center">oppure, se giochi o dirigi una squadra:</p>`}<div class="card">
  <p class="mu">Ti sei registrato con la tua email: ora completa i dati che vedranno le squadre.</p>
- <label>Email di contatto</label><input id="em" type="email" autocomplete="email">
+ ${S.authEmail?`<p class="mu" style="margin:6px 0 0;white-space:normal">Email dell’account: <b>${esc(S.authEmail)}</b></p><input id="em" type="hidden" value="${esc(S.authEmail)}">`:`<label>Email di contatto</label><input id="em" type="email" autocomplete="email">`}
  <label>Soprannome (sulla carta)</label><input id="nk"><label>Nome e cognome</label><input id="nm">
  <label>Ruolo nella squadra</label><select id="rl" onchange="$('rpf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select>
  <div id="rpf">${posFields("r")}</div>
@@ -859,7 +859,7 @@ async function boot(){
   const recovery=window.location.hash.includes("type=recovery");
   if(recovery)return resetPasswordView();
   if(!session){try{if((LINK||localStorage.getItem("fan")==="1")&&typeof fanStart==="function")return fanStart().then(openLink)}catch(e){}return loginView()}
-  S.tab="cal";
+  S.tab="cal";S.authEmail=session.user.email||"";
   makeClaude(session.user.id);
   try{const r=await sb.from("docs").select("data").eq("collection","profiles").eq("id",session.user.id).maybeSingle(),pf=r&&r.data&&r.data.data;
     if(pf&&pf.fan&&typeof fanStart==="function")return fanStart(pf,session.user.id).then(openLink)}catch(e){}
