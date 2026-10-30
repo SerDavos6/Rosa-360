@@ -535,6 +535,21 @@ async function leaveRpc(m){
   if(!r.error){const x=S.members.find(y=>y.id===m.id);if(x){x.uid=null;x.captain=false;x.admin=false}return}
   if(r.error.code==="PGRST202")return S.db.doc("members/"+m.id).update({uid:null,captain:false,admin:false});   // funzione non ancora creata
   throw {code:r.error.code||"errore",message:r.error.message}}
+// ---- elimina squadra (solo chi l'ha creata) ----
+function deleteTeam(){
+  const t=S.teams.find(x=>x.id===S.tid);if(!t||t.owner!==S.uid)return;
+  const n=S.members.filter(m=>m.tid===t.id&&m.uid&&m.uid!==S.uid).length;
+  sheet(`<h2 style="margin-top:0">Eliminare «${esc(t.name)}»?</h2><p class="mu" style="white-space:normal">Spariscono per sempre rosa, partite, statistiche e richieste${n?" di tutti i membri ("+n+(n===1?" persona":" persone")+" oltre a te)":""}. Le partite delle altre squadre contro di voi restano, senza il collegamento. Non si può annullare.</p>
+  <label for="dtn">Per confermare scrivi il nome della squadra</label><input id="dtn" autocomplete="off" data-n="${esc(t.name)}" placeholder="${esc(t.name)}" oninput="$('dtb').disabled=this.value.trim().toLowerCase()!==this.dataset.n.trim().toLowerCase()">
+  <div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="d" id="dtb" disabled onclick="doDeleteTeam('${t.id}')">Elimina squadra</button><button onclick="closeSheet()">Annulla</button></div>`)}
+async function doDeleteTeam(id){
+  const t=S.teams.find(x=>x.id===id);if(!t||t.owner!==S.uid)return;
+  const r=await sb.rpc("delete_team",{p_tid:id,p_name:($("dtn")||{}).value||""});
+  if(r.error)return sheetErr(r.error.code==="PGRST202"?"Sul database manca la funzione: va eseguito lo script elimina-squadra.sql.":(r.error.message||"Eliminazione non riuscita. Riprova."));
+  closeSheet();
+  S.teams=S.teams.filter(x=>x.id!==id);S.members=S.members.filter(x=>x.tid!==id);S.matches=S.matches.filter(x=>x.tid!==id);S.reqs=S.reqs.filter(x=>x.tid!==id);
+  S.tid=null;S.tab="cal";S.mid=null;try{localStorage.removeItem("tid")}catch(e){}
+  render();toast("Squadra eliminata",true)}
 function leaveTeam(id){const m=S.members.find(x=>x.id===id&&x.uid===S.uid);if(!m)return;
   const b=leaveBlock(m);if(b)return toast(b);
   ask({title:"Lasciare la squadra?",msg:"Non farai più parte della squadra. Le tue statistiche e le partite giocate restano nello storico (i dirigenti possono rimuoverti dalla rosa). Per rientrare servirà di nuovo il codice invito.",ok:"Lascia squadra",danger:1,fn:()=>doLeave(id)})}
@@ -608,7 +623,7 @@ function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
 function impView(t,mgr){
   const pend=S.reqs.filter(r=>r.tid===t.id),ps=mgr&&S.ps==="sq"?"sq":"io";
   const io=`<div class="card pcard">${crest(myMember().photo,ic("user"),"xl")}<div class="nm2">${esc(myMember().nick)}</div>${S.profile.name?`<div>${esc(S.profile.name)}</div>`:""}<div class="mu">${esc(S.profile.email||"")}</div><div class="pbtns"><button onclick="S.profile=null;render()">Modifica profilo</button><button onclick="S.tid=null;render()">Cambia squadra</button><button onclick="goFan()">Passa a profilo tifoso</button></div><button class="out" onclick="sb.auth.signOut().then(()=>location.reload())">Esci dall’account</button></div>
-  <div class="card"><b>Squadra e account</b><p class="mu">Se lasci la squadra le tue statistiche restano nello storico. Eliminando l’account cancelli il tuo accesso per sempre.</p><div class="pbtns"><button onclick="leaveTeam('${myMember().id}')">Lascia squadra</button><button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
+  <div class="card"><b>Squadra e account</b><p class="mu">Se lasci la squadra le tue statistiche restano nello storico. Eliminando l’account cancelli il tuo accesso per sempre.</p><div class="pbtns"><button onclick="leaveTeam('${myMember().id}')">Lascia squadra</button>${t.owner===S.uid?'<button class="d" onclick="deleteTeam()">Elimina squadra</button>':""}<button class="d" onclick="deleteAccount()">Elimina account</button></div></div>
   <div class="card"><b>Aspetto</b><div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>${typeof aspettoExtra==="function"?aspettoExtra():""}<p class="mu" style="margin-bottom:0">Vale solo su questo telefono. Di giorno, in campo, il tema chiaro si legge meglio. “Squadra” usa i colori scelti dai dirigenti.</p></div>
   <div class="card"><b>Codice invito</b><div class="code" onclick="copyCode()" title="Tocca per copiare">${esc(t.code)}</div>
   <div class="pbtns"><button class="p" onclick="shareCode()">${ic("share")} Condividi</button><button onclick="copyCode()">${ic("copy")} Copia</button></div>
