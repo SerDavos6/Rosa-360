@@ -1,8 +1,7 @@
 // Notifiche push (Web Push). Resta spenta finché VAPID_PUBLIC è vuoto: nessun effetto sull'app.
 // Per attivarla: genera le chiavi VAPID e incolla qui la chiave PUBBLICA (vedi LEGGIMI-notifiche.md).
 (function () {
-  const VAPID_PUBLIC = "BFNkZveizCHrQ3xicdm4ZLhCFlZpbEQPEU-RCPQklTTgwCeJisnjuQeC7If8fodF6TJRACztBR5nqG0Zflm-Xvg
-";
+  const VAPID_PUBLIC = "BFNkZveizCHrQ3xicdm4ZLhCFlZpbEQPEU-RCPQklTTgwCeJisnjuQeC7If8fodF6TJRACztBR5nqG0Zflm-Xvg";
 
   const supported = () => !!VAPID_PUBLIC && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const b64 = s => {
