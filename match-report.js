@@ -413,6 +413,15 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
     // Ultima risorsa (centinaia di eventi): si nasconde l'ultimo evento della sezione più lunga con "+N ALTRI".
     while(total(pick[0],pick[1])>avail){const q=secs.reduce((a,b)=>(b.rows.length>a.rows.length?b:a),secs[0]);if(q.rows.length<=1)break;q.rows.pop();q.hid++}}
   const [cols,sc]=pick,gap=30,cw=cols===1?Rt-L:(Rt-L-gap)/2,f=(w,px)=>`${w} ${(px*sc).toFixed(1)}px Oswald, sans-serif`;
+  const fa=(wt,px)=>`${wt} ${px.toFixed(1)}px Oswald, sans-serif`;
+  // Nome sempre per intero: prima si rimpicciolisce un po', poi va su due righe (se ha spazi), in ultimo si riduce ancora.
+  const fitName=(text,px,w,wt,twoOk)=>{
+    const meas=(p,t=text)=>{ctx.font=fa(wt,p);return ctx.measureText(t).width};
+    if(meas(px)<=w)return {px,lines:[text]};
+    if(meas(px*.8)<=w)return {px:px*.8,lines:[text]};
+    if(twoOk&&/\s/.test(text.trim())){const p2=px*.62,ls=wrapReport(ctx,text,w);
+      if(ls.length<=2&&text.split(/\s+/).every(wd=>meas(p2,wd)<=w)&&ls.every(l=>meas(p2,l)<=w))return {px:p2,lines:ls}}
+    let p=px*.8;while(p>px*.4&&meas(p)>w)p*=.95;ctx.font=fa(wt,p);return {px:p,lines:[reportFit(ctx,text,w)]}};
   const drawRow=(r,cx,y,h)=>{
     ctx.textAlign='left';
     const bt=r.min?r.min+"'":r.cnt?String(r.cnt):'•',big=r.k==='g';
@@ -421,8 +430,12 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
     if(big){drawBall(ctx,cx+26*sc,y+30*sc,22*sc)}
     else if(r.k==='ps'){ctx.fillStyle='#2fbf71';reportRoundRect(ctx,cx,y+6*sc,38*sc,38*sc,19*sc);ctx.fill();ctx.fillStyle='#101216';ctx.font=f('700',24);ctx.textAlign='center';ctx.fillText('P',cx+19*sc,y+33*sc)}
     else{ctx.fillStyle=r.k==='y'?'#f5c518':'#e5484d';reportRoundRect(ctx,cx+5*sc,y+6*sc,28*sc,38*sc,5*sc);ctx.fill()}
-    ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font=f(big?'700':'500',big?42:30);ctx.fillText(reportFit(ctx,r.name,maxW),nx,y+(big?43:36)*sc);
-    if(big&&r.as){ctx.globalAlpha=.7;ctx.font=f('500',24);ctx.fillText(reportFit(ctx,'ASSIST: '+r.as,cw-(nx-cx)-14*sc),nx,y+70*sc);ctx.globalAlpha=1}
+    ctx.textAlign='left';ctx.fillStyle=P.text;
+    const bp=(big?42:30)*sc,nf=fitName(r.name,bp,maxW,big?'700':'500',true),two=nf.lines.length>1;
+    ctx.font=fa(big?'700':'500',nf.px);
+    if(two){const sp=nf.px*1.06,c=(big?30:25)*sc,b1=c-sp/2+nf.px*.35;nf.lines.forEach((l,k)=>ctx.fillText(l,nx,y+b1+k*sp))}
+    else ctx.fillText(nf.lines[0],nx,y+(big?43:36)*sc);
+    if(big&&r.as){const aw=cw-(nx-cx)-14*sc,af=fitName('ASSIST: '+r.as,24*sc,aw,'500',false);ctx.globalAlpha=.7;ctx.font=fa('500',af.px);ctx.fillText(af.lines[0],nx,y+(two?76:70)*sc);ctx.globalAlpha=1}
     ctx.font=f('700',big?32:28);ctx.fillStyle=P.accent;reportRoundRect(ctx,cx+cw-bw,y+(big?4:3)*sc,bw,bh,bh/2);ctx.fill();
     ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,cx+cw-bw/2,y+(big?41:34)*sc);
     if(big){ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(cx,y+h*sc-6*sc,cw,2);ctx.globalAlpha=1}};
