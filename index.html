@@ -747,7 +747,14 @@ function matchParts(x,mgr){
   <div class="mtabs">${[["info","Info"],["live","In diretta"],["stats","Statistiche"]].map(([k,n])=>`<button class="${tab===k?"on":""}" data-k="${k}" onclick="mTab('${k}')">${n}</button>`).join("")}</div></header>`;
   const foot=mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"";
   return {head,body:panel("info",info)+panel("live",live)+panel("stats",st),foot}}
-function stp(id,d){const e=$(id);if(!e||e.disabled)return;e.value=Math.max(0,(+e.value||0)+d);markDirty()}
+// Statistiche inserite a mano: ogni gol di un giocatore aggiorna "Gol nostri", ogni autogol aggiorna "Gol avversari" (come nella diretta).
+// Si aggiunge solo la differenza, così un risultato già scritto a mano (es. gol con marcatore non registrato) non viene azzerato.
+function scoreSync(e){
+  const mt=e&&e.id&&/^s_.+_(g|og)$/.exec(e.id);if(!mt)return;
+  const tgt=$(mt[1]==="g"?"gf":"ga");if(!tgt||tgt.disabled)return;
+  const prev=e.dataset.p!==undefined?+e.dataset.p:(+e.defaultValue||0),cur=Math.max(0,+e.value||0);
+  e.dataset.p=cur;tgt.value=Math.max(0,(+tgt.value||0)+cur-prev)}
+function stp(id,d){const e=$(id);if(!e||e.disabled)return;e.value=Math.max(0,(+e.value||0)+d);scoreSync(e);markDirty()}
 // il giocatore segna da solo la propria presenza (salvataggio immediato, solo partite non ancora giocate)
 async function myPresence(mid,memId,on){
   const x=S.matches.find(k=>k.id===mid),m=S.members.find(k=>k.id===memId);
@@ -765,7 +772,7 @@ async function myPresence(mid,memId,on){
   if(err){x.present=prev;render();toast("Presenza non salvata: "+(err.message||err.code||"errore")+".")}
   else toast(on?"Presenza segnata":"Presenza tolta",true)}
 function markDirty(){const b=$("sbar");if(b)b.hidden=false}
-document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
+document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp")){scoreSync(e.target);markDirty()}});
 document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
 function mTab(k){const K=["info","live","stats"],d=K.indexOf(k)-K.indexOf(document.querySelector(".mtabs .on")?.dataset.k);S.mt=k;toTop();document.querySelectorAll(".mp").forEach(e=>{e.classList.remove("fx-l","fx-r");e.style.display=e.dataset.k===k?"block":"none";if(e.dataset.k===k&&d)fxSlide([e],d)});document.querySelectorAll(".mtabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===k))}
 function collectMatch(id){
