@@ -229,7 +229,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=9"></script><script src="push.js?v=5"></script>
+<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=9"></script><script src="push.js?v=5"></script><script src="collega.js?v=1"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -646,7 +646,7 @@ function calView(t,mgr){
   const mf=S.mf||"",cnt={"":ms.length,todo:ms.filter(x=>!x.played).length,done:ms.filter(x=>x.played).length};
   const list=ms.filter(x=>(!S.flt||(x.tourn||"Amichevoli")===S.flt)&&(!mf||(mf==="todo")===!x.played)).sort((a,b)=>mf==="todo"?(a.date<b.date?-1:1):(a.date<b.date?1:-1));
   const pl=ms.filter(x=>x.played).sort((a,b)=>a.date<b.date?1:-1),last=pl[0];
-  const form=mgr&&S.nm?`<div class="card" id="nmcard"><h3>Nuova partita</h3><div class="row"><input id="md" type="date"><input id="mo" placeholder="Avversario" list="ol" autocomplete="off" oninput="h2hLive(this.value)"></div><datalist id="ol">${[...new Set(S.matches.filter(x=>x.tid===S.tid).map(x=>x.opp).filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join("")}</datalist><div id="h2h-live"></div>
+  const form=mgr&&S.nm?`<div class="card" id="nmcard"><h3>Nuova partita</h3><div class="row"><input id="md" type="date"><input id="mo" placeholder="Avversario" list="ol" autocomplete="off" oninput="h2hLive(this.value);if(typeof oppType==='function')oppType(this.value)"></div><div id="opp-sug">${typeof oppSugHtml==="function"?oppSugHtml():""}</div><datalist id="ol">${[...new Set(S.matches.filter(x=>x.tid===S.tid).map(x=>x.opp).filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join("")}</datalist><div id="h2h-live"></div>
   <div class="row"><div><label for="ml">Luogo (facoltativo)</label><input id="ml" maxlength="300" placeholder="Nome del posto o indirizzo"></div><div><label for="mh">Ora (facoltativa)</label><input id="mh" type="time"></div></div>
   <div class="row"><div><label for="mc">Campo (facoltativo)</label><input id="mc" maxlength="20" placeholder="es. 3"></div></div>
   <label>Torneo / campionato</label><input id="mt" list="tl" placeholder="es. Campionato CSI"><datalist id="tl">${tor.map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
@@ -658,11 +658,11 @@ function calView(t,mgr){
   <div class="seg">${[["","Tutte"],["todo","Da giocare"],["done","Giocate"]].map(([k,n])=>`<button class="${mf===k?"on":""}" onclick="S.mf='${k}';render()">${n} <i style="font-style:normal;opacity:.65">${cnt[k]}</i></button>`).join("")}</div>
   ${cnt.todo?`<p style="margin:8px 0"><button class="s" onclick="addToCalendar()">${ic("plus")} Aggiungi ${cnt.todo===1?"la partita":"le "+cnt.todo+" partite"} al calendario</button></p>`:""}${tor.length>1||S.flt?`<div style="margin:8px 0 4px"><select onchange="S.flt=this.value;render()" aria-label="Torneo"><option value="">Tutti i tornei</option>${tor.map(n=>`<option ${S.flt===n?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
   <div style="margin-top:12px">${list.map(row).join("")||(ms.length?emptyState("ball","Nessuna partita con questi filtri","Prova a cambiare filtro o torneo.",""):emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""))}</div>`}
-function openNm(){S.nm=true;render();toTop()}
+function openNm(){S.nm=true;S.nmOpp=null;S.nmSug=null;render();toTop()}
 async function addMatch(){
   if(!v("md")||!v("mo"))return;
-  const id=rid()+rid(),match={tid:S.tid,location:v("ml"),field:v("mc"),time:v("mh"),date:v("md"),opp:v("mo"),tourn:v("mt"),oppLogo:logoTmp||"",played:false,gf:0,ga:0,present:[],stats:{}};
-  try{await S.db.doc("matches/"+id).set(match);logoTmp=null;S.mid=id;S.nm=false;
+  const op=S.nmOpp&&S.nmOpp.name===v("mo")?S.nmOpp:null,id=rid()+rid(),match={tid:S.tid,location:v("ml"),field:v("mc"),time:v("mh"),date:v("md"),opp:v("mo"),tourn:v("mt"),oppLogo:logoTmp||(op&&/^https:\/\//.test(op.logo||"")?op.logo:""),played:false,gf:0,ga:0,present:[],stats:{},...(op?{oppTid:op.id}:{})};
+  try{await S.db.doc("matches/"+id).set(match);logoTmp=null;S.nmOpp=null;S.nmSug=null;S.mid=id;S.nm=false;
     S.err="";
   }catch(e){S.err="Impossibile creare la partita: verifica la connessione e riprova."}
   render();
@@ -728,7 +728,7 @@ function matchParts(x,mgr){
   ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label>${(()=>{const own=!mgr&&!!m.uid&&m.uid===S.uid&&!x.played;return `<input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr||own?"":"disabled"} ${own?`onchange="myPresence('${x.id}','${m.id}',this.checked)"`:""}>`})()} <span>${esc(m.nick)}${!mgr&&m.uid===S.uid&&!x.played?" (tu)":""}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
   </div>
   <div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><div class="row"><div><label for="ec">Campo (facoltativo)</label><input id="ec" maxlength="20" placeholder="es. 3" value="${esc(md.field)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
-  ${h2hCard(x.tid,x.opp,x.id)}
+  ${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
   <div id="formation-holder">${formationCard(x,mgr)}</div>
   <p><button class="p" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button></p>
   <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>
@@ -738,7 +738,7 @@ function matchParts(x,mgr){
   const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=ms.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
   const infoP=`${me?`<div class="card"><b>Presenza</b>${x.played?`<p style="margin:8px 0 0">${isIn?"Eri presente a questa partita.":"Non risulti presente a questa partita."}</p>`:`<p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button>`}</div>`:""}
   <div class="card"><b>Dettagli</b>${md.location?`<div class="mu" style="margin-top:10px">Luogo</div><div>${esc(md.location)}</div>`:""}${md.field?`<div class="mu" style="margin-top:10px">Campo</div><div>${esc(md.field)}</div>`:""}${md.time?`<div class="mu" style="margin-top:10px">Ora</div><div>${esc(md.time)}</div>`:""}<p style="margin:12px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p></div>
-  ${h2hCard(x.tid,x.opp,x.id)}
+  ${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
   <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`;
   const info=mgr?infoM:infoP;
   const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>`;
