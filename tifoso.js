@@ -181,7 +181,19 @@ function tourHtml(){
     .sort((a,b)=>b.pt-a.pt||b.dr-a.dr||b.gf-a.gf||String(a.t.name).localeCompare(String(b.t.name)));
   const nm=id=>(by[id]&&by[id].t.name)||"Squadra";
   const line=m=>`<div class="frs" data-t="${esc(m.tid)}" data-m="${esc(m.id)}" onclick="fanOpen(this.dataset.t,this.dataset.m)"><div class="mid"><b>${esc(nm(m.tid))}</b><div class="mu">vs ${esc(m.opp)} · ${esc(dt(m.date).f)}</div></div>${m.played?`<span class="sc">${esc(m.gf)}–${esc(m.ga)}</span>`:""}${ic("chev")}</div>`;
-  const done=ms.filter(m=>m.played).sort((a,b)=>a.date<b.date?1:-1).slice(0,15),todo=ms.filter(m=>!m.played).sort((a,b)=>a.date<b.date?-1:1).slice(0,10);
+  // Se due squadre iscritte hanno inserito entrambe lo stesso incontro, nell'elenco compare una volta sola.
+  // Si riconoscono dalla stessa data e dal collegamento (oppTid) oppure dai nomi che si corrispondono; se i due risultati
+  // non coincidono (o uno è finito e l'altro no) restano entrambi visibili, così il problema non resta nascosto.
+  const nk=s=>String(s||"").trim().toLowerCase();
+  const twinless=list=>{const used=new Set(),out=[];
+    list.forEach(m=>{if(used.has(m.id))return;used.add(m.id);
+      const t=list.find(o=>!used.has(o.id)&&o.tid!==m.tid&&o.date===m.date&&!!o.played===!!m.played
+        &&((m.oppTid&&m.oppTid===o.tid)||(o.oppTid&&o.oppTid===m.tid)||(nk(m.opp)===nk(nm(o.tid))&&nk(o.opp)===nk(nm(m.tid))))
+        &&(!m.played||((+m.gf||0)===(+o.ga||0)&&(+m.ga||0)===(+o.gf||0))));
+      if(t)used.add(t.id);
+      out.push(m)});
+    return out};
+  const done=twinless(ms.filter(m=>m.played).sort((a,b)=>a.date<b.date?1:-1)).slice(0,15),todo=twinless(ms.filter(m=>!m.played).sort((a,b)=>a.date<b.date?-1:1)).slice(0,10);
   return `<div class="row" style="flex-wrap:nowrap"><button class="ib" style="border:0" onclick="fanHome()" aria-label="Indietro">${ic("back")}</button><h1 style="flex:1;margin:0">${esc(T.name)}</h1></div>
   ${seasons.length>1?`<div class="csl" style="margin-top:8px">${seasons.map(s=>`<button class="chip${s===se?" on":""}" data-s="${esc(s)}" onclick="fanTs(this.dataset.s)">${esc(s)}</button>`).join("")}</div>`:""}
   <h2>Classifica</h2><div class="card" style="padding:6px 10px;overflow-x:auto"><table class="ftb"><thead><tr><th class="k">#</th><th class="l">Squadra</th><th class="n">G</th><th class="n">V</th><th class="n">N</th><th class="n">P</th><th class="n">DR</th><th class="pt">Pt</th></tr></thead><tbody>

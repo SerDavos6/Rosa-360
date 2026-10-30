@@ -85,6 +85,48 @@
       '<div class="mu" style="white-space:normal">È il punteggio registrato nella loro partita (noi–loro). Le due dirette restano separate.</div>' + note + '</div>';
   };
 
+  // ---------- logo dell'avversario: segue quello della squadra collegata ----------
+  // Alla creazione il logo viene copiato nella partita; se l'altra squadra lo cambia, qui lo si aggiorna.
+  // Serve la funzione SQL "linked_team_logos" (vedi collega-partite.sql). Senza, tutto resta com'era.
+  const OL = {};            // id squadra -> indirizzo del logo (solo https)
+  const OLT = {};           // id della mia squadra -> ora dell'ultimo controllo
+  const WB = {};            // aggiornamenti già scritti nelle partite, per non ripeterli
+  const isHttps = u => /^https:\/\/[^\s"'<>`]+$/.test(String(u || ''));
+
+  window.applyOppLogos = function () {
+    try {
+      if (!S || S.fan || !S.matches) return;
+      const mgr = typeof canManage === 'function' && canManage() && !(typeof lvBusy === 'function' && lvBusy());
+      S.matches.forEach(m => {
+        const nl = m.oppTid && OL[m.oppTid];
+        if (!nl || !isHttps(nl) || m.oppLogo === nl) return;
+        const old = m.oppLogo;
+        m.oppLogo = nl;                                    // subito a schermo
+        const key = m.id + '|' + nl;
+        if (mgr && !WB[key] && m.tid === S.tid) {          // e lo salva nella partita, così lo vedono anche tifosi e condivisioni
+          WB[key] = 1;
+          try { S.db.doc('matches/' + m.id).update({ oppLogo: nl }).catch(() => { delete WB[key]; m.oppLogo = old; }); } catch (e) { delete WB[key]; }
+        }
+      });
+      loadOppLogos();
+    } catch (e) {}
+  };
+
+  function loadOppLogos() {
+    const tid = S && S.tid;
+    if (!tid || S.fan || !S.matches || !S.matches.some(m => m.tid === tid && m.oppTid)) return;
+    if (Date.now() - (OLT[tid] || 0) < 60000) return;
+    OLT[tid] = Date.now();
+    sb.rpc('linked_team_logos', { p_tid: tid }).then(r => {
+      if (r.error || !r.data || typeof r.data !== 'object') return;
+      let ch = false;
+      Object.keys(r.data).forEach(id => { if (isHttps(r.data[id]) && OL[id] !== r.data[id]) { OL[id] = r.data[id]; ch = true; } });
+      if (ch) { applyOppLogos(); try { render(); } catch (e) {} }
+    }).catch(() => {});
+  }
+  setInterval(() => { if (!document.hidden) loadOppLogos(); }, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadOppLogos(); });
+
   // anche nella scheda "In diretta" dei dirigenti
   const lc = window.liveCardHtml;
   if (typeof lc === 'function') window.liveCardHtml = x => pairedBox(x) + lc(x);

@@ -229,7 +229,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=9"></script><script src="push.js?v=5"></script><script src="collega.js?v=1"></script>
+<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=10"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -334,6 +334,7 @@ async function init(){
   S.db=(typeof fluidDb==="function"?fluidDb(db):db);S.uid=await user.id();
   if(typeof lvSync==="function")lvSync();
   const sub=(c,k,o)=>db.collection(c).onSnapshot(s=>{(S.stash||S)[k]=s.docs.filter(d=>/^[\w.:@+~-]{1,120}$/.test(d.id)).map(d=>({id:d.id,...d.data()}));
+    if(k==="matches"&&typeof applyOppLogos==="function")applyOppLogos();
     if(S.stash)return;if(k==="teams"||k==="members"||k==="reqs"||k==="matches"){if(k==="matches"&&typeof lvBusy==="function"&&lvBusy())return;render()}},e=>{S.err="Errore database: "+e.code;render()},o);
   db.doc("profiles/"+S.uid).onSnapshot(s=>{const d=s.exists?s.data():null;if(d&&d.fan&&!S.fan){location.reload();return}S.profile=d&&d.role?d:null;render()});
   sub("teams","teams");sub("members","members");sub("requests","reqs");sub("matches","matches",{recent:curSeason().slice(0,4)+"-09-01"});
@@ -526,12 +527,19 @@ function leaveBlock(m){
 function dropMember(m){
   const usato=S.matches.some(x=>(x.present||[]).includes(m.id)||(x.stats&&x.stats[m.id]));
   if(m.role==="dirigente"&&!usato)return del("members/"+m.id);
-  return S.db.doc("members/"+m.id).update({uid:null,captain:false,admin:false})}
+  return leaveRpc(m)}
+// toglie l'account dalla propria riga tramite la funzione del database (un giocatore non può scriverla direttamente);
+// se la funzione non c'è ancora, ripiega sul metodo di prima (funziona solo per i dirigenti)
+async function leaveRpc(m){
+  const r=await sb.rpc("leave_team",{p_member:m.id});
+  if(!r.error){const x=S.members.find(y=>y.id===m.id);if(x){x.uid=null;x.captain=false;x.admin=false}return}
+  if(r.error.code==="PGRST202")return S.db.doc("members/"+m.id).update({uid:null,captain:false,admin:false});   // funzione non ancora creata
+  throw {code:r.error.code||"errore",message:r.error.message}}
 function leaveTeam(id){const m=S.members.find(x=>x.id===id&&x.uid===S.uid);if(!m)return;
   const b=leaveBlock(m);if(b)return toast(b);
   ask({title:"Lasciare la squadra?",msg:"Non farai più parte della squadra. Le tue statistiche e le partite giocate restano nello storico (i dirigenti possono rimuoverti dalla rosa). Per rientrare servirà di nuovo il codice invito.",ok:"Lascia squadra",danger:1,fn:()=>doLeave(id)})}
 async function doLeave(id){const m=S.members.find(x=>x.id===id&&x.uid===S.uid);if(!m)return;
-  try{await dropMember(m)}catch(e){return toast("Non sono riuscito a lasciare la squadra ("+(e.code||e.message||"errore")+").")}
+  try{await dropMember(m)}catch(e){return toast("Non sono riuscito a lasciare la squadra: "+(e.message||e.code||"errore"))}
   S.tid=null;S.tab="cal";S.mid=null;try{localStorage.removeItem("tid")}catch(e){}render();toast("Hai lasciato la squadra",true)}
 function deleteAccount(){
   for(const m of S.members.filter(x=>x.uid===S.uid)){const b=leaveBlock(m);if(b)return toast(b)}
