@@ -386,12 +386,17 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
   resultLabel(ctx,'MARCATORI',top,P.text);let y=top+34;ctx.textAlign='center';
   if(!R.scorers.length){ctx.fillStyle=P.text;ctx.globalAlpha=.6;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(o.empty||'',540,y+40);ctx.globalAlpha=1;y+=80}
   else{
-    const rows=R.scorers.map(e=>{const as=ev.filter(v=>String(v.p)===String(e.m.id)).map(v=>nick(v.a));return {e,as,h:as.length?94:64}});
+    const evAll=x.events||[],rows=[];
+    R.scorers.forEach(e=>{const id=String(e.m.id);let c=0;
+      evAll.forEach((v,i)=>{if(v.k==='g'&&String(v.p)===id&&c<e.g){c++;rows.push({e,i,min:v.m,cnt:0,as:v.a?[nick(v.a)]:[]})}});
+      if(e.g>c)rows.push({e,i:1e6,min:0,cnt:e.g-c,as:[]})});
+    rows.sort((p,q)=>p.i-q.i);rows.forEach(r=>{r.h=r.as.length?94:64});
     let n=0,acc=0;while(n<rows.length&&y+acc+rows[n].h+(n+1<rows.length?44:0)<=limit-reserve)acc+=rows[n++].h;n=Math.max(n,1);
-    rows.slice(0,n).forEach(({e,as,h})=>{
-      drawBall(ctx,L+26,y+30,22);ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='700 42px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(e.m.nick||e.m.name||'').toUpperCase(),560),L+68,y+43);
+    rows.slice(0,n).forEach(({e,as,h,min,cnt})=>{
+      drawBall(ctx,L+26,y+30,22);ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='700 42px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(e.m.nick||e.m.name||'').toUpperCase(),520),L+68,y+43);
       if(as.length){ctx.globalAlpha=.7;ctx.font='500 24px Oswald, sans-serif';ctx.fillText(reportFit(ctx,'ASSIST: '+as.join(', ').toUpperCase(),620),L+68,y+70);ctx.globalAlpha=1}
-      ctx.fillStyle=P.accent;ctx.beginPath();ctx.arc(Rt-28,y+30,26,0,Math.PI*2);ctx.fill();ctx.fillStyle=fxContrast(P.accent);ctx.font='700 34px Oswald, sans-serif';ctx.textAlign='center';ctx.fillText(e.g,Rt-28,y+42);
+      {const bt=min?min+"'":cnt?String(cnt):'•';ctx.font='700 32px Oswald, sans-serif';const bw=Math.max(56,ctx.measureText(bt).width+28);
+        ctx.fillStyle=P.accent;reportRoundRect(ctx,Rt-bw,y+4,bw,52,26);ctx.fill();ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,Rt-bw/2,y+41)}
       ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(L,y+h-6,Rt-L,2);ctx.globalAlpha=1;y+=h});
     if(n<rows.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+(rows.length-n)+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}
   }
