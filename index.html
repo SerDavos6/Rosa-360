@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="preconnect" href="https://xmgtlgeftxpjacolaqnb.supabase.co" crossorigin>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Rosa 360 – gestione calcio e calcetto</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -229,7 +229,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=7"></script>
+<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=7"></script><script src="push.js?v=1"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -311,7 +311,7 @@ const dataToBlob=d=>{const m=/^data:([^;]+);base64,(.*)$/.exec(d||"");if(!m)retu
 async function sbUpload(d,folder){
   try{const b=dataToBlob(d);if(!b)return d;const ext=b.type==="image/jpeg"?"jpg":"png",path=(folder||"misc")+"/"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
     const r=await sb.storage.from(IMG_BUCKET).upload(path,b,{contentType:b.type,cacheControl:"31536000",upsert:false});
-    if(r.error){window.__upErr=r.error.message||String(r.error);return d}return sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl}catch(e){window.__upErr=(e&&e.message)||String(e);return d}}
+    if(r.error){window.__upErr=r.error.message||String(r.error);toast("Immagine non caricata nello spazio file: la salvo nel database.");return d}return sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl}catch(e){window.__upErr=(e&&e.message)||String(e);toast("Immagine non caricata nello spazio file: la salvo nel database.");return d}}
 function migCard(t){const n=S.members.filter(m=>m.tid===t.id&&isData(m.photo)).length+(isData(t.logo)?1:0)+S.matches.filter(x=>x.tid===t.id&&isData(x.oppLogo)).length;
   return `<div class="card"><b>Immagini</b><p class="mu">${n?n+" immagini sono ancora salvate dentro il database. Spostarle rende l’app più veloce.":"Tutte le immagini sono già fuori dal database."}</p>${n?'<button onclick="migraImmagini()">Sposta ora</button>':""}</div>`}
 async function migraImmagini(){
@@ -468,7 +468,8 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   const r=await sb.rpc("request_join",{c,p:S.profile});
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
-function teamBar(t){return `<header class="bar">${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button></header>`}
+function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="toggleMode()" aria-label="Tema chiaro o scuro">${ic(isDarkNow()?"sun":"moon")}</button></header>`}
 function teamView(t){
   const mgr=canManage(),pend=S.reqs.filter(r=>r.tid===t.id);
   const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"],["srch",ic("search"),"Cerca"],["imp",ic("user"),"Profilo"]];
