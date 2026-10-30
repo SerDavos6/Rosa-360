@@ -72,7 +72,7 @@ function addToCalendar(id){const T=S.teams.find(t=>t.id===S.tid)||{},today=new D
   const ev=ms.map(x=>{const y=+x.date.slice(0,4),mo=+x.date.slice(5,7)-1,dd=+x.date.slice(8,10),md=matchDetail(x),tm=(md.time||'').match(/^(\d{2}):(\d{2})/);let s,en;
     if(tm){const end=new Date(y,mo,dd,+tm[1]+1,+tm[2]+30);s='DTSTART:'+ymd(new Date(y,mo,dd))+'T'+tm[1]+tm[2]+'00';en='DTEND:'+ymd(end)+'T'+p2(end.getHours())+p2(end.getMinutes())+'00'}
     else{s='DTSTART;VALUE=DATE:'+ymd(new Date(y,mo,dd));en='DTEND;VALUE=DATE:'+ymd(new Date(y,mo,dd+1))}
-    return ['BEGIN:VEVENT','UID:'+x.id+'@squadra','DTSTAMP:'+stamp,s,en,'SUMMARY:'+e((T.name||'Squadra')+' vs '+x.opp),md.location?'LOCATION:'+e(md.location):'',x.tourn?'DESCRIPTION:'+e(x.tourn):'','BEGIN:VALARM','TRIGGER:-PT60M','ACTION:DISPLAY','DESCRIPTION:Partita tra un’ora','END:VALARM','END:VEVENT'].filter(Boolean).join('\r\n')}).join('\r\n');
+    return ['BEGIN:VEVENT','UID:'+x.id+'@squadra','DTSTAMP:'+stamp,s,en,'SUMMARY:'+e((T.name||'Squadra')+' vs '+x.opp),md.location?'LOCATION:'+e(md.location):'',(x.tourn||x.field)?'DESCRIPTION:'+e([x.tourn,x.field?'Campo '+x.field:''].filter(Boolean).join(' · ')):'','BEGIN:VALARM','TRIGGER:-PT60M','ACTION:DISPLAY','DESCRIPTION:Partita tra un’ora','END:VALARM','END:VEVENT'].filter(Boolean).join('\r\n')}).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Squadra//IT\r\nCALSCALE:GREGORIAN\r\n'+ev+'\r\nEND:VCALENDAR\r\n'],{type:'text/calendar'}));a.download=id?'partita-'+ms[0].date+'.ics':'partite.ics';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 
 // ===== Immagini da condividere: classifica, carta, riepilogo stagione =====
@@ -152,7 +152,9 @@ function badgeIcons(m){const l=badgeList(m).filter(b=>b.on);return l.length?'<di
 function badgePanel(m){return '<h2>Traguardi</h2><div class="card"><div class="bgl">'+badgeList(m).map(b=>'<div class="bgi'+(b.on?' on':'')+'"><span class="bgc">'+ic(b.icon)+'</span><div><b>'+b.label+'</b><span class="mu">'+b.note+'</span></div></div>').join('')+'</div></div>'}
 
 // ===== Apri in Maps =====
-function openMaps(id){const x=S.matches.find(m=>m.id===id),q=v('el')||(x&&matchDetail(x).location)||'';if(!q){toast('Scrivi prima il luogo della partita.');return}
+function openMaps(id){const x=S.matches.find(m=>m.id===id),raw=v('el')||(x&&matchDetail(x).location)||'';if(!raw){toast('Scrivi prima il luogo della partita.');return}
+  // Maps non conosce il "campo 3": si toglie dalla ricerca e resta solo il nome del posto (nell'app il Luogo resta com'è).
+  const q=raw.replace(/[\s,;:·–-]*\(?\b(?:campo|field|c\.)\s*(?:n\.?\s*°?\s*)?\d+\w?\b\)?/gi,' ').replace(/\s{2,}/g,' ').replace(/\s+,/g,',').replace(/^[\s,;:·–-]+|[\s,;:·–-]+$/g,'')||raw;
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   window.open((ios?'https://maps.apple.com/?q=':'https://www.google.com/maps/search/?api=1&query=')+encodeURIComponent(q),'_blank','noopener')}
 

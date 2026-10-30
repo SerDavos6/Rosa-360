@@ -1,8 +1,10 @@
-const matchDetail=x=>({location:x.location||'',time:x.time||''});
+const matchDetail=x=>({location:x.location||'',time:x.time||'',field:x.field||''});
+// Luogo + numero del campo (facoltativo) per le righe di testo
+const matchPlace=x=>[x.location,x.field?'Campo '+x.field:''].filter(Boolean).join(' · ');
 function reportLines(x){
   const team=S.teams.find(t=>t.id===x.tid)||{};
   const present=(x.present||[]).map(id=>S.members.find(m=>m.id===id)).filter(Boolean);
-  const lines=[['TORNEO',x.tourn||'Amichevole'],['DATA',dt(x.date).f],['ORA',x.time||'Non indicata'],['LUOGO',x.location||'Non indicato'],['STATO',x.played?'Partita terminata':'Da giocare']];
+  const lines=[['TORNEO',x.tourn||'Amichevole'],['DATA',dt(x.date).f],['ORA',x.time||'Non indicata'],['LUOGO',matchPlace(x)||'Non indicato'],['STATO',x.played?'Partita terminata':'Da giocare']];
   const sc=scorers(x);lines.push(['MARCATORI',sc||(x.played?'Nessun marcatore registrato':'Da giocare')]);
   lines.push(['PRESENTI',present.map(m=>m.nick+(m.role==='dirigente'?' (dirigente)':'')).join(', ')||'Nessuna presenza registrata']);
   for(const m of present){
@@ -183,7 +185,7 @@ async function matchReportBlob(x,options={}){
   ctx.textAlign='center';ctx.fillStyle=accent;ctx.font=font(30,true);
   ctx.fillText(reportFit(ctx,(x.tourn||'Amichevole').toUpperCase(),900),W/2,infoTop+48);
   ctx.fillStyle=text;ctx.font=font(28);
-  const info=[[dt(x.date).f,x.time?'ORE '+x.time:''].filter(Boolean).join(' · '),x.location||'Luogo non indicato'];
+  const info=[[dt(x.date).f,x.time?'ORE '+x.time:''].filter(Boolean).join(' · '),matchPlace(x)||'Luogo non indicato'];
   info.forEach((line,j)=>ctx.fillText(reportFit(ctx,line.toUpperCase(),900),W/2,infoTop+96+j*44));
   ctx.fillStyle=accent;ctx.fillRect(W/2-75,infoTop+170,150,5);
 
@@ -239,7 +241,7 @@ function formationHeader(ctx,x,team,P,logos,top,ink,kicker=true,kickerText='FORM
   if(kicker){ctx.fillStyle=P.accent;ctx.font=font(30);if('letterSpacing' in ctx)ctx.letterSpacing='8px';ctx.fillText(kickerText,W/2,top);if('letterSpacing' in ctx)ctx.letterSpacing='0px'}
   const name=(team.name||'SQUADRA').toUpperCase();ctx.fillStyle=ink;ctx.font=font(fitFormationName(ctx,name,logos.some(Boolean)?620:900,96,48));ctx.fillText(name,W/2,top+100);
   ctx.fillStyle=kicker?P.accent:ink;const opp='VS '+(x.opp||'AVVERSARIO').toUpperCase();ctx.font=font(fitFormationName(ctx,opp,800,58,32));ctx.fillText(opp,W/2,top+172);
-  ctx.fillStyle=ink;ctx.globalAlpha=.82;ctx.font=font(27,false);ctx.fillText(reportFit(ctx,[dt(x.date).f,x.time?'ORE '+x.time:'',x.location||''].filter(Boolean).join('   ·   ').toUpperCase(),920),W/2,top+226);ctx.globalAlpha=1;
+  ctx.fillStyle=ink;ctx.globalAlpha=.82;ctx.font=font(27,false);ctx.fillText(reportFit(ctx,[dt(x.date).f,x.time?'ORE '+x.time:'',matchPlace(x)].filter(Boolean).join('   ·   ').toUpperCase(),920),W/2,top+226);ctx.globalAlpha=1;
   for(const [img,cx] of [[logos[0],120],[logos[1],960]])if(img){const r=Math.min(120/img.width,120/img.height);ctx.drawImage(img,cx-img.width*r/2,top+70-img.height*r/2,img.width*r,img.height*r)}
 }
 function futsalLines(ctx,px,py,pw,ph,color,width){
@@ -446,7 +448,7 @@ async function previewMatch(id){
   document.body.append(dialog);const q=s=>dialog.querySelector(s);q('#report-close').onclick=()=>dialog.close();dialog.showModal();
   let url,file,version=0;dialog.addEventListener('close',()=>{version++;if(url)URL.revokeObjectURL(url);dialog.remove()},{once:true});
   try{
-    const saved=S.matches.find(m=>m.id===id),x=canManage()?{id,...collectMatch(id),location:v('el'),time:v('eh')}:{...saved,...matchDetail(saved)};
+    const saved=S.matches.find(m=>m.id===id),x=canManage()?{id,...collectMatch(id),location:v('el'),time:v('eh'),field:v('ec')}:{...saved,...matchDetail(saved)};
     const team=S.teams.find(t=>t.id===x.tid)||{},defaults=formationDefaults(team,await reportPalette(team));if(!dialog.open)return;
     const pref=teamShareStyle(team,'result');
     let layout=RESULT_LAYOUTS.some(([k])=>k===pref.layout)?pref.layout:'campo';

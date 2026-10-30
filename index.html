@@ -231,7 +231,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=9"></script><script src="match-report.js?v=11"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=12"></script><script src="tifoso.js?v=7"></script>
+<script src="ui-extra.js?v=11"></script><script src="match-report.js?v=12"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=9"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=7"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -628,7 +628,7 @@ function allPresent(v){document.querySelectorAll(".pc").forEach(e=>{if(!e.disabl
 function nextMatch(ms){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
   const x=ms.filter(m=>!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0];if(!x)return"";
   const dd=Math.round((new Date(x.date+"T12:00")-new Date(ds+"T12:00"))/864e5),when=dd===0?"Oggi":dd===1?"Domani":"Tra "+dd+" giorni",d=matchDetail(x);
-  return `<div class="card nxt" onclick="S.mid='${x.id}';render()"><div class="eb">Prossima partita · ${when}</div><div class="hd" style="font-size:26px;margin:4px 0">vs ${esc(x.opp)}</div><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${d.location?" · "+esc(d.location):""}</div></div>`}
+  return `<div class="card nxt" onclick="S.mid='${x.id}';render()"><div class="eb">Prossima partita · ${when}</div><div class="hd" style="font-size:26px;margin:4px 0">vs ${esc(x.opp)}</div><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${matchPlace(x)?" · "+esc(matchPlace(x)):""}</div></div>`}
 function playerModal(id){
   const m=S.members.find(x=>x.id===id);if(!m){S.pd=null;return""}
   const t=stats(m),pl=m.role==="giocatore",gm=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).sort((a,b)=>a.date<b.date?1:-1);
@@ -646,10 +646,11 @@ function calView(t,mgr){
   const list=ms.filter(x=>(!S.flt||(x.tourn||"Amichevoli")===S.flt)&&(!mf||(mf==="todo")===!x.played)).sort((a,b)=>mf==="todo"?(a.date<b.date?-1:1):(a.date<b.date?1:-1));
   const pl=ms.filter(x=>x.played).sort((a,b)=>a.date<b.date?1:-1),last=pl[0];
   const form=mgr&&S.nm?`<div class="card" id="nmcard"><h3>Nuova partita</h3><div class="row"><input id="md" type="date"><input id="mo" placeholder="Avversario" list="ol" autocomplete="off" oninput="h2hLive(this.value)"></div><datalist id="ol">${[...new Set(S.matches.filter(x=>x.tid===S.tid).map(x=>x.opp).filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join("")}</datalist><div id="h2h-live"></div>
-  <div class="row"><div><label for="ml">Luogo (facoltativo)</label><input id="ml" maxlength="300" placeholder="Campo / indirizzo"></div><div><label for="mh">Ora (facoltativa)</label><input id="mh" type="time"></div></div>
+  <div class="row"><div><label for="ml">Luogo (facoltativo)</label><input id="ml" maxlength="300" placeholder="Nome del posto o indirizzo"></div><div><label for="mh">Ora (facoltativa)</label><input id="mh" type="time"></div></div>
+  <div class="row"><div><label for="mc">Campo (facoltativo)</label><input id="mc" maxlength="20" placeholder="es. 3"></div></div>
   <label>Torneo / campionato</label><input id="mt" list="tl" placeholder="es. Campionato CSI"><datalist id="tl">${tor.map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
   <label>Logo avversario (facoltativo)</label><input type="file" accept="image/*" onchange="oppLogo(this)"><div class="mu" id="lg"></div><div class="row" style="margin-top:12px"><button class="p" onclick="addMatch()">Aggiungi</button><button onclick="S.nm=false;logoTmp=null;render()">Annulla</button></div></div>`:"";
-  const row=x=>`<div class="card mrow ${x.played?(x.gf>x.ga?"w":x.gf<x.ga?"l":"d"):"u"}" onclick="S.mid='${x.id}';render()">${(d=>`<div class="db"><b>${d.d}</b>${d.m}</div>`)(dt(x.date))}${crest(x.oppLogo,ic("shield"),"sm")}<div class="mid"><b class="hd">vs ${esc(x.opp)}</b><div class="mu">${esc(x.tourn||"Amichevoli")}${x.played?" · "+(x.present||[]).length+" in campo":""}</div><div class="mu">${esc([matchDetail(x).location,matchDetail(x).time].filter(Boolean).join(" · "))}</div>${(m=>m?`<div class="gold">${ic("trophy")} MVP ${esc(m.m.nick)}</div>`:"")(x.played?mvp(x):null)}</div>
+  const row=x=>`<div class="card mrow ${x.played?(x.gf>x.ga?"w":x.gf<x.ga?"l":"d"):"u"}" onclick="S.mid='${x.id}';render()">${(d=>`<div class="db"><b>${d.d}</b>${d.m}</div>`)(dt(x.date))}${crest(x.oppLogo,ic("shield"),"sm")}<div class="mid"><b class="hd">vs ${esc(x.opp)}</b><div class="mu">${esc(x.tourn||"Amichevoli")}${x.played?" · "+(x.present||[]).length+" in campo":""}</div><div class="mu">${esc([matchPlace(x),matchDetail(x).time].filter(Boolean).join(" · "))}</div>${(m=>m?`<div class="gold">${ic("trophy")} MVP ${esc(m.m.nick)}</div>`:"")(x.played?mvp(x):null)}</div>
   <div class="rs">${x.played?`<b class="hd">${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?"v":x.gf<x.ga?"p":"n"}">${x.gf>x.ga?"V":x.gf<x.ga?"P":"N"}</i>`:'<span class="tag">Da giocare</span>'}</div></div>`;
   return `${form}${nextMatch(all)}${last?heroMatch(last,t):""}
   <div class="tool"><h2>Partite</h2>${mgr&&!S.nm?`<button class="p s plus" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""}</div>
@@ -659,7 +660,7 @@ function calView(t,mgr){
 function openNm(){S.nm=true;render();toTop()}
 async function addMatch(){
   if(!v("md")||!v("mo"))return;
-  const id=rid()+rid(),match={tid:S.tid,location:v("ml"),time:v("mh"),date:v("md"),opp:v("mo"),tourn:v("mt"),oppLogo:logoTmp||"",played:false,gf:0,ga:0,present:[],stats:{}};
+  const id=rid()+rid(),match={tid:S.tid,location:v("ml"),field:v("mc"),time:v("mh"),date:v("md"),opp:v("mo"),tourn:v("mt"),oppLogo:logoTmp||"",played:false,gf:0,ga:0,present:[],stats:{}};
   try{await S.db.doc("matches/"+id).set(match);logoTmp=null;S.mid=id;S.nm=false;
     S.err="";
   }catch(e){S.err="Impossibile creare la partita: verifica la connessione e riprova."}
@@ -725,7 +726,7 @@ function matchParts(x,mgr){
   <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div>
   ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label>${(()=>{const own=!mgr&&!!m.uid&&m.uid===S.uid&&!x.played;return `<input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr||own?"":"disabled"} ${own?`onchange="myPresence('${x.id}','${m.id}',this.checked)"`:""}>`})()} <span>${esc(m.nick)}${!mgr&&m.uid===S.uid&&!x.played?" (tu)":""}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
   </div>
-  <div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
+  <div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><div class="row"><div><label for="ec">Campo (facoltativo)</label><input id="ec" maxlength="20" placeholder="es. 3" value="${esc(md.field)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
   ${h2hCard(x.tid,x.opp,x.id)}
   <div id="formation-holder">${formationCard(x,mgr)}</div>
   <p><button class="p" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button></p>
@@ -735,7 +736,7 @@ function matchParts(x,mgr){
   // vista del giocatore (sola lettura): risultato, la sua presenza, storico, dettagli
   const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=ms.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
   const infoP=`${me?`<div class="card"><b>Presenza</b>${x.played?`<p style="margin:8px 0 0">${isIn?"Eri presente a questa partita.":"Non risulti presente a questa partita."}</p>`:`<p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button>`}</div>`:""}
-  <div class="card"><b>Dettagli</b>${md.location?`<div class="mu" style="margin-top:10px">Luogo</div><div>${esc(md.location)}</div>`:""}${md.time?`<div class="mu" style="margin-top:10px">Ora</div><div>${esc(md.time)}</div>`:""}<p style="margin:12px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p></div>
+  <div class="card"><b>Dettagli</b>${md.location?`<div class="mu" style="margin-top:10px">Luogo</div><div>${esc(md.location)}</div>`:""}${md.field?`<div class="mu" style="margin-top:10px">Campo</div><div>${esc(md.field)}</div>`:""}${md.time?`<div class="mu" style="margin-top:10px">Ora</div><div>${esc(md.time)}</div>`:""}<p style="margin:12px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p></div>
   ${h2hCard(x.tid,x.opp,x.id)}
   <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`;
   const info=mgr?infoM:infoP;
@@ -743,7 +744,7 @@ function matchParts(x,mgr){
   const rowsP=ms.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{},chips=["g","a","og","y","r"].concat(m.pos==="P"?["gs","ps"]:[]).filter(k=>+s[k]>0).map(k=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px">${LBL[k][1]} ${LBL[k][0]} <b>${s[k]}</b></span>`).join("");
     return chips?`<div class="card sp"><b>${esc(m.nick)}</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${chips}</div></div>`:""}).join("");
   const st=mgr?(rows?rows:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
-  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc([dt(x.date).f,md.time,md.location].filter(Boolean).join(" · "))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
+  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc([dt(x.date).f,md.time,matchPlace(x)].filter(Boolean).join(" · "))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
   <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="sc2">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
   <div class="mtabs">${[["info","Info"],["live","In diretta"],["stats","Statistiche"]].map(([k,n])=>`<button class="${tab===k?"on":""}" data-k="${k}" onclick="mTab('${k}')">${n}</button>`).join("")}</div></header>`;
   const foot=mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"";
@@ -774,7 +775,7 @@ function collectMatch(id){
   present.forEach(mid=>{const o={};let any=false;for(const k of["g","a","og","y","r","gs","ps"]){const e=$("s_"+mid+"_"+k);if(e){o[k]=+e.value||0;any=true}}if(any)stats[mid]=o});
   const {id:_,...rest}=x;return {...rest,gf:+v("gf")||0,ga:+v("ga")||0,played:$("pl").checked,present,stats,formation:collectFormation(x)};}
 async function saveMatch(id){
-  const data={...collectMatch(id),location:v("el"),time:v("eh")},bb=badgeKeys(data.tid);
+  const data={...collectMatch(id),location:v("el"),time:v("eh"),field:v("ec")},bb=badgeKeys(data.tid);
   try{await S.db.doc("matches/"+id).set(data);S.err="";render();if(!badgeCheer(bb,badgeKeys(data.tid,{...data,id})))toast("Partita salvata",true)}
   catch(e){toast("Salvataggio non riuscito: verifica la connessione e riprova.")}
 }
