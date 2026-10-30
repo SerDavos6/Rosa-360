@@ -47,17 +47,23 @@
     refresh();
   };
 
-  function pushCard() {
+  // kind "fan": versione per il profilo tifoso (dentro una propria scheda, testo sulle squadre preferite)
+  function pushCard(kind) {
     if (!supported() || state === 'na') return '';
+    const fan = kind === 'fan';
     const btn = state === 'on' ? '<button onclick="pushDisable()">Disattiva notifiche</button>'
       : state === 'denied' ? '<p class="mu">Le notifiche sono bloccate: riattivale dalle impostazioni del browser per questo sito.</p>'
       : '<button class="p" onclick="pushEnable()">Attiva notifiche</button>';
-    return '<div style="margin-top:16px"><b>Notifiche</b></div><p class="mu">Ricevi un avviso quando viene fissata una partita o inserito un risultato.</p>' + btn;
+    const txt = fan ? 'Ricevi un avviso quando una delle tue squadre preferite fissa una partita o inserisce un risultato.'
+                    : 'Ricevi un avviso quando viene fissata una partita o inserito un risultato.';
+    return (fan ? '<b>Notifiche</b>' : '<div style="margin-top:16px"><b>Notifiche</b></div>') + '<p class="mu" style="white-space:normal">' + txt + '</p>' + btn;
   }
+  window.pushCard = pushCard;
 
   // si aggancia alla scheda "Aspetto" del Profilo, senza toccare il resto
   const prev = window.aspettoExtra;
   window.aspettoExtra = () => (typeof prev === 'function' ? prev() : '') + pushCard();
+  // nota: nella schermata del tifoso la scheda "Notifiche" è aggiunta da tifoso.js (solo con un account)
 
   addEventListener('load', () => { if (supported()) setTimeout(refresh, 800); });
 })();

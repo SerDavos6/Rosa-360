@@ -3,7 +3,7 @@
 // Non tocca Supabase né le richieste non-GET, così i dati restano sempre aggiornati.
 const V = 'squadra-v37';
 const SUPA = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
-const SHELL = ['./', 'index.html', 'ui-extra.js?v=11', 'match-report.js?v=17', 'fluido.js?v=10', 'restyle.js?v=10', 'rinnova.js?v=13', 'tifoso.js?v=7', 'push.js?v=1','manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
+const SHELL = ['./', 'index.html', 'ui-extra.js?v=11', 'match-report.js?v=17', 'fluido.js?v=10', 'restyle.js?v=10', 'rinnova.js?v=13', 'tifoso.js?v=8', 'push.js?v=2','manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
 const EXT = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const good = res => res && (res.ok || res.type === 'opaque');
 self.addEventListener('install', e => {
