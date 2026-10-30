@@ -382,7 +382,18 @@ function drawScore(ctx,R,P,cx,base,size,ink,dash){
 function drawPill(ctx,O,cx,cy,size){ctx.font=`700 ${size}px Oswald, sans-serif`;ctx.textAlign='center';const w=ctx.measureText(O.label).width+size*2.2,h=size*1.9;ctx.fillStyle=O.color;reportRoundRect(ctx,cx-w/2,cy-h/2,w,h,h/2);ctx.fill();ctx.fillStyle='#101216';ctx.fillText(O.label,cx,cy+size*.36)}
 function resultReport(ctx,x,R,P,top,limit,o={}){
   const L=170,Rt=910,nick=id=>(S.members.find(m=>String(m.id)===String(id))||{}).nick||'?',ev=(x.events||[]).filter(e=>e.k==='g'&&e.a);
-  const gc=[{c:'#f5c518',l:'AMMONITI',t:R.cards.y.join(', ')},{c:'#e5484d',l:'ESPULSI',t:R.cards.r.join(', ')}].filter(g=>g.t),reserve=gc.length?72+gc.length*54:0;
+  const known=id=>S.members.some(m=>String(m.id)===String(id)),evx=x.events||[],stx=x.stats||{},cardRows=[],saveRows=[];
+  evx.forEach((v,i)=>{
+    if((v.k==='y'||v.k==='r')&&known(v.p))cardRows.push({k:v.k,name:nick(v.p),min:v.m,i});
+    else if(v.k==='ps')saveRows.push({k:'ps',name:known(v.gk)?nick(v.gk):'PORTIERE',min:v.m,i,gk:v.gk});
+  });
+  // Eventi inseriti a mano (solo statistiche, senza cronaca): restano visibili, senza minuto.
+  Object.keys(stx).forEach(id=>{if(!known(id))return;
+    for(const k of ['y','r']){const have=evx.filter(v=>v.k===k&&String(v.p)===String(id)).length;for(let c=have;c<(+stx[id][k]||0);c++)cardRows.push({k,name:nick(id),min:0,i:1e6})}
+    const hs=evx.filter(v=>v.k==='ps'&&String(v.gk)===String(id)).length;for(let c=hs;c<(+stx[id].ps||0);c++)saveRows.push({k:'ps',name:nick(id),min:0,i:1e6})});
+  cardRows.sort((p,q)=>p.i-q.i);saveRows.sort((p,q)=>p.i-q.i);
+  const CAP=6,cardShow=cardRows.slice(0,CAP),saveShow=saveRows.slice(0,CAP),
+    sec=(a,t)=>a.length?72+a.length*54+(t>a.length?44:0):0,reserve=sec(cardShow,cardRows.length)+sec(saveShow,saveRows.length);
   resultLabel(ctx,'MARCATORI',top,P.text);let y=top+34;ctx.textAlign='center';
   if(!R.scorers.length){ctx.fillStyle=P.text;ctx.globalAlpha=.6;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(o.empty||'',540,y+40);ctx.globalAlpha=1;y+=80}
   else{
@@ -400,8 +411,16 @@ function resultReport(ctx,x,R,P,top,limit,o={}){
       ctx.fillStyle=P.text;ctx.globalAlpha=.15;ctx.fillRect(L,y+h-6,Rt-L,2);ctx.globalAlpha=1;y+=h});
     if(n<rows.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+(rows.length-n)+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}
   }
-  if(gc.length){y+=28;resultLabel(ctx,'CARTELLINI',y+22,P.text);y+=44;
-    gc.forEach(g=>{ctx.fillStyle=g.c;reportRoundRect(ctx,L,y+6,28,38,5);ctx.fill();ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(reportFit(ctx,g.l+' · '+g.t.toUpperCase(),Rt-L-52),L+52,y+36);y+=54})}
+  const drawEv=(a,tot,title)=>{if(!a.length)return;y+=28;resultLabel(ctx,title,y+22,P.text);y+=44;
+    a.forEach(r=>{
+      if(r.k==='ps'){ctx.fillStyle='#2fbf71';reportRoundRect(ctx,L,y+6,38,38,19);ctx.fill();ctx.fillStyle='#101216';ctx.font='700 24px Oswald, sans-serif';ctx.textAlign='center';ctx.fillText('P',L+19,y+33)}
+      else{ctx.fillStyle=r.k==='y'?'#f5c518':'#e5484d';reportRoundRect(ctx,L+5,y+6,28,38,5);ctx.fill()}
+      ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(reportFit(ctx,r.name.toUpperCase(),Rt-L-170),L+52,y+36);
+      const bt=r.min?r.min+"'":'•';ctx.font='700 28px Oswald, sans-serif';const bw=Math.max(52,ctx.measureText(bt).width+26);
+      ctx.fillStyle=P.accent;reportRoundRect(ctx,Rt-bw,y+3,bw,44,22);ctx.fill();ctx.fillStyle=fxContrast(P.accent);ctx.textAlign='center';ctx.fillText(bt,Rt-bw/2,y+34);
+      y+=54});
+    if(tot>a.length){ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.8;ctx.font='500 26px Oswald, sans-serif';ctx.fillText('+'+(tot-a.length)+' ALTRI',540,y+30);ctx.globalAlpha=1;y+=44}};
+  drawEv(cardShow,cardRows.length,'CARTELLINI');drawEv(saveShow,saveRows.length,'RIGORI PARATI');
   return y;
 }
 function resultPresent(ctx,R,P,top){
