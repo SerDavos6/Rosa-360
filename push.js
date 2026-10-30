@@ -58,6 +58,7 @@
     return (fan ? '<b>Notifiche</b>' : '<div style="margin-top:16px"><b>Notifiche</b></div>') + '<p class="mu" style="white-space:normal">' + txt + '</p>' + btn;
   }
   window.pushCard = pushCard;
+  window.pushState = () => state;
 
   // si aggancia alla scheda "Aspetto" del Profilo, senza toccare il resto
   const prev = window.aspettoExtra;

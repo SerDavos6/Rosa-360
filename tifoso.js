@@ -155,7 +155,23 @@ function settingsHtml(){
   const seg=`<div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>`;
   const acc=F.uid?`<div class="card"><b>Account</b><p class="mu" style="white-space:normal">Profilo tifoso: le squadre preferite sono salvate sul tuo account e le ritrovi su ogni telefono.${F.pf&&F.pf.role?" Il tuo profilo da giocatore o dirigente resta salvato.":""}</p><div class="pbtns"><button onclick="fanSignOut()">Esci dall’account</button><button onclick="fanToPlayer()">Passa a giocatore o dirigente</button></div></div>`
     :`<div class="card"><b>Account</b><p class="mu" style="white-space:normal">Crea un profilo tifoso per ritrovare le squadre preferite su ogni telefono. Se hai già un profilo, accedi.</p><button class="p" onclick="fanExit()">Accedi o crea un profilo</button></div>`;
-  return `<div style="margin-top:22px"><div class="card"><b>Aspetto</b>${seg}<p class="mu" style="margin-bottom:0;white-space:normal">Vale solo su questo telefono. “Squadra” usa i colori della squadra che stai guardando.</p></div>${acc}${F.uid&&typeof pushCard==="function"&&pushCard("fan")?`<div class="card">${pushCard("fan")}</div>`:""}</div>`}
+  return `<div style="margin-top:22px"><div class="card"><b>Aspetto</b>${seg}<p class="mu" style="margin-bottom:0;white-space:normal">Vale solo su questo telefono. “Squadra” usa i colori della squadra che stai guardando.</p></div>${acc}${notifHtml()}</div>`}
+// Notifiche del tifoso: solo per le squadre preferite, con un interruttore per ciascuna (campo "mute" dentro il preferito).
+function notifHtml(){
+  if(!F.uid||typeof pushCard!=="function")return "";
+  const base=pushCard("fan");if(!base)return "";
+  let list="";
+  if(typeof pushState==="function"&&pushState()==="on"){
+    const fa=favs();
+    list=fa.length
+      ?`<div class="mu" style="white-space:normal;margin-top:12px">Scegli per quali squadre preferite ricevere gli avvisi:</div>`+fa.map(f=>`<div class="row" style="align-items:center;margin-top:8px;flex-wrap:nowrap"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name||"Squadra")}</span><button class="chip${f.mute?"":" on"}" data-id="${esc(f.id)}" onclick="fanNotif(this.dataset.id)" aria-pressed="${f.mute?"false":"true"}">${f.mute?"Disattivate":"Attive"}</button></div>`).join("")
+      :`<p class="mu" style="white-space:normal;margin-top:12px">Non hai ancora squadre preferite: cerca una squadra e tocca la stella ${ic("star")} per ricevere i suoi avvisi.</p>`}
+  return `<div class="card">${base}${list}</div>`}
+window.fanNotif=function(id){
+  if(!ID(id))return;
+  saveFavs(favs().map(f=>f.id===id?{...f,mute:!f.mute}:f));render()};
+// scheda "Profilo" del tifoso dentro una squadra: account, notifiche e aspetto (le stesse impostazioni della schermata principale)
+function fanProfile(){return `<h1 style="margin:0">${ic("user")} Profilo</h1>${settingsHtml()}`}
 function tourHtml(){
   const T=F.tour,seasons=[...new Set(T.matches.filter(m=>m.date).map(m=>seasonOf(m.date)))].sort().reverse(),se=seasons.includes(F.ts)?F.ts:seasons[0];
   const ms=T.matches.filter(m=>!se||(m.date&&seasonOf(m.date)===se)),by={};
@@ -178,10 +194,12 @@ function teamBar(t){
   return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn fn" style="font-size:${nameFs(t.name,17,12)}px">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
   const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
+  if(!S.browse)nav.push(["imp",ic("user"),"Profilo"]);
+  if(S.browse&&S.tab==="imp")S.tab="cal";
   const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,false);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body=({rosa:rosaView,cal:calView,cls:clsView}[S.tab]||calView)(t,false)}
+  else{head=teamBar(t);body=({rosa:rosaView,cal:calView,cls:clsView,imp:fanProfile}[S.tab]||calView)(t,false)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}</button>`).join("")}<button onclick="fanHome()"><span>${SRCH}</span>Cerca</button>${S.browse?`<button onclick="fanLeave()"><span>${XI}</span>Chiudi</button>`:""}</nav>`}
 
 window.fanRender=function(){
