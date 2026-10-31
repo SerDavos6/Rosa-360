@@ -171,7 +171,7 @@
     const recs = jsonObjs(txt).flatMap(recordsOf);
     if (!recs.length) { s.imp = 'Non ho trovato partite nel testo incollato. Copia la risposta completa (scheda Response) e riprova.'; return render(); }
     const k = r => [norm(r.h), norm(r.a)].sort().join('|');
-    let nuove = 0, agg = 0, fasi = 0, nonConf = 0; const sconosciute = new Set();
+    let nuove = 0, agg = 0, fasi = 0, nonConf = 0; const sconosciute = new Set(), partiteNo = [];
     o.res = o.res || [];
     recs.forEach(r => {
       const gm = /gir(?:one|\.)?\s*([A-D])\b/i.exec(r.serie_name || '');
@@ -181,13 +181,14 @@
       if (!m || (r.match_status && r.match_status !== 'validated')) { nonConf++; return; }
       const find = n => o.groups[g].find(x => nn(x) === nn(n));
       const h = find(r.team1_name), a = find(r.team2_name);
-      if (!h || !a) { if (!h) sconosciute.add(r.team1_name + ' (Gir. ' + g + ')'); if (!a) sconosciute.add(r.team2_name + ' (Gir. ' + g + ')'); return; }
+      if (!h || !a) { if (!h) sconosciute.add(r.team1_name); if (!a) sconosciute.add(r.team2_name); partiteNo.push('G' + (r.day_n || '?') + ' Gir. ' + g + ': ' + r.team1_name + ' – ' + r.team2_name); return; }
       const item = { h, a, gh: +m[1], ga: +m[2] }, key = k(item), i = o.res.findIndex(x => k(x) === key);
-      if (i >= 0) { if (o.res[i].h !== h || o.res[i].gh !== item.gh || o.res[i].ga !== item.ga) agg++; o.res[i] = item; } else { o.res.push(item); nuove++; }
+      if (+r.day_n > 0) item.dn = +r.day_n;
+      if (i >= 0) { if (o.res[i].h !== h || o.res[i].gh !== item.gh || o.res[i].ga !== item.ga || o.res[i].dn !== item.dn) agg++; o.res[i] = item; } else { o.res.push(item); nuove++; }
     });
     s.imp = 'Importate ' + nuove + ' partite nuove, ' + agg + ' aggiornate.' + (nonConf ? ' Saltate ' + nonConf + ' senza risultato confermato.' : '') +
       (fasi ? ' Ignorate ' + fasi + ' partite che non sono dei gironi (fasi finali: per ora a mano).' : '') +
-      (sconosciute.size ? ' Squadre non riconosciute: ' + [...sconosciute].join(', ') + '.' : '');
+      (partiteNo.length ? ' NON importate perché una squadra ha un nome diverso (' + partiteNo.length + '): ' + partiteNo.join('; ') + '. Nomi del sito da correggere in Impostazioni: ' + [...sconosciute].join(', ') + '.' : '');
     save(o);
   };
   window.trSaveSettings = () => {
@@ -281,11 +282,23 @@
     const up = appList(o).filter(r => !r.played && r.g === g).sort((p, q) => (p.date + p.time) < (q.date + q.time) ? -1 : 1);
     const upH = up.length ? '<h2>Prossime partite · Girone ' + g + '</h2><div class="card">' + up.map(r => '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span></div><div class="tm"><span>' + E(r.a) + '</span></div><span class="mu">' + E([dmy(r.date), r.time].filter(Boolean).join(' · ') || 'data da definire') + '</span></div>').join('') + '</div>' : '';
     const list = gres(o, g).sort((p, q) => (q.date || '') < (p.date || '') ? -1 : (q.date || '') > (p.date || '') ? 1 : 0), man = o.res || [];
-    const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2><div class="card">' + list.map(r => {
+    const per = Math.max(1, Math.floor(names.length / 2));
+    const rowH = r => {
       const i = r.auto ? -1 : man.findIndex(x => x.h === r.h && x.a === r.a && x.gh === r.gh && x.ga === r.ga);
       return '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span><b>' + r.gh + '</b></div><div class="tm"><span>' + E(r.a) + '</span><b>' + r.ga + '</b></div>' +
         (r.auto ? '<span class="mu">' + (r.date ? dmy(r.date) + ' · ' : '') + 'dalle partite dell’app</span>' : (mgr && i >= 0 ? '<button class="s" onclick="trDelRes(' + i + ')">Elimina</button>' : '')) + '</div>';
-    }).join('') + '</div>' : '';
+    };
+    const byDn = {}; list.forEach(r => { (byDn[r.dn || 0] = byDn[r.dn || 0] || []).push(r); });
+    const maxDn = Math.max(0, ...Object.keys(byDn).map(Number));
+    let lstBody = '';
+    for (let d = 1; d <= maxDn; d++) {
+      const arr = byDn[d] || [], miss = arr.length < per;
+      const senza = names.filter(n => !arr.some(r => nn(r.h) === nn(n) || nn(r.a) === nn(n)));
+      lstBody += '<div style="margin-top:10px"><b>Giornata ' + d + '</b> <span class="' + (miss ? '' : 'mu') + '" style="' + (miss ? 'color:var(--dg);font-weight:700' : '') + '">' + arr.length + '/' + per + ' partite</span>' +
+        (miss && senza.length && senza.length < names.length ? '<div class="mu" style="white-space:normal">Senza risultato: ' + senza.map(E).join(', ') + '</div>' : '') + '</div>' + arr.map(rowH).join('');
+    }
+    if ((byDn[0] || []).length) lstBody += '<div style="margin-top:10px"><b>' + (maxDn ? 'Senza numero di giornata' : 'Risultati') + '</b> <span class="mu">' + byDn[0].length + ' partite</span></div>' + byDn[0].map(rowH).join('');
+    const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2><div class="card">' + lstBody + '</div>' : '';
     const imp = mgr ? '<div class="card"><b>Importa dal sito dei risultati</b><p class="mu" style="white-space:normal">Sulla pagina delle giornate apri gli strumenti del browser (F12) → Rete → richiesta «data?widgetId…» → scheda Response, copia tutto e incollalo qui. Puoi incollarne più di seguito (una per giornata). Vengono importate solo le partite dei gironi con risultato confermato.</p><textarea id="tr-imp" rows="4" style="width:100%" placeholder="Incolla qui la risposta…"></textarea>' +
       '<p style="margin:10px 0 0"><button class="p" onclick="trImport()">Importa</button></p>' + (st().imp ? '<p style="white-space:normal;margin:10px 0 0"><b>' + E(st().imp) + '</b></p>' : '') + '</div>' : '';
     return chips + tbl + upH + force + mine + form + imp + lst;
