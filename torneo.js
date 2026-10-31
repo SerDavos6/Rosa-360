@@ -345,14 +345,18 @@
   };
 
   // classifiche dei miei gironi, per la scheda "Classifiche" (in cima alla vista "Squadra")
+  window.trClsPick = id => { st().cls = id; R(); };
   window.torneoClassifica = function () {
     if (X()) return '';
-    return tourList().map(o => {
-      if (!o.mine) return '';
-      const g = GL(o).find(x => o.groups[x].some(y => norm(y) === norm(o.mine))); if (!g) return '';
-      return '<div class="card" style="padding:10px 10px 6px"><b>' + E(o.name) + (GLn(o).length > 1 ? ' · Girone ' + g : '') + '</b><div style="overflow-x:auto">' + stRows(o, g, false) +
-        '</div><p style="margin:8px 0 4px"><button class="s" onclick="trOpen();trPick(\'' + E(o.id) + '\')">' + ic('trophy') + ' Apri il torneo</button></p></div>';
-    }).join('');
+    const items = tourList().map(o => {
+      if (!o.mine) return null;
+      const g = GL(o).find(x => o.groups && o.groups[x] && o.groups[x].some(y => norm(y) === norm(o.mine))); return g ? { o, g } : null;
+    }).filter(Boolean);
+    if (!items.length) return '';
+    const cur = items.find(i => i.o.id === st().cls) || items[0], o = cur.o, g = cur.g;
+    const chips = items.length > 1 ? '<select aria-label="Scegli il torneo" style="width:100%;margin-bottom:8px" onchange="trClsPick(this.value)">' + items.map(i => '<option value="' + E(i.o.id) + '"' + (i === cur ? ' selected' : '') + '>' + E(i.o.name) + '</option>').join('') + '</select>' : '';
+    return chips + '<div class="card" style="padding:10px 10px 6px"><b>' + E(o.name) + (GLn(o).length > 1 ? ' · Girone ' + g : '') + '</b><div style="overflow-x:auto">' + stRows(o, g, false) +
+      '</div><p style="margin:8px 0 4px"><button class="s" onclick="trOpen();trPick(\'' + E(o.id) + '\')">' + ic('trophy') + ' Apri il torneo</button></p></div>';
   };
 
   window.torneoBtn = function (t, mgr) {
