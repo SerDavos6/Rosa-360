@@ -175,6 +175,26 @@
       (sconosciute.size ? ' Squadre non riconosciute: ' + [...sconosciute].join(', ') + '.' : '');
     save(o);
   };
+  window.trSaveSettings = () => {
+    const o = clone(T()), name = val('tr-sn'); if (!o) return;
+    if (!name) return toast('Scrivi il nome del torneo.');
+    const ren = {}, groups = {}; let lost = 0;
+    for (const g of GN) {
+      const nl = val('tr-s' + g).split('\n').map(x => x.trim()).filter(Boolean), ol = o.groups[g];
+      if (nl.length === ol.length) ol.forEach((x, i) => { if (norm(x) !== norm(nl[i])) ren[norm(x)] = nl[i]; });   // stessa lunghezza: righe cambiate = squadre rinominate
+      groups[g] = nl;
+    }
+    const all = GN.flatMap(g => groups[g].map(norm));
+    if (new Set(all).size !== all.length) return toast('Ci sono due squadre con lo stesso nome.');
+    const fix = n => ren[norm(n)] || n, has = n => all.includes(norm(n));
+    o.name = name; o.groups = groups;
+    const before = (o.res || []).length;
+    o.res = (o.res || []).map(r => ({ ...r, h: fix(r.h), a: fix(r.a) })).filter(r => has(r.h) && has(r.a));
+    lost = before - o.res.length;
+    if (o.mine) o.mine = has(fix(o.mine)) ? fix(o.mine) : '';
+    st().imp = ''; save(o);
+    toast('Torneo aggiornato' + (lost ? ' (' + lost + ' risultati di squadre tolte eliminati)' : ''), true);
+  };
   window.trDelRes = i => { const o = clone(T()); o.res.splice(i, 1); save(o); };
   window.trForce = g => { const o = clone(T()); o.force = o.force || {}; o.force[g] = !o.force[g]; save(o); };
   window.trSaveKo = key => {
@@ -287,7 +307,10 @@
     const tabs = '<div class="csl"><button class="chip' + (v === 'g' ? ' on' : '') + '" onclick="trGo(\'g\')">Gironi</button><button class="chip' + (v === 'b' ? ' on' : '') + '" onclick="trGo(\'b\')">Tabellone</button>' + (mgr ? '<button class="chip' + (v === 'x' ? ' on' : '') + '" onclick="trGo(\'x\')">Impostazioni</button>' : '') + '</div>';
     let body;
     if (v === 'b') body = bracketView(o, mgr);
-    else if (v === 'x' && mgr) body = '<div class="card"><b>' + E(o.name) + '</b><label>La mia squadra nel torneo</label><select onchange="trMine(this.value)"><option value="">Nessuna</option>' +
+    else if (v === 'x' && mgr) body = '<div class="card"><h3>Modifica il torneo</h3><label for="tr-sn">Nome del torneo</label><input id="tr-sn" maxlength="80" value="' + E(o.name) + '">' +
+      GN.map(g => '<label for="tr-s' + g + '">Girone ' + g + ' (una squadra per riga)</label><textarea id="tr-s' + g + '" rows="6" style="width:100%">' + E(o.groups[g].join('\n')) + '</textarea>').join('') +
+      '<p class="mu" style="white-space:normal">Per correggere il nome di una squadra cambia la riga senza spostarla: i suoi risultati restano. Se aggiungi o togli righe, i risultati delle squadre tolte vengono eliminati. Se cambi il nome del torneo, ricordati di usare lo stesso nome nelle partite della squadra.</p><p><button class="p" onclick="trSaveSettings()">Salva modifiche</button></p></div>' +
+      '<div class="card"><b>La mia squadra nel torneo</b><label>Scegli</label><select onchange="trMine(this.value)"><option value="">Nessuna</option>' +
       GN.map(x => '<optgroup label="Girone ' + x + '">' + o.groups[x].map(n => '<option' + (norm(n) === norm(o.mine) ? ' selected' : '') + '>' + E(n) + '</option>').join('') + '</optgroup>').join('') + '</select>' +
       '<p class="mu" style="white-space:normal">Le partite della tua squadra con torneo «' + E(o.name) + '» entrano da sole nelle classifiche dei gironi.</p>' +
       '<p style="margin-top:16px"><button class="d" onclick="trDelete()">Elimina il torneo</button></p></div>';
