@@ -22,7 +22,8 @@
   const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const num = x => { const n = parseInt(x, 10); return isFinite(n) && n >= 0 ? Math.min(n, 99) : null; };
   const team = () => S.teams.find(t => t.id === S.tid);
-  const T = () => { const t = team(); return t && t.tourn && t.tourn.groups ? t.tourn : null; };
+  const X = () => window.trExt || null;   // vista dei tifosi dal ricerca-per-torneo: { o, tid, matches, back }
+  const T = () => { const x = X(); if (x) return x.o && x.o.groups ? x.o : null; const t = team(); return t && t.tourn && t.tourn.groups ? t.tourn : null; };
   const clone = o => JSON.parse(JSON.stringify(o));
   const val = id => { const e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
   const st = () => (S.tr = S.tr || { v: 'g', g: 'A' });
@@ -38,8 +39,9 @@
   function autoRes(o) {            // partite della mia squadra registrate nell'app con lo stesso nome di torneo
     const out = [];
     if (!o.mine) return out;
-    (S.matches || []).forEach(m => {
-      if (m.tid !== S.tid || !m.played || norm(m.tourn) !== norm(o.name)) return;
+    const x = X(), tid = x ? x.tid : S.tid;
+    ((x ? x.matches : S.matches) || []).forEach(m => {
+      if (m.tid !== tid || !m.played || (!x && norm(m.tourn) !== norm(o.name))) return;
       const opp = GN.reduce((f, g) => f || o.groups[g].find(n => norm(n) === norm(m.opp)), null);
       if (opp && norm(opp) !== norm(o.mine)) out.push({ h: o.mine, a: opp, gh: +m.gf || 0, ga: +m.ga || 0, auto: true });
     });
@@ -300,7 +302,7 @@
   window.st_c = c => { st().c = c; render(); };
 
   window.torneoView = function (t, mgr) {
-    const o = T(), back = '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p>';
+    const o = T(), back = '<p style="margin:6px 0"><button class="s" onclick="' + (X() && X().back || 'trBack()') + '">' + ic('back') + (X() ? ' Indietro' : ' Partite') + '</button></p>';
     if (!o) return back + (mgr ? setupView() : '<div class="card mu">Il dirigente non ha ancora creato un torneo.</div>');
     const s = st(), v = s.v === 'b' ? 'b' : s.v === 'x' ? 'x' : 'g';
     const tabs = '<div class="csl"><button class="chip' + (v === 'g' ? ' on' : '') + '" onclick="trGo(\'g\')">Gironi</button><button class="chip' + (v === 'b' ? ' on' : '') + '" onclick="trGo(\'b\')">Tabellone</button>' + (mgr ? '<button class="chip' + (v === 'x' ? ' on' : '') + '" onclick="trGo(\'x\')">Impostazioni</button>' : '') + '</div>';
