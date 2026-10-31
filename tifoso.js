@@ -96,7 +96,7 @@ window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
 window.fanHome=function(){F.tv=false;S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
 window.fanTourName=async function(name){
   if(!name)return;F.tv=false;S.tr=null;F.busy=true;render();
-  try{const d=await rpc("fan_tournament",{n:name});F.tour={name,teams:d.teams||[],matches:d.matches||[],bracket:d.bracket&&d.bracket.groups?d.bracket:null};F.ts=null;addRecent({k:"c",name:String(name).slice(0,80)})}
+  try{const d=await rpc("fan_tournament",{n:name});F.tour={name,teams:d.teams||[],matches:d.matches||[],bracket:d.bracket&&d.bracket.name?d.bracket:null};F.ts=null;addRecent({k:"c",name:String(name).slice(0,80)})}
   catch(e){toast("Torneo non disponibile. Controlla la connessione.")}
   F.busy=false;render()};
 window.fanTour=function(i){const t=F.res&&F.res.tours[i];if(t)return window.fanTourName(t.name)};
