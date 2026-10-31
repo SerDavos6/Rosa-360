@@ -262,14 +262,14 @@
     const o = clone(cur);
     const recs = jsonObjs(txt).flatMap(recordsOf);
     if (!recs.length) { s.imp = 'Non ho trovato partite nel testo incollato. Copia la risposta completa (scheda Response) e riprova.'; return R(); }
-    let nuove = 0, agg = 0, fasi = 0, nonConf = 0; const sconosciute = new Set(), partiteNo = [];
+    let nuove = 0, agg = 0, fasi = 0, nonConf = 0; const diag = []; const sconosciute = new Set(), partiteNo = [];
     o.res = o.res || [];
     recs.forEach(r => {
       const gm = /gir(?:one|\.)?\s*([A-H])\b/i.exec(r.serie_name || '');
       const g = gm ? gm[1].toUpperCase() : (GLn(o).length === 1 && !(/final|ottav|quart|semi|play/i.test(r.serie_name || '')) ? GLn(o)[0] : null);
       if (!g || !o.groups[g]) { fasi++; return; }
-      const m = /^\s*(\d+)\s*[-–]\s*(\d+)\s*$/.exec(r.result || '');
-      if (!m || (r.match_status && r.match_status !== 'validated')) { nonConf++; return; }
+      const m = /^\s*(\d+)\s*[-–:]\s*(\d+)\s*$/.exec(String(r.result == null ? '' : r.result));
+      if (!m || (r.match_status && r.match_status !== 'validated')) { nonConf++; if (diag.length < 3) diag.push(r.team1_name + ' – ' + r.team2_name + ' (risultato: "' + (r.result == null ? '' : r.result) + '", stato: "' + (r.match_status || '') + '")'); return; }
       const find = n => o.groups[g].find(x => nn(x) === nn(n));
       const h = find(r.team1_name), a = find(r.team2_name);
       if (!h || !a) { if (!h) sconosciute.add(r.team1_name); if (!a) sconosciute.add(r.team2_name); partiteNo.push('G' + (r.day_n || '?') + ' ' + (GLn(o).length > 1 ? 'Gir. ' + g + ': ' : '') + r.team1_name + ' – ' + r.team2_name); return; }
@@ -277,7 +277,7 @@
       if (+r.day_n > 0) item.dn = +r.day_n;
       if (i >= 0) { if (o.res[i].h !== h || o.res[i].gh !== item.gh || o.res[i].ga !== item.ga || o.res[i].dn !== item.dn) agg++; o.res[i] = item; } else { o.res.push(item); nuove++; }
     });
-    s.imp = 'Importate ' + nuove + ' partite nuove, ' + agg + ' aggiornate.' + (nonConf ? ' Saltate ' + nonConf + ' senza risultato confermato.' : '') +
+    s.imp = 'Importate ' + nuove + ' partite nuove, ' + agg + ' aggiornate.' + (nonConf ? ' Saltate ' + nonConf + ' senza risultato confermato' + (diag.length ? ' — es. ' + diag.join('; ') : '') + '.' : '') +
       (fasi ? ' Ignorate ' + fasi + ' partite che non sono dei gironi (fasi finali: per ora a mano).' : '') +
       (partiteNo.length ? ' NON importate perché una squadra ha un nome diverso (' + partiteNo.length + '): ' + partiteNo.join('; ') + '. Nomi del sito da correggere in Impostazioni: ' + [...sconosciute].join(', ') + '.' : '');
     save(o);
