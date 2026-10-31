@@ -225,11 +225,10 @@
     '.trk .ir{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}';
   document.head.appendChild(css);
 
-  window.torneoCard = function (t, mgr) {
-    const o = T();
-    if (o) return '<div class="card"><b>' + E(o.name) + '</b><p class="mu" style="white-space:normal;margin:4px 0 10px">Gironi, classifiche e fasi finali.</p><button class="p" onclick="trOpen()">' + ic('trophy') + ' Apri il torneo</button></div>';
-    if (!mgr) return '';
-    return '<div class="card"><b>Torneo a gironi</b><p class="mu" style="white-space:normal;margin:4px 0 10px">Crea un torneo con gironi e fasi finali (Gold, Silver, Bronze, Copper) e inserisci i risultati.</p><button onclick="trOpen()">' + ic('plus') + ' Crea un torneo</button></div>';
+  // piccolo pulsante accanto a "Nuova partita": apre il torneo, oppure lo crea (solo dirigenti) se non esiste ancora
+  window.torneoBtn = function (t, mgr) {
+    if (!T() && !mgr) return '';
+    return '<button class="s plus" onclick="trOpen()" aria-label="' + (T() ? 'Apri il torneo' : 'Crea un torneo') + '">' + ic('trophy') + ' Torneo</button>';
   };
 
   function setupView() {
