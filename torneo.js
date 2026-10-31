@@ -192,6 +192,7 @@
   }
 
   // ---------- azioni ----------
+  window.trDn = k => { st().dn = k === 'all' ? 'all' : +k; R(); };
   window.trGo = (v, g) => { const s = st(); if (v) s.v = v; if (g) s.g = g; R(); };
   window.trOpen = () => { S.tab = 'trn'; S.tr = { v: 'g', id: null }; R(); };
   window.trBack = () => { S.tab = 'cal'; R(); };
@@ -417,15 +418,20 @@
     };
     const byDn = {}; list.forEach(r => { (byDn[r.dn || 0] = byDn[r.dn || 0] || []).push(r); });
     const maxDn = Math.max(0, ...Object.keys(byDn).map(Number));
-    let lstBody = '';
-    for (let d = 1; d <= maxDn; d++) {
-      const arr = byDn[d] || [], miss = arr.length < per;
-      const senza = names.filter(n => !arr.some(r => nn(r.h) === nn(n) || nn(r.a) === nn(n)));
-      lstBody += '<div style="margin-top:10px"><b>Giornata ' + d + '</b> <span class="' + (miss ? '' : 'mu') + '" style="' + (miss ? 'color:var(--dg);font-weight:700' : '') + '">' + arr.length + '/' + per + ' partite</span>' +
+    const dkeys = []; for (let d = 1; d <= maxDn; d++) dkeys.push(d); if ((byDn[0] || []).length && maxDn) dkeys.push(0);
+    const sel = s.dn === 'all' ? 'all' : (dkeys.includes(s.dn) ? s.dn : (maxDn || 'all'));
+    const incomplete = d => d > 0 && (byDn[d] || []).length < per;
+    const dchips = dkeys.length ? '<div class="csl">' + ['all'].concat(dkeys).map(k => '<button class="chip' + (k === sel ? ' on' : '') + '" onclick="trDn(\'' + k + '\')">' + (k === 'all' ? 'Tutte' : (k === 0 ? 'Senza n.' : 'G' + k + (incomplete(k) ? ' !' : ''))) + '</button>').join('') + '</div>' : '';
+    const dayBlock = d => {
+      const arr = byDn[d] || [];
+      if (d === 0) return '<div style="margin-top:10px"><b>' + (maxDn ? 'Senza numero di giornata' : 'Risultati') + '</b> <span class="mu">' + arr.length + ' partite</span></div>' + arr.map(rowH).join('');
+      const miss = arr.length < per, senza = names.filter(n => !arr.some(r => nn(r.h) === nn(n) || nn(r.a) === nn(n)));
+      return '<div style="margin-top:10px"><b>Giornata ' + d + '</b> <span class="' + (miss ? '' : 'mu') + '" style="' + (miss ? 'color:var(--dg);font-weight:700' : '') + '">' + arr.length + '/' + per + ' partite</span>' +
         (miss && senza.length && senza.length < names.length ? '<div class="mu" style="white-space:normal">Senza risultato: ' + senza.map(E).join(', ') + '</div>' : '') + '</div>' + arr.map(rowH).join('');
-    }
-    if ((byDn[0] || []).length) lstBody += '<div style="margin-top:10px"><b>' + (maxDn ? 'Senza numero di giornata' : 'Risultati') + '</b> <span class="mu">' + byDn[0].length + ' partite</span></div>' + byDn[0].map(rowH).join('');
-    const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2><div class="card">' + lstBody + '</div>' : '';
+    };
+    const shown = !dkeys.length ? [0] : (sel === 'all' ? dkeys : [sel]);
+    const lstBody = shown.map(dayBlock).join('');
+    const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2>' + dchips + '<div class="card">' + lstBody + '</div>' : '';
     const imp = mgr ? '<div class="card"><b>Importa dal sito dei risultati</b><p class="mu" style="white-space:normal">Sulla pagina delle giornate apri gli strumenti del browser (F12) → Rete → richiesta «data?widgetId…» → scheda Response, copia tutto e incollalo qui. Puoi incollarne più di seguito (una per giornata). Vengono importate solo le partite dei gironi con risultato confermato.</p><textarea id="tr-imp" rows="4" style="width:100%" placeholder="Incolla qui la risposta…"></textarea>' +
       '<p style="margin:10px 0 0"><button class="p" onclick="trImport()">Importa</button></p>' + (st().imp ? '<p style="white-space:normal;margin:10px 0 0"><b>' + E(st().imp) + '</b></p>' : '') + '</div>' : '';
     return chips + tbl + upH + force + mine + form + imp + lst;
