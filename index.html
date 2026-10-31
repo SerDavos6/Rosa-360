@@ -230,7 +230,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
 <script src="ui-extra.js?v=11"></script><script src="match-report.js?v=17"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=13"></script><script src="tifoso.js?v=11"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
-<script src="torneo.js?v=5"></script>
+<script src="torneo.js?v=6"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -589,7 +589,7 @@ function clsView(t){
     const pod=top.length?`<div class="pod">${order.map(i=>{const a=top[i];return `<div class="p${i+1}">${av(a.m,"")}<div class="pn" style="font-size:${pnFs(a.m.nick)}px"><span>${esc(a.m.nick)}</span></div><div class="st2"><div class="pl2">${i+1}°</div><div class="pv">${a.v}</div></div></div>`}).join("")}</div>`:"";
     return `<div class="card">${pod}${rest.map((a,i)=>`<div class="lr"><span class="rk">${i+off}</span>${av(a.m,"sm")}<b style="flex:1">${esc(a.m.nick)}</b><b class="gold hd">${a.v}</b></div>`).join("")||(l.length?"":emptyState("trophy","Ancora nessun dato","La classifica si riempie con le partite giocate.",""))}</div>`};
   const tabs=[["sq","Squadra"],["ov","Overall"],["g","Marcatori"],["a","Assist"],["p","Presenze"]],cs=tabs.some(x=>x[0]===S.cs)?S.cs:"sq";
-  const body=cs==="sq"?squadBlock(t):cs==="ov"?blk(a=>a.m.role==="giocatore"?a.o:0,true):cs==="g"?blk(a=>a.s.g):cs==="a"?blk(a=>a.s.a):blk(a=>a.s.p);
+  const body=cs==="sq"?(typeof torneoClassifica==="function"?torneoClassifica():"")+squadBlock(t):cs==="ov"?blk(a=>a.m.role==="giocatore"?a.o:0,true):cs==="g"?blk(a=>a.s.g):cs==="a"?blk(a=>a.s.a):blk(a=>a.s.p);
   return `<div class="csl">${tabs.map(([k,n])=>`<button class="chip${cs===k?" on":""}" onclick="S.cs='${k}';render()">${n}</button>`).join("")}</div>${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic("share")} Condividi classifica</button></p>`}
 function editCard(m){if(!m)return"";const g=m.role==="giocatore";
   return `<div><h2 style="margin-top:0">Modifica carta</h2>

@@ -36,17 +36,30 @@
   }
 
   // ---------- calcoli ----------
-  function autoRes(o) {            // partite della mia squadra registrate nell'app con lo stesso nome di torneo
-    const out = [];
-    if (!o.mine) return out;
-    const x = X(), tid = x ? x.tid : S.tid;
+  const dmy = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? m[3] + '/' + m[2] : ''; };
+  // Partite registrate nell'app che riguardano due squadre dello stesso girone (con lo stesso nome di torneo).
+  // Nella vista del dirigente/giocatori sono quelle della propria squadra; nella vista dei tifosi (ricerca per torneo) quelle di tutte le squadre iscritte.
+  function appList(o) {
+    const x = X(), out = [], seen = new Set();
+    const gName = n => { for (const g of GN) { const f = o.groups[g].find(y => nn(y) === nn(n)); if (f) return f; } return null; };
+    const gOf = n => GN.find(g => o.groups[g].some(y => nn(y) === nn(n)));
+    const nameOf = tid => {
+      if (tid === (x ? x.tid : S.tid) && o.mine) return o.mine;
+      if (!x) return null;
+      const t = (x.teams || []).find(q => q.id === tid);
+      return t && t.name ? gName(t.name) : null;
+    };
     ((x ? x.matches : S.matches) || []).forEach(m => {
-      if (m.tid !== tid || !m.played || (!x && norm(m.tourn) !== norm(o.name))) return;
-      const opp = GN.reduce((f, g) => f || o.groups[g].find(n => norm(n) === norm(m.opp)), null);
-      if (opp && norm(opp) !== norm(o.mine)) out.push({ h: o.mine, a: opp, gh: +m.gf || 0, ga: +m.ga || 0, auto: true });
+      if (!x && (m.tid !== S.tid || norm(m.tourn) !== norm(o.name))) return;
+      const h = nameOf(m.tid), a = gName(m.opp);
+      if (!h || !a || nn(h) === nn(a) || gOf(h) !== gOf(a)) return;
+      const key = [nn(h), nn(a)].sort().join('|') + '|' + (m.date || '');
+      if (seen.has(key)) return; seen.add(key);
+      out.push({ h, a, gh: +m.gf || 0, ga: +m.ga || 0, played: !!m.played, date: m.date || '', time: m.time || '', g: gOf(h), auto: true });
     });
     return out;
   }
+  const autoRes = o => appList(o).filter(r => r.played);
   function gres(o, g) {
     const names = o.groups[g], inG = n => names.some(x => norm(x) === norm(n));
     const key = r => [norm(r.h), norm(r.a)].sort().join('|');
@@ -228,6 +241,16 @@
   document.head.appendChild(css);
 
   // piccolo pulsante accanto a "Nuova partita": apre il torneo, oppure lo crea (solo dirigenti) se non esiste ancora
+  // classifica del girone della mia squadra, per la scheda "Classifiche" (in cima alla vista "Squadra")
+  window.torneoClassifica = function () {
+    const o = T(); if (!o || !o.mine || X()) return '';
+    const g = GN.find(x => o.groups[x].some(y => norm(y) === norm(o.mine))); if (!g) return '';
+    const rows = standings(o, g);
+    return '<div class="card" style="padding:10px 10px 6px"><b>' + E(o.name) + ' · Girone ' + g + '</b><div style="overflow-x:auto"><table class="trt"><thead><tr><th>#</th><th class="l">Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th><th>DR</th><th>Pt</th></tr></thead><tbody>' +
+      rows.map((r, i) => '<tr class="' + (norm(r.n) === norm(o.mine) ? 'me' : '') + (i === 3 ? ' cut' : '') + '"><td>' + (i + 1) + '</td><td class="l">' + E(r.n) + '</td><td>' + r.g + '</td><td>' + r.v + '</td><td>' + r.p + '</td><td>' + r.s + '</td><td>' + (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) + '</td><td><b>' + r.pt + '</b></td></tr>').join('') +
+      '</tbody></table></div><p style="margin:8px 0 4px"><button class="s" onclick="trOpen()">' + ic('trophy') + ' Tutti i gironi e il tabellone</button></p></div>';
+  };
+
   window.torneoBtn = function (t, mgr) {
     if (!T() && !mgr) return '';
     return '<button class="s plus" onclick="trOpen()" aria-label="' + (T() ? 'Apri il torneo' : 'Crea un torneo') + '">' + ic('trophy') + ' Torneo</button>';
@@ -243,8 +266,8 @@
   }
 
   function groupsView(o, mgr) {
-    const s = st(), g = GN.includes(s.g) ? s.g : 'A', rows = standings(o, g), done = gdone(o, g);
-    const chips = '<div class="csl">' + GN.map(x => '<button class="chip' + (x === g ? ' on' : '') + '" onclick="trGo(null,\'' + x + '\')">Girone ' + x + '</button>').join('') + '</div>';
+    const gl = GN.filter(x => o.groups[x].length), s = st(), g = gl.includes(s.g) ? s.g : (gl[0] || 'A'), rows = standings(o, g), done = gdone(o, g);
+    const chips = '<div class="csl">' + gl.map(x => '<button class="chip' + (x === g ? ' on' : '') + '" onclick="trGo(null,\'' + x + '\')">Girone ' + x + '</button>').join('') + '</div>';
     const tbl = '<div class="card" style="padding:6px 10px;overflow-x:auto"><table class="trt"><thead><tr><th>#</th><th class="l">Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th><th>GF</th><th>GS</th><th>DR</th><th>Pt</th></tr></thead><tbody>' +
       rows.map((r, i) => '<tr class="' + (norm(r.n) === norm(o.mine) ? 'me' : '') + (i === 3 ? ' cut' : '') + '"><td>' + (i + 1) + '</td><td class="l">' + E(r.n) + '</td><td>' + r.g + '</td><td>' + r.v + '</td><td>' + r.p + '</td><td>' + r.s + '</td><td>' + r.gf + '</td><td>' + r.ga + '</td><td>' + (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) + '</td><td><b>' + r.pt + '</b></td></tr>').join('') +
       '</tbody></table></div><p class="mu" style="white-space:normal">Le prime 4 vanno agli ottavi Gold-Silver, dalla 5ª all’8ª agli ottavi Bronze-Copper. A parità di punti: differenza reti, poi gol fatti (il regolamento non indica altri criteri). ' +
@@ -255,15 +278,17 @@
     const names = o.groups[g];
     const form = mgr ? '<div class="card"><h3>Inserisci un risultato · Girone ' + g + '</h3><div class="row"><select id="tr-h"><option value="">Casa</option>' + names.map(n => '<option>' + E(n) + '</option>').join('') + '</select><select id="tr-a"><option value="">Ospite</option>' + names.map(n => '<option>' + E(n) + '</option>').join('') + '</select></div>' +
       '<div class="row" style="margin-top:8px"><input id="tr-gh" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol casa"><input id="tr-ga" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol ospite"></div><p style="margin:10px 0 0"><button class="p" onclick="trAddRes()">Salva risultato</button></p><p class="mu" style="white-space:normal">Se esiste già il risultato di quella coppia, viene sostituito (si gioca solo l’andata).</p></div>' : '';
-    const list = gres(o, g), man = o.res || [];
+    const up = appList(o).filter(r => !r.played && r.g === g).sort((p, q) => (p.date + p.time) < (q.date + q.time) ? -1 : 1);
+    const upH = up.length ? '<h2>Prossime partite · Girone ' + g + '</h2><div class="card">' + up.map(r => '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span></div><div class="tm"><span>' + E(r.a) + '</span></div><span class="mu">' + E([dmy(r.date), r.time].filter(Boolean).join(' · ') || 'data da definire') + '</span></div>').join('') + '</div>' : '';
+    const list = gres(o, g).sort((p, q) => (q.date || '') < (p.date || '') ? -1 : (q.date || '') > (p.date || '') ? 1 : 0), man = o.res || [];
     const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2><div class="card">' + list.map(r => {
       const i = r.auto ? -1 : man.findIndex(x => x.h === r.h && x.a === r.a && x.gh === r.gh && x.ga === r.ga);
       return '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span><b>' + r.gh + '</b></div><div class="tm"><span>' + E(r.a) + '</span><b>' + r.ga + '</b></div>' +
-        (r.auto ? '<span class="mu">dalle partite dell’app</span>' : (mgr && i >= 0 ? '<button class="s" onclick="trDelRes(' + i + ')">Elimina</button>' : '')) + '</div>';
+        (r.auto ? '<span class="mu">' + (r.date ? dmy(r.date) + ' · ' : '') + 'dalle partite dell’app</span>' : (mgr && i >= 0 ? '<button class="s" onclick="trDelRes(' + i + ')">Elimina</button>' : '')) + '</div>';
     }).join('') + '</div>' : '';
     const imp = mgr ? '<div class="card"><b>Importa dal sito dei risultati</b><p class="mu" style="white-space:normal">Sulla pagina delle giornate apri gli strumenti del browser (F12) → Rete → richiesta «data?widgetId…» → scheda Response, copia tutto e incollalo qui. Puoi incollarne più di seguito (una per giornata). Vengono importate solo le partite dei gironi con risultato confermato.</p><textarea id="tr-imp" rows="4" style="width:100%" placeholder="Incolla qui la risposta…"></textarea>' +
       '<p style="margin:10px 0 0"><button class="p" onclick="trImport()">Importa</button></p>' + (st().imp ? '<p style="white-space:normal;margin:10px 0 0"><b>' + E(st().imp) + '</b></p>' : '') + '</div>' : '';
-    return chips + tbl + force + mine + form + imp + lst;
+    return chips + tbl + upH + force + mine + form + imp + lst;
   }
 
   function nodeHtml(n, mgr) {

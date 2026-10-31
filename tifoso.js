@@ -95,7 +95,7 @@ window.fanOpen=async function(id,mid){
 window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
 window.fanHome=function(){F.tv=false;S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
 window.fanTourName=async function(name){
-  if(!name)return;F.tv=false;F.busy=true;render();
+  if(!name)return;F.tv=false;S.tr=null;F.busy=true;render();
   try{const d=await rpc("fan_tournament",{n:name});F.tour={name,teams:d.teams||[],matches:d.matches||[],bracket:d.bracket&&d.bracket.groups?d.bracket:null};F.ts=null;addRecent({k:"c",name:String(name).slice(0,80)})}
   catch(e){toast("Torneo non disponibile. Controlla la connessione.")}
   F.busy=false;render()};
@@ -175,7 +175,7 @@ window.fanNotif=function(id){
 function fanProfile(){return `<h1 style="margin:0">${ic("user")} Profilo</h1>${settingsHtml()}`}
 function tourHtml(){
   const T=F.tour;
-  if(F.tv&&T.bracket&&typeof torneoView==="function"){window.trExt={o:T.bracket,tid:T.bracket.by,matches:T.matches,back:"fanTv(false)"};return torneoView(null,false)}
+  if(T.bracket&&typeof torneoView==="function"){window.trExt={o:T.bracket,tid:T.bracket.by,matches:T.matches,teams:T.teams,back:"fanHome()"};return torneoView(null,false)}
   window.trExt=null;
   const seasons=[...new Set(T.matches.filter(m=>m.date).map(m=>seasonOf(m.date)))].sort().reverse(),se=seasons.includes(F.ts)?F.ts:seasons[0];
   const ms=T.matches.filter(m=>!se||(m.date&&seasonOf(m.date)===se)),by={};
@@ -199,7 +199,6 @@ function tourHtml(){
     return out};
   const done=twinless(ms.filter(m=>m.played).sort((a,b)=>a.date<b.date?1:-1)).slice(0,15),todo=twinless(ms.filter(m=>!m.played).sort((a,b)=>a.date<b.date?-1:1)).slice(0,10);
   return `<div class="row" style="flex-wrap:nowrap"><button class="ib" style="border:0" onclick="fanHome()" aria-label="Indietro">${ic("back")}</button><h1 style="flex:1;margin:0">${esc(T.name)}</h1></div>
-  ${T.bracket?`<div class="card" style="display:flex;align-items:center;gap:10px"><div style="flex:1"><b>Gironi e fasi finali</b><div class="mu">Classifiche dei gironi e tabellone.</div></div><button class="p" onclick="fanTv(true)">${ic("trophy")} Apri</button></div>`:""}
   ${seasons.length>1?`<div class="csl" style="margin-top:8px">${seasons.map(s=>`<button class="chip${s===se?" on":""}" data-s="${esc(s)}" onclick="fanTs(this.dataset.s)">${esc(s)}</button>`).join("")}</div>`:""}
   <h2>Classifica</h2><div class="card" style="padding:6px 10px;overflow-x:auto"><table class="ftb"><thead><tr><th class="k">#</th><th class="l">Squadra</th><th class="n">G</th><th class="n">V</th><th class="n">N</th><th class="n">P</th><th class="n">DR</th><th class="pt">Pt</th></tr></thead><tbody>
   ${rows.map((r,i)=>`<tr data-t="${esc(r.t.id)}" onclick="fanOpen(this.dataset.t)"><td>${i+1}</td><td class="l"><div class="t">${crest(r.t.logo,ic("ball"),"sm")}<b>${esc(r.t.name)}</b></div></td><td>${r.g}</td><td>${r.v}</td><td>${r.n}</td><td>${r.p}</td><td>${r.dr>0?"+":""}${r.dr}</td><td><b class="gold">${r.pt}</b></td></tr>`).join("")||'<tr><td colspan="8" class="mu">Nessuna partita</td></tr>'}</tbody></table></div>
@@ -222,11 +221,11 @@ function teamHtml(t){
 window.fanRender=function(){
   const a=$("app"),old=a.querySelector(".view"),oldTop=old?old.scrollTop:0,fx=fxBefore();
   const t=S.tid&&S.teams.find(x=>x.id===S.tid);
-  if(t||!F.tour||!F.tv)window.trExt=null;   // il torneo a gironi "esterno" vale solo nella pagina del torneo cercato
+  if(t||!F.tour||!F.tour.bracket)window.trExt=null;   // il torneo a gironi "esterno" vale solo nella pagina del torneo cercato
   applyTheme(t?t.color:null,t?t.bg:null);applyMode();syncBar();
   let html,key;
   if(t){html=teamHtml(t);key=["f",S.tid,S.tab,S.mid||"",S.cs||"",S.ps||""].join("|")}
-  else if(F.tour){html=plain(tourHtml());key="ft|"+F.tour.name+"|"+(F.ts||"")+"|"+(F.tv?"b":"")+(S.tr&&S.tr.v||"")+(S.tr&&S.tr.g||"")+(S.tr&&S.tr.c||"")}
+  else if(F.tour){html=plain(tourHtml());key="ft|"+F.tour.name+"|"+(F.ts||"")+"|"+(S.tr&&S.tr.v||"")+(S.tr&&S.tr.g||"")+(S.tr&&S.tr.c||"")}
   else{html=plain(homeHtml());key="fh"}
   morphInto(a,html);keepScroll(key,oldTop);if(t)fxAfter(fx);
   if(S.err){toast(S.err);S.err=""}};
