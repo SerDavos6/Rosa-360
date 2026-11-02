@@ -88,11 +88,12 @@
     };
     ((x ? x.matches : S.matches) || []).forEach(m => {
       if (!x && (m.tid !== S.tid || norm(m.tourn) !== norm(o.name))) return;
+      if (m.ph && m.ph !== 'G') return;   // ottavi, quarti, finali…: non contano nella classifica del girone
       const h = nameOf(m.tid), a = gName(m.opp);
       if (!h || !a || nn(h) === nn(a) || gOf(h) !== gOf(a)) return;
       const key = [nn(h), nn(a)].sort().join('|') + '|' + (m.date || '');
       if (seen.has(key)) return; seen.add(key);
-      out.push({ h, a, gh: +m.gf || 0, ga: +m.ga || 0, played: !!m.played, date: m.date || '', time: m.time || '', g: gOf(h), auto: true });
+      out.push({ h, a, gh: +m.gf || 0, ga: +m.ga || 0, played: !!m.played, date: m.date || '', time: m.time || '', g: gOf(h), auto: true, dn: m.ph === 'G' ? (+m.dn || 0) : 0 });
     });
     return out;
   }
@@ -192,6 +193,7 @@
   }
 
   // ---------- azioni ----------
+  window.trNames = () => tourList().map(o => o.name);
   window.trDn = k => { st().dn = k === 'all' ? 'all' : +k; R(); };
   window.trGo = (v, g) => { const s = st(); if (v) s.v = v; if (g) s.g = g; R(); };
   window.trOpen = () => { S.tab = 'trn'; S.tr = { v: 'g', id: null }; R(); };
@@ -330,7 +332,8 @@
 
   // ---------- schermate ----------
   const css = document.createElement('style');
-  css.textContent = '.trt{width:100%;border-collapse:collapse;font-size:14px}.trt th,.trt td{padding:7px 4px;text-align:center;border-bottom:1px solid var(--bd)}' +
+  css.textContent = '.trt{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:14px}.trt th,.trt td{padding:7px 2px;text-align:center;border-bottom:1px solid var(--bd)}' +
+    '.trt th{width:25px}.trt th:first-child{width:22px}.trt th.w{width:34px}.trt th.l{width:auto}.trt td.l{overflow-wrap:anywhere}@media (max-width:480px){.trt .x{display:none}}' +
     '.trt .l{text-align:left}.trt .me td{font-weight:800;background:var(--sf)}.trt tr.cut td{border-bottom:2px solid var(--bd)}' +
     '.trk{padding:10px 0;border-bottom:1px solid var(--bd)}.trk .tm{display:flex;justify-content:space-between;gap:8px;padding:2px 0}' +
     '.trk .ph{color:var(--mu);font-style:italic}.trk input[type=number]{width:56px;min-height:40px;text-align:center}.trk .w{font-weight:800}' +
@@ -339,9 +342,9 @@
 
   const stRows = (o, g, full) => {
     const rows = standings(o, g), cut = fmtOf(o) === 'memorial' ? 4 : qOf(o);
-    return '<table class="trt"><thead><tr><th>#</th><th class="l">Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th>' + (full ? '<th>GF</th><th>GS</th>' : '') + '<th>DR</th><th>Pt</th></tr></thead><tbody>' +
+    return '<table class="trt"><thead><tr><th>#</th><th class="l">Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th>' + (full ? '<th class="w x">GF</th><th class="w x">GS</th>' : '') + '<th class="w">DR</th><th class="w">Pt</th></tr></thead><tbody>' +
       rows.map((r, i) => '<tr class="' + (norm(r.n) === norm(o.mine) ? 'me' : '') + (cut && i === cut - 1 && i < rows.length - 1 ? ' cut' : '') + '"><td>' + (i + 1) + '</td><td class="l">' + E(r.n) + '</td><td>' + r.g + '</td><td>' + r.v + '</td><td>' + r.p + '</td><td>' + r.s + '</td>' +
-        (full ? '<td>' + r.gf + '</td><td>' + r.ga + '</td>' : '') + '<td>' + (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) + '</td><td><b>' + r.pt + '</b></td></tr>').join('') + '</tbody></table>';
+        (full ? '<td class="x">' + r.gf + '</td><td class="x">' + r.ga + '</td>' : '') + '<td>' + (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) + '</td><td><b>' + r.pt + '</b></td></tr>').join('') + '</tbody></table>';
   };
 
   // classifiche dei miei gironi, per la scheda "Classifiche" (in cima alla vista "Squadra")

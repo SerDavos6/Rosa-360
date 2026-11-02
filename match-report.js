@@ -1,10 +1,24 @@
 const matchDetail=x=>({location:x.location||'',time:x.time||'',field:x.field||''});
 // Luogo + numero del campo (facoltativo) per le righe di testo
+// Giornata o fase della partita (campi ph, dn, phx): "G" = giornata con numero; le altre sono fasi finali, con un dettaglio facoltativo (es. Gold).
+const PHASES={G:'Giornata',S:'Sedicesimi',O:'Ottavi',Q:'Quarti',F2:'Semifinale',F:'Finale',A:'Altra fase'};
+const matchPhase=x=>{const p=x&&x.ph;if(!PHASES[p])return'';if(p==='G')return x.dn?'Giornata '+x.dn:'';return (p==='A'?'':PHASES[p]+(x.phx?' ':''))+(x.phx||(p==='A'?PHASES.A:''))};
+const matchComp=x=>[x.tourn||'Amichevole',matchPhase(x)].filter(Boolean).join(' · ');
+function phaseFields(pre,x,dis){const p=PHASES[x&&x.ph]?x.ph:'',d=dis?'disabled':'';
+  return `<div class="row"><div><label for="${pre}ph">Giornata / fase</label><select id="${pre}ph" ${d} onchange="phaseSync('${pre}')"><option value="">Nessuna</option>${Object.keys(PHASES).map(k=>`<option value="${k}" ${p===k?'selected':''}>${PHASES[k]}</option>`).join('')}</select></div>
+  <div id="${pre}pdw" style="display:${p==='G'?'block':'none'}"><label for="${pre}dn">Numero giornata</label><input id="${pre}dn" type="number" min="1" max="99" inputmode="numeric" value="${esc((x&&x.dn)||'')}" ${d}></div>
+  <div id="${pre}pxw" style="display:${p&&p!=='G'?'block':'none'}"><label for="${pre}px">Dettaglio (facoltativo)</label><input id="${pre}px" maxlength="30" placeholder="es. Gold, Play Out" value="${esc((x&&x.phx)||'')}" ${d}></div></div>`}
+function phaseSync(pre){const p=document.getElementById(pre+'ph').value;document.getElementById(pre+'pdw').style.display=p==='G'?'block':'none';document.getElementById(pre+'pxw').style.display=p&&p!=='G'?'block':'none'}
+// Restituisce i campi da salvare, oppure null (con avviso) se manca il numero della giornata.
+function phaseRead(pre){const p=(document.getElementById(pre+'ph')||{}).value||'';
+  if(p==='G'){const n=parseInt((document.getElementById(pre+'dn')||{}).value,10);if(!(n>=1&&n<=99)){toast('Indica il numero della giornata.');return null}return{ph:'G',dn:n,phx:''}}
+  return{ph:p,dn:0,phx:p?String((document.getElementById(pre+'px')||{}).value||'').trim():''}}
+const tourNames=extra=>[...new Set([...(typeof trNames==='function'?trNames():[]),...extra])];
 const matchPlace=x=>[x.location,x.field?'Campo '+x.field:''].filter(Boolean).join(' · ');
 function reportLines(x){
   const team=S.teams.find(t=>t.id===x.tid)||{};
   const present=(x.present||[]).map(id=>S.members.find(m=>m.id===id)).filter(Boolean);
-  const lines=[['TORNEO',x.tourn||'Amichevole'],['DATA',dt(x.date).f],['ORA',x.time||'Non indicata'],['LUOGO',matchPlace(x)||'Non indicato'],['STATO',x.played?'Partita terminata':'Da giocare']];
+  const lines=[['TORNEO',matchComp(x)],['DATA',dt(x.date).f],['ORA',x.time||'Non indicata'],['LUOGO',matchPlace(x)||'Non indicato'],['STATO',x.played?'Partita terminata':'Da giocare']];
   const sc=scorers(x);lines.push(['MARCATORI',sc||(x.played?'Nessun marcatore registrato':'Da giocare')]);
   lines.push(['PRESENTI',present.map(m=>m.nick+(m.role==='dirigente'?' (dirigente)':'')).join(', ')||'Nessuna presenza registrata']);
   for(const m of present){
@@ -183,7 +197,7 @@ async function matchReportBlob(x,options={}){
   ctx.fillStyle=text;ctx.beginPath();ctx.moveTo(0,infoTop-27);
   for(let a=0;a<=W;a+=18)ctx.lineTo(a,infoTop-27+random()*15);ctx.lineTo(W,infoTop-12);ctx.lineTo(0,infoTop-12);ctx.closePath();ctx.fill();
   ctx.textAlign='center';ctx.fillStyle=accent;ctx.font=font(30,true);
-  ctx.fillText(reportFit(ctx,(x.tourn||'Amichevole').toUpperCase(),900),W/2,infoTop+48);
+  ctx.fillText(reportFit(ctx,matchComp(x).toUpperCase(),900),W/2,infoTop+48);
   ctx.fillStyle=text;ctx.font=font(28);
   const info=[[dt(x.date).f,x.time?'ORE '+x.time:''].filter(Boolean).join(' · '),matchPlace(x)||'Luogo non indicato'];
   info.forEach((line,j)=>ctx.fillText(reportFit(ctx,line.toUpperCase(),900),W/2,infoTop+96+j*44));
@@ -549,21 +563,50 @@ function lvApply(id,fn){
   const base=S.matches.find(m=>m.id===id);if(!base)return;const bb=badgeKeys(base.tid);
   const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0}),cur=lvEff(base);
   const d={gf:+cur.gf||0,ga:+cur.ga||0,played:!!cur.played,stats:JSON.parse(JSON.stringify(cur.stats||{})),events:[...(cur.events||[])]};
-  fn(d,cur);o.d=d;o.n++;o.pend=d;o.taps++;
+  if(o.d&&o.d.clock)d.clock=o.d.clock;
+  fn(d,cur);o.d=d;o.n++;o.pend=Object.assign({},o.pend,d);o.taps++;lvKeep(id,o);
   rq();setTimeout(()=>badgeCheer(bb,badgeKeys(base.tid)),0); // il controllo traguardi dopo il disegno, così il tocco risponde subito
   lvPump(id)}
+// Coda sul telefono: ciò che non è ancora arrivato al database resta salvato qui (anche se l'app si chiude) e riparte da solo.
+const LVQ='lvCoda';
+const lvNetErr=e=>{const m=String((e&&(e.message||e.details))||e||'');return navigator.onLine===false||/fetch|network|load failed|timed? ?out|abort|jwt/i.test(m)||/^PGRST00[0-3]$/.test((e&&e.code)||'')};
+const lvPending=id=>{const o=LV[id];return !!(o&&o.sv)};
+function lvSave(){try{const q={};Object.keys(LV).forEach(id=>{if(LV[id].sv)q[id]=LV[id].sv});
+  if(Object.keys(q).length)localStorage.setItem(LVQ,JSON.stringify({uid:S.uid,q}));else localStorage.removeItem(LVQ)}catch(e){}}
+function lvKeep(id,o){o.sv=Object.assign({},o.sv,o.pend);o.wait=o.wait||0;lvSave()}
+// Dopo ogni aggiornamento dal database: riprende la coda rimasta sul telefono e tiene a schermo il cronometro non ancora inviato.
+let lvLoaded=false;
+function lvRestore(){
+  if(S.fan)return;
+  Object.keys(LV).forEach(id=>{const o=LV[id],m=S.matches.find(x=>x.id===id);if(o.sv&&o.sv.clock&&m)m.clock=o.sv.clock});
+  if(lvLoaded)return;lvLoaded=true;
+  let s=null;try{s=JSON.parse(localStorage.getItem(LVQ)||'null')}catch(e){}
+  if(!s||s.uid!==S.uid||!s.q)return;
+  Object.keys(s.q).forEach(id=>{if(LV[id]||!/^[\w.:@+~-]{1,120}$/.test(id))return;const sv=s.q[id],m=S.matches.find(x=>x.id===id);
+    LV[id]={n:1,d:{...sv},busy:false,pend:{...sv},taps:1,sv,wait:0,at:0};if(m&&sv.clock)m.clock=sv.clock});
+  rq();lvRetry(true)}
+function lvRetry(now){Object.keys(LV).forEach(id=>{const o=LV[id];if(o.pend&&!o.busy&&(now||Date.now()>=(o.at||0)))lvPump(id)})}
+setInterval(()=>{if(!document.hidden)lvRetry()},2000);
+addEventListener('online',()=>lvRetry(true));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)lvRetry(true)});
 // Un solo salvataggio alla volta: se nel frattempo arrivano altri tocchi, parte un unico salvataggio con lo stato aggiornato.
 function lvPump(id){
-  const o=LV[id];if(!o||o.busy||!o.pend)return;
-  const d=o.pend,k=o.taps;o.pend=null;o.taps=0;o.busy=true;
-  S.db.doc('matches/'+id).update(d).then(()=>{const m=S.matches.find(m=>m.id===id);if(m){const {clock,...rest}=d;Object.assign(m,rest)}})
-    .catch(e=>{S.err='Evento non salvato'+(e&&(e.code||e.message)?' ('+(e.code||e.message)+')':'')+': controlla la connessione.'})
-    .finally(()=>{o.busy=false;o.n=Math.max(0,o.n-k);if(o.pend)lvPump(id);else{if(o.n===0)o.d=null;rq()}})}
+  const o=LV[id];if(!o||o.busy||!o.pend||S.fan)return;   // nella ricerca tifoso il database è in sola lettura: la coda aspetta il ritorno
+  const d=o.pend,k=o.taps;let again=false;o.pend=null;o.taps=0;o.busy=true;
+  Promise.resolve().then(()=>S.db.doc('matches/'+id).update(d)).then(()=>{const m=S.matches.find(m=>m.id===id);if(m){const {clock,...rest}=d;Object.assign(m,rest)}
+      if(o.wait&&!o.pend)toast('Eventi della diretta inviati',true);o.wait=0;if(!o.pend)o.sv=null})
+    .catch(e=>{
+      if(lvNetErr(e)){again=true;o.pend=Object.assign({},d,o.pend);o.taps+=k;
+        if(!o.wait)toast('Rete assente: gli eventi restano sul telefono e partono da soli appena torna.');
+        o.wait++;o.at=Date.now()+Math.min(10000,2000*Math.pow(2,o.wait-1))}
+      else{if(!o.pend)o.sv=null;S.err='Evento non salvato'+(e&&(e.code||e.message)?' ('+(e.code||e.message)+')':'')+': controlla la connessione.'}})
+    .finally(()=>{o.busy=false;if(!again)o.n=Math.max(0,o.n-k);lvSave();
+      if(!again&&o.pend)lvPump(id);else{if(o.n===0)o.d=null;rq()}})}
 // Cronometro: l'effetto è immediato sullo schermo (con l'ora del tocco); il salvataggio segue in coda con gli altri eventi.
 function lvClockSet(id,c){
   const x=S.matches.find(m=>m.id===id);if(!x)return;
   const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0});
-  x.clock=c;o.n++;o.taps++;o.pend=Object.assign(o.pend||{},{clock:c});rq();lvPump(id)}
+  x.clock=c;o.n++;o.taps++;o.pend=Object.assign(o.pend||{},{clock:c});o.d=Object.assign(o.d||{},{clock:c});lvKeep(id,o);rq();lvPump(id)}
 function liveSel(p){LIVE.p=LIVE.p===p?null:p;LIVE.assist=false;LIVE.pick=null;rq()}
 function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}lvApply(id,d=>{lvStat(d,p).g++;d.gf++;d.events.push({k:'g',p,t:lvNow(),...lvM(id)})});LIVE.assist=true;rq()}
 function liveAssist(id,a){
@@ -612,7 +655,7 @@ function liveCardHtml(x){
   else if(sel&&LIVE.assist)bar=`<div class="lvbar"><b>Gol di ${esc(sel.nick)}! Assist?</b><div class="chips">${ps.filter(m=>m.id!==sel.id).map(m=>`<button class="chip" onclick="liveAssist('${id}','${m.id}')">${esc(m.nick)}</button>`).join('')}<button class="chip" onclick="liveAssist('${id}',null)">Nessuno</button></div></div>`;
   else if(sel)bar=`<div class="lvbar"><b>${esc(sel.nick)}</b><div class="row"><button class="p" onclick="liveGoal('${id}')">${ic('ball')} Gol</button><button onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')}</button><button onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')}</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div></div>`;
   const cl=x.clock||{},clk=`<div class="lvclk"><b id="lvclock" data-id="${id}">${lvFmt(lvElapsed(x))}</b><button class="s" onclick="liveClock('${id}')">${cl.since?'Pausa':(+cl.base?'Riprendi':'Avvia')}</button>${cl.since||+cl.base?`<button class="s" onclick="liveClockReset('${id}')">Azzera</button>`:''}</div>`;const sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=lvNow();LIVE.sc=sc;const pop=lvNow()-(LIVE.popAt||0)<900?' pop':'';
-  return `<div class="card live"><div class="lvh"><b class="hd">${ic('ball')} Gol in diretta</b><span class="lvs${pop}">${esc(x.gf)} – ${esc(x.ga)}</span></div>${clk}<div class="chips">${chips}</div>${bar}<div class="row" style="margin-top:10px"><button onclick="liveOpp('${id}')">${ic('plus')} Gol avversario</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div><p style="margin:8px 0 0"><button style="width:100%" onclick="liveUndo('${id}')">${ic('undo')} Annulla ultimo</button></p>${x.played?'':`<p style="margin:10px 0 0"><button class="p" onclick="liveEnd('${id}')">Fine partita</button></p>`}<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>${liveLog(x)}</div>`}
+  return `<div class="card live"><div class="lvh"><b class="hd">${ic('ball')} Gol in diretta</b><span class="lvs${pop}">${esc(x.gf)} – ${esc(x.ga)}</span></div>${clk}<div class="chips">${chips}</div>${bar}<div class="row" style="margin-top:10px"><button onclick="liveOpp('${id}')">${ic('plus')} Gol avversario</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div><p style="margin:8px 0 0"><button style="width:100%" onclick="liveUndo('${id}')">${ic('undo')} Annulla ultimo</button></p>${x.played?'':`<p style="margin:10px 0 0"><button class="p" onclick="liveEnd('${id}')">Fine partita</button></p>`}${lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>'}${liveLog(x)}</div>`}
 
 // Cronometro: salvato nella partita (clock:{base,since}), così lo vedono tutti e il minuto finisce nella cronaca.
 // Ora del server: ogni telefono corregge il proprio orologio, così il cronometro è uguale per tutti.
