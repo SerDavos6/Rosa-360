@@ -494,13 +494,14 @@
   window.torneoView = function (t, mgr) {
     const x = X(), s = st(), list = x ? [] : tourList();
     const toList = !x && (mgr || list.length > 1);
-    const back = '<p style="margin:6px 0"><button class="s" onclick="' + (x && x.back || (toList ? 'trList()' : 'trBack()')) + '">' + ic('back') + (x ? ' Indietro' : (toList ? ' Tornei' : ' Partite')) + '</button></p>';
+    const toCal = S.fan ? '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p>' : '';
+    const back = !x && !toList ? toCal : '<p style="margin:6px 0"><button class="s" onclick="' + (x && x.back || 'trList()') + '">' + ic('back') + (x ? ' Indietro' : ' Tornei') + '</button></p>';
     if (!x) {
-      if (s.v === 'new' && mgr) return '<p style="margin:6px 0"><button class="s" onclick="' + (list.length ? 'trList()' : 'trBack()') + '">' + ic('back') + (list.length ? ' Tornei' : ' Partite') + '</button></p>' + setupView(list.length > 0);
+      if (s.v === 'new' && mgr) return (list.length ? '<p style="margin:6px 0"><button class="s" onclick="trList()">' + ic('back') + ' Tornei</button></p>' : toCal) + setupView(list.length > 0);
       if (!list.find(q => q.id === s.id)) {
-        if (!list.length) { if (mgr) { s.v = 'new'; return '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p>' + setupView(false); } return '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p><div class="card mu">Non c’è ancora nessun torneo.</div>'; }
+        if (!list.length) { if (mgr) { s.v = 'new'; return toCal + setupView(false); } return toCal + '<div class="card mu">Non c’è ancora nessun torneo.</div>'; }
         if (list.length === 1 && !mgr) { s.id = list[0].id; s.v = hasGroups(list[0]) ? 'g' : 'b'; }
-        else return '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p>' + listView(list, mgr);
+        else return toCal + listView(list, mgr);
       }
     }
     const o = T();
