@@ -81,6 +81,8 @@ input[type=checkbox],input[type=radio]{width:auto;min-height:0;padding:0;accent-
 input[type=file]{min-height:0;font-size:14px;padding:9px 12px}
 input[type=color]{padding:3px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--acf);outline-offset:1px;border-color:transparent}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--acf);outline-offset:2px}
+.bn button:focus-visible,.mtabs button:focus-visible,.seg button:focus-visible{outline-offset:-3px}
 button{font:700 15px var(--ui);color:var(--tx);min-height:44px;padding:10px 16px;border-radius:12px;background:var(--sf);border:1px solid var(--bd);cursor:pointer;transition:transform .1s}
 button:active{transform:scale(.97)}
 button.p{background:var(--acf);color:var(--on);border-color:transparent}
