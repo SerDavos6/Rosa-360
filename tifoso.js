@@ -75,11 +75,11 @@ window.fanLeave=function(){
   F.tour=null;F.uid=null;F.dbo=null;F.sig={};render()};
 window.fanExit=function(){try{localStorage.removeItem("fan")}catch(e){}location.reload()};
 window.fanSignOut=function(){try{localStorage.removeItem("fan")}catch(e){}sb.auth.signOut().then(()=>location.reload())};
-window.fanToPlayer=async function(){
+window.fanToPlayer=function(){
   const has=F.pf&&F.pf.role;
-  if(!confirm(has?"Tornare al tuo profilo da giocatore o dirigente? Le tue squadre ti aspettano come prima.":"Creare un profilo da giocatore o dirigente? Ti chiederemo i tuoi dati. Le squadre preferite restano salvate."))return;
-  try{await F.dbo.doc("profiles/"+F.uid).update({fan:false})}catch(e){toast("Operazione non riuscita. Riprova.");return}
-  try{localStorage.removeItem("fan")}catch(e){}location.reload()};
+  ask({title:has?"Tornare al tuo profilo?":"Creare un profilo da giocatore o dirigente?",msg:has?"Torni al profilo da giocatore o dirigente: le tue squadre ti aspettano come prima.":"Ti chiederemo i tuoi dati. Le squadre preferite restano salvate.",ok:has?"Torna al profilo":"Crea il profilo",fn:async()=>{
+    try{await F.dbo.doc("profiles/"+F.uid).update({fan:false})}catch(e){toast("Operazione non riuscita. Riprova.");return}
+    try{localStorage.removeItem("fan")}catch(e){}location.reload()}})};
 
 // ---- navigazione ----
 window.fanOpen=async function(id,mid){

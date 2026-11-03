@@ -244,8 +244,8 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=12"></script><script src="match-report.js?v=20"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=14"></script><script src="tifoso.js?v=12"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
-<script src="torneo.js?v=16"></script>
+<script src="ui-extra.js?v=13"></script><script src="match-report.js?v=20"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=14"></script><script src="tifoso.js?v=13"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="torneo.js?v=17"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -457,7 +457,7 @@ function regView(){return `<h1>${ic("ball")} Crea il tuo profilo</h1>${S.members
  <label>Foto</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
  <div class="err">${esc(S.err)}</div><p><button class="p" onclick="saveProfile()">Salva profilo</button></p></div>`}
 function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8);const mine=photoData;sbUpload(mine,"foto").then(u=>{if(photoData===mine)photoData=u})};img.src=URL.createObjectURL(f)}
-function goFan(){if(!confirm("Passare al profilo tifoso? Le tue squadre e i tuoi dati restano salvati: potrai tornare a giocatore o dirigente quando vuoi."))return;S.db.doc("profiles/"+S.uid).update({fan:true,favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]}).then(()=>location.reload()).catch(e=>{S.err="Operazione non riuscita ("+e.code+")";render()})}
+function goFan(){ask({title:"Passare al profilo tifoso?",msg:"Le tue squadre e i tuoi dati restano salvati: potrai tornare a giocatore o dirigente quando vuoi.",ok:"Passa a tifoso",fn:()=>S.db.doc("profiles/"+S.uid).update({fan:true,favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]}).then(()=>location.reload()).catch(e=>{S.err="Operazione non riuscita ("+e.code+")";render()})})}
 function saveFanProfile(){S.err="";S.db.doc("profiles/"+S.uid).set({fan:true,nick:"Tifoso",favs:typeof fanFavsRaw==="function"?fanFavsRaw():[]}).then(()=>location.reload()).catch(e=>{S.err="Salvataggio non riuscito ("+e.code+")";render()})}
 function saveProfile(){
   const rl=v("rl");if(!v("em")||!v("nk"))return S.err="Email e soprannome sono obbligatori.",render();
@@ -585,7 +585,7 @@ async function doDeleteAccount(){
     await del("profiles/"+S.uid);
     const q=await sb.rpc("delete_account");
     if(q.error){await sb.auth.signOut();try{localStorage.removeItem("tid")}catch(e){}
-      alert("I tuoi dati sono stati cancellati, ma l’accesso non si è eliminato del tutto ("+(q.error.message||q.error.code)+"). Chi gestisce l’app deve attivare la funzione delete_account su Supabase.");location.reload();return}
+      ask({title:"Account eliminato solo in parte",msg:"I tuoi dati sono stati cancellati, ma l’accesso non si è eliminato del tutto ("+esc(q.error.message||q.error.code)+"). Chi gestisce l’app deve attivare la funzione delete_account su Supabase.",ok:"Ho capito",only:1,fn:()=>location.reload()});return}
   }catch(e){return toast("Eliminazione non riuscita ("+(e.code||e.message||"errore")+").")}
   await sb.auth.signOut();try{localStorage.removeItem("tid")}catch(e){}location.reload()}
 const rate=s=>Math.max(4,Math.min(10,6+(s.g||0)+.6*(s.a||0)-(s.og||0)-.3*(s.y||0)-1.5*(s.r||0)+.8*(s.ps||0)));

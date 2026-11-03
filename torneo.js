@@ -322,12 +322,13 @@
   window.trOv = (key, side, v) => { const o = clone(T()); o.ov = o.ov || {}; if (v) o.ov[key + ':' + side] = v; else delete o.ov[key + ':' + side]; save(o); };
   window.trDelete = () => {
     const o = T(), t = team(); if (!o || !t) return;
-    if (!confirm('Eliminare il torneo «' + o.name + '» e tutti i risultati inseriti? Le partite della squadra non vengono toccate.')) return;
-    const patch = {};
-    if (o.id === 'legacy') { t.tourn = null; patch.tourn = null; }
-    else { const nt = Object.assign({}, t.tourns || {}); delete nt[o.id]; t.tourns = nt; patch.tourns = nt; }
-    Promise.resolve(S.db.doc('teams/' + t.id).update(patch)).catch(e => toast('Non riuscito: ' + ((e && e.message) || 'errore')));
-    S.tr = { v: 'g', id: null }; R();
+    ask({ title: 'Eliminare il torneo?', msg: '«' + E(o.name) + '» e tutti i risultati inseriti spariscono. Le partite della squadra non vengono toccate.', ok: 'Elimina', danger: 1, fn: () => {
+      const patch = {};
+      if (o.id === 'legacy') { t.tourn = null; patch.tourn = null; }
+      else { const nt = Object.assign({}, t.tourns || {}); delete nt[o.id]; t.tourns = nt; patch.tourns = nt; }
+      Promise.resolve(S.db.doc('teams/' + t.id).update(patch)).catch(e => toast('Non riuscito: ' + ((e && e.message) || 'errore')));
+      S.tr = { v: 'g', id: null }; R();
+    } });
   };
 
   // ---------- schermate ----------

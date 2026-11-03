@@ -9,7 +9,7 @@
 function sheet(html){closeSheet();const w=document.createElement('div');w.className='pmw';w.id='sheet';w.style.zIndex=70;w.innerHTML='<div class="pm" role="dialog" aria-modal="true">'+html+'</div>';w.onclick=e=>{if(e.target===w)closeSheet()};document.body.append(w);return w}
 function closeSheet(){document.getElementById('sheet')?.remove()}
 function sheetErr(m){const e=document.getElementById('sheet-err');if(e)e.textContent=m}
-function ask(o){window._askFn=o.fn;sheet(`<h2 style="margin-top:0">${o.title}</h2>${o.msg?`<p class="mu">${o.msg}</p>`:''}<div class="row" style="margin-top:14px"><button class="${o.danger?'d':'p'}" onclick="const f=window._askFn;closeSheet();f&&f()">${o.ok||'Conferma'}</button><button onclick="closeSheet()">Annulla</button></div>`)}
+function ask(o){window._askFn=o.fn;sheet(`<h2 style="margin-top:0">${o.title}</h2>${o.msg?`<p class="mu">${o.msg}</p>`:''}<div class="row" style="margin-top:14px"><button class="${o.danger?'d':'p'}" onclick="const f=window._askFn;closeSheet();f&&f()">${o.ok||'Conferma'}</button>${o.only?'':'<button onclick="closeSheet()">Annulla</button>'}</div>`);if(o.only)document.getElementById('sheet').onclick=null}
 
 // Modifica carta in un pannello: la rosa resta dov'era.
 function openEdit(id){const m=S.members.find(x=>x.id===id);if(!m)return;S.pd=null;photoData=null;render();sheet(editCard(m))}
