@@ -169,6 +169,7 @@ body:has(.lvdock:not([hidden])) .a2hs{display:none}
 .lvact>button.lvico{flex:0 0 54px}
 .lvact.sc{overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}.lvact.sc::-webkit-scrollbar{display:none}
 .lvact.sc>button{flex:0 0 auto;padding:8px 14px}
+.pcg-osp{position:relative}.pcg-osp>span{min-width:0;overflow-wrap:anywhere}.osp-x{flex:none;margin-left:auto;width:32px;min-width:32px;height:32px;min-height:32px;padding:0;border:0;background:none;color:var(--mu);font-size:20px;line-height:1}
 .lvwait{margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--ac2);font-size:13px;font-weight:700}.sc2.pop{animation:lvpop .5s ease-out}@keyframes lvpop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
@@ -246,7 +247,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=13"></script><script src="match-report.js?v=20"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=14"></script><script src="tifoso.js?v=13"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=13"></script><script src="match-report.js?v=21"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=13"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=17"></script>
 
 <script>
@@ -591,9 +592,9 @@ async function doDeleteAccount(){
   }catch(e){return toast("Eliminazione non riuscita ("+(e.code||e.message||"errore")+").")}
   await sb.auth.signOut();try{localStorage.removeItem("tid")}catch(e){}location.reload()}
 const rate=s=>Math.max(4,Math.min(10,6+(s.g||0)+.6*(s.a||0)-(s.og||0)-.3*(s.y||0)-1.5*(s.r||0)+.8*(s.ps||0)));
-function mvp(x){let b=null;for(const id of x.present||[]){const m=S.members.find(k=>k.id===id),s=(x.stats||{})[id];if(!m||!s)continue;let r=rate(s);if(m.pos==="P"&&!(s.gs>0))r+=1;r=Math.min(10,r);if(!b||r>b.r)b={r,m}}return b}
-function scorerList(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[S.members.find(m=>m.id===id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" ×"+g:""))}
-function scorers(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[S.members.find(m=>m.id===id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" x"+g:"")).join(", ")}
+function mvp(x){let b=null;for(const id of x.present||[]){const m=mbr(x,id),s=(x.stats||{})[id];if(!m||!s)continue;let r=rate(s);if(m.pos==="P"&&!(s.gs>0))r+=1;r=Math.min(10,r);if(!b||r>b.r)b={r,m}}return b}
+function scorerList(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[mbr(x,id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" ×"+g:""))}
+function scorers(x){return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>[mbr(x,id)?.nick,s.g]).filter(a=>a[0]).sort((a,b)=>b[1]-a[1]).map(([n,g])=>n+(g>1?" x"+g:"")).join(", ")}
 function dt(d){const o=new Date(d+"T12:00");return{d:o.getDate(),m:o.toLocaleString("it-IT",{month:"short"}).toUpperCase().replace(".",""),f:o.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}).toUpperCase().replace(/\./g,"")}}
 function heroMatch(x,t){const mv=mvp(x),sc=scorerList(x);
   return `<div class="hero2" onclick="S.mid='${x.id}';render()">${t.logo?`<img class="wm" src="${safeSrc(t.logo)}" alt="">`:""}<div class="eb">Ultima partita · ${dt(x.date).f}</div><div class="big"><span class="t" style="font-size:${nameFs(t.name,15,11)}px">${esc(t.name)}</span><b>${esc(x.gf)} – ${esc(x.ga)}</b><span class="t" style="font-size:${nameFs(x.opp,15,11)}px">${esc(x.opp)}</span></div>${sc.length?`<ul class="scl">${sc.map(n=>`<li>${ic("ball")}${esc(n)}</li>`).join("")}</ul>`:""}${mv?`<span class="mvp">${ic("trophy")} MVP ${esc(mv.m.nick)} · ${mv.r.toFixed(1)}</span>`:""}</div>`}
@@ -722,7 +723,7 @@ function formationData(x){const f=x.formation||{};const scheme=FORMATIONS[f.sche
 function formationOptions(x,slot){
   const present=new Set((x.present||[]).map(String));
   const current=formationData(x).players;
-  return S.members.filter(m=>m.tid===x.tid&&m.role==='giocatore'&&present.has(String(m.id))).map(m=>{
+  return matchRoster(x).filter(m=>m.role==='giocatore'&&present.has(String(m.id))).map(m=>{
     const used=current.some((id,i)=>i!==current.indexOf(slot)&&id===m.id);
     return `<option value="${esc(m.id)}" ${slot===m.id?'selected':''} ${used&&slot!==m.id?'disabled':''}>${esc(m.name||m.nick||'')} ${m.num?'· #'+esc(m.num):''}</option>`;
   }).join('');
@@ -732,7 +733,7 @@ function formationCard(x,mgr){
   const slots=labels.map((label,i)=>{const val=f.players[i]||'';return `<div><label>${label}</label><select class="fi" data-i="${i}" ${mgr?'':'disabled'} onchange="formationSlotChanged('${x.id}')"><option value="">— Nessuno —</option>${formationOptions(x,val)}</select></div>`}).join('');
   const present=(x.present||[]).map(String);
   const starters=f.players.filter(Boolean).map(String);
-  const bench=S.members.filter(m=>m.tid===x.tid&&m.role==='giocatore'&&present.includes(String(m.id))&&!starters.includes(String(m.id)));
+  const bench=matchRoster(x).filter(m=>m.role==='giocatore'&&present.includes(String(m.id))&&!starters.includes(String(m.id)));
   return `<div class="card"><div class="row"><h3 style="margin:0;flex:1">Formazione iniziale</h3>${mgr?`<select id="formation-scheme" style="max-width:150px" onchange="formationRender('${x.id}',this.value)">${Object.keys(FORMATIONS).map(k=>`<option value="${k}" ${k===f.scheme?'selected':''}>${k}</option>`).join('')}</select>`:`<span class="tag">${esc(f.scheme)}</span>`}</div>
   <p class="mu">Scegli tra i giocatori presenti: portiere + 4 giocatori di movimento.</p>
   <div id="formation-slots" class="formation-grid">${slots}</div>
@@ -759,11 +760,13 @@ function collectFormation(x){const holder=document.getElementById('formation-hol
 function shareFormation(id){previewFormation(id)}
 function matchParts(x,mgr){
   x=lvEff(x);if(LIVE.mid!==x.id){LIVE.mid=x.id;S.mt=null;LIVE.p=null;LIVE.assist=false;LIVE.pick=null;LIVE.sc=undefined}
-  const ms=S.members.filter(m=>m.tid===x.tid),pr=x.present||[];
+  const ms=S.members.filter(m=>m.tid===x.tid),rs=matchRoster(x),pr=x.present||[],guests=matchGuests(x);
+  // Gol subiti e rigori parati: per i portieri, per chi ne ha già e per tutti se tra i presenti non c'è un portiere.
+  const noGk=!rs.some(m=>pr.includes(m.id)&&m.role==="giocatore"&&m.pos==="P"),gkK=(m,s)=>m.pos==="P"||noGk||s.gs>0||s.ps>0?["gs","ps"]:[];
   const LBL={g:["Gol",ic("ball")],a:["Assist",ic("assist")],og:["Autogol",ic("og")],y:["Giallo",ic("card","y")],r:["Rosso",ic("card","r")],gs:["Subiti",ic("glove")],ps:["Rig. parati",ic("glove")]};
-  const rows=ms.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{};
+  const rows=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{};
     const cell=k=>{const id="s_"+m.id+"_"+k;return `<div class="stp"><span class="mu">${LBL[k][1]} ${LBL[k][0]}</span><div><button type="button" onclick="stp('${id}',-1)" aria-label="Meno ${LBL[k][0]}" ${mgr?"":"disabled"}>−</button><input type="number" inputmode="numeric" min="0" id="${id}" value="${s[k]||0}" ${mgr?"":"disabled"}><button type="button" onclick="stp('${id}',1)" aria-label="Più ${LBL[k][0]}" ${mgr?"":"disabled"}>+</button></div></div>`};
-    return `<div class="card sp"><b>${esc(m.nick)}</b><div class="sg">${["g","a","og","y","r"].concat(m.pos==="P"?["gs","ps"]:[]).map(cell).join("")}</div></div>`}).join("");
+    return `<div class="card sp"><b>${esc(m.nick)}</b><div class="sg">${["g","a","og","y","r"].concat(gkK(m,s)).map(cell).join("")}</div></div>`}).join("");
   const T=S.teams.find(t=>t.id===x.tid)||{},md=matchDetail(x),tab=S.mt||(mgr&&!x.played?"live":"info");
   const showScore=x.played||(+x.gf||0)+(+x.ga||0)>0||(x.events||[]).length>0;
   const panel=(k,h)=>`<div class="mp" data-k="${k}" style="display:${tab===k?"block":"none"}">${h}</div>`;
@@ -771,6 +774,7 @@ function matchParts(x,mgr){
   <label class="chk"><input type="checkbox" id="pl" ${x.played?"checked":""} ${mgr?"":"disabled"}> Partita giocata</label></div>
   <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div>
   ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label>${(()=>{const own=!mgr&&!!m.uid&&m.uid===S.uid&&!x.played;return `<input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr||own?"":"disabled"} ${own?`onchange="myPresence('${x.id}','${m.id}',this.checked)"`:""}>`})()} <span>${esc(m.nick)}${!mgr&&m.uid===S.uid&&!x.played?" (tu)":""}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
+  ${mgr?`<div class="pc-section"><div class="pc-title">Ospiti${guests.length?` <span>${guests.length}</span>`:""}</div>${guests.length?`<div class="pcg">${guests.map(g=>`<label class="pcg-osp"><input type="checkbox" class="pc" value="${g.id}" ${pr.includes(g.id)?"checked":""}> <span>${esc(g.nick)}</span><button type="button" class="osp-x" aria-label="Togli ${esc(g.nick)}" onclick="event.preventDefault();event.stopPropagation();guestDel('${x.id}','${g.id}')">×</button></label>`).join("")}</div>`:""}<button class="s" style="margin-top:8px" onclick="guestAdd('${x.id}')">${ic("plus")} Aggiungi ospite</button></div>`:""}
   </div>
   <div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="emd">Data</label><input id="emd" type="date" value="${esc(x.date||"")}" ${mgr?"":"disabled"}></div><div><label for="eop">Avversario</label><input id="eop" maxlength="80" value="${esc(x.opp||"")}" ${mgr?"":"disabled"}></div></div>
   <label for="etr">Torneo / campionato</label><input id="etr" list="etl" maxlength="80" placeholder="Vuoto = amichevole" value="${esc(x.tourn||"")}" ${mgr?"":"disabled"}><datalist id="etl">${tourNames([...new Set(S.matches.filter(m=>m.tid===x.tid).map(m=>m.tourn).filter(Boolean))]).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
@@ -783,14 +787,14 @@ function matchParts(x,mgr){
   ${mgr?`<p style="margin-top:22px"><button class="d" style="width:100%" onclick="ask({title:'Eliminare la partita?',msg:'Spariscono anche gol, presenze e statistiche. Non si può annullare.',ok:'Elimina',danger:1,fn:()=>{del('matches/${x.id}');S.mid=null;S.mt=null}})">Elimina partita</button></p>`:""}`;
 
   // vista del giocatore (sola lettura): risultato, la sua presenza, storico, dettagli
-  const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=ms.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
+  const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=rs.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
   const infoP=`${me?`<div class="card"><b>Presenza</b>${x.played?`<p style="margin:8px 0 0">${isIn?"Eri presente a questa partita.":"Non risulti presente a questa partita."}</p>`:`<p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button>`}</div>`:""}
   <div class="card"><b>Dettagli</b>${md.location?`<div class="mu" style="margin-top:10px">Luogo</div><div>${esc(md.location)}</div>`:""}${md.field?`<div class="mu" style="margin-top:10px">Campo</div><div>${esc(md.field)}</div>`:""}${md.time?`<div class="mu" style="margin-top:10px">Ora</div><div>${esc(md.time)}</div>`:""}<p style="margin:12px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p></div>
   ${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
   <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`;
   const info=mgr?infoM:infoP;
   const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>`;
-  const rowsP=ms.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{},chips=["g","a","og","y","r"].concat(m.pos==="P"?["gs","ps"]:[]).filter(k=>+s[k]>0).map(k=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px">${LBL[k][1]} ${LBL[k][0]} <b>${s[k]}</b></span>`).join("");
+  const rowsP=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{},chips=["g","a","og","y","r"].concat(gkK(m,s)).filter(k=>+s[k]>0).map(k=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px">${LBL[k][1]} ${LBL[k][0]} <b>${s[k]}</b></span>`).join("");
     return chips?`<div class="card sp"><b>${esc(m.nick)}</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${chips}</div></div>`:""}).join("");
   const st=mgr?(rows?rows:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
   const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc([dt(x.date).f,md.time,matchPlace(x)].filter(Boolean).join(" · "))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>

@@ -15,15 +15,34 @@ function phaseRead(pre){const p=(document.getElementById(pre+'ph')||{}).value||'
   return{ph:p,dn:0,phx:p?String((document.getElementById(pre+'px')||{}).value||'').trim():''}}
 const tourNames=extra=>[...new Set([...(typeof trNames==='function'?trNames():[]),...extra])];
 const matchPlace=x=>[x.location,x.field?'Campo '+x.field:''].filter(Boolean).join(' · ');
+// Ospiti: giocatori non iscritti alla squadra che valgono per una sola partita. Stanno dentro la partita (x.guests), non nella rosa,
+// quindi i loro numeri restano nella partita e non entrano in classifiche, carte o traguardi.
+const matchGuests=x=>((x&&x.guests)||[]).map(g=>({id:g.id,nick:g.nick,name:g.nick,num:'',pos:'C',role:'giocatore',tid:x.tid,guest:true}));
+const matchRoster=x=>[...S.members.filter(m=>m.tid===x.tid),...matchGuests(x)];
+const mbr=(x,id)=>S.members.find(m=>String(m.id)===String(id))||matchGuests(x).find(g=>String(g.id)===String(id));
+function guestAdd(id){sheet(`<h2 style="margin-top:0">Aggiungi ospite</h2><p class="mu">Gioca solo questa partita: non entra nella rosa né nelle classifiche.</p><label for="gst-n">Nome</label><input id="gst-n" maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guestAddSave('${id}')"><div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="p" onclick="guestAddSave('${id}')">Aggiungi</button><button onclick="closeSheet()">Annulla</button></div>`);setTimeout(()=>document.getElementById('gst-n')?.focus(),0)}
+async function guestPut(x,patch,back){Object.assign(x,patch);render();
+  try{await S.db.doc('matches/'+x.id).update(patch);return true}catch(e){Object.assign(x,back);render();toast('Ospite non salvato: verifica la connessione e riprova.');return false}}
+async function guestAddSave(id){
+  const x=S.matches.find(m=>m.id===id),nick=(document.getElementById('gst-n')?.value||'').trim();if(!x)return closeSheet();if(!nick)return sheetErr('Scrivi il nome.');
+  const g={id:'osp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nick},dom=[...document.querySelectorAll('.pc:checked')].map(e=>e.value);
+  closeSheet();if(await guestPut(x,{guests:[...(x.guests||[]),g],present:[...new Set([...(dom.length?dom:x.present||[]),g.id])]},{guests:x.guests||[],present:x.present||[]}))toast(nick+' aggiunto ai presenti',true)}
+function guestDel(id,gid){
+  const x=S.matches.find(m=>m.id===id),b=x&&lvEff(x);if(!b)return;
+  if((b.events||[]).some(e=>e.p===gid||e.a===gid||e.gk===gid))return toast('Ha eventi in diretta: annullali prima di toglierlo.');
+  const g=(x.guests||[]).find(q=>q.id===gid);if(!g)return;
+  ask({title:'Togliere '+esc(g.nick)+'?',msg:'Spariscono anche le sue statistiche in questa partita.',ok:'Togli',danger:1,fn:()=>{
+    const st={...(x.stats||{})};delete st[gid];const f=formationData(x);
+    guestPut(x,{guests:(x.guests||[]).filter(q=>q.id!==gid),present:(x.present||[]).filter(i=>i!==gid),stats:st,formation:{scheme:f.scheme,players:f.players.map(i=>i===gid?'':i)}},{guests:x.guests||[],present:x.present||[],stats:x.stats||{},formation:x.formation})}})}
 function reportLines(x){
   const team=S.teams.find(t=>t.id===x.tid)||{};
-  const present=(x.present||[]).map(id=>S.members.find(m=>m.id===id)).filter(Boolean);
+  const present=(x.present||[]).map(id=>mbr(x,id)).filter(Boolean);
   const lines=[['TORNEO',matchComp(x)],['DATA',dt(x.date).f],['ORA',x.time||'Non indicata'],['LUOGO',matchPlace(x)||'Non indicato'],['STATO',x.played?'Partita terminata':'Da giocare']];
   const sc=scorers(x);lines.push(['MARCATORI',sc||(x.played?'Nessun marcatore registrato':'Da giocare')]);
   lines.push(['PRESENTI',present.map(m=>m.nick+(m.role==='dirigente'?' (dirigente)':'')).join(', ')||'Nessuna presenza registrata']);
   for(const m of present){
     const s=(x.stats||{})[m.id];if(!s||m.role!=='giocatore')continue;
-    const values=[['g','gol'],['a','assist'],['og','autogol'],['y','ammonizioni'],['r','espulsioni'],...(m.pos==='P'?[['gs','gol subiti'],['ps','rigori parati']]:[])];
+    const values=[['g','gol'],['a','assist'],['og','autogol'],['y','ammonizioni'],['r','espulsioni'],...(m.pos==='P'||s.gs>0||s.ps>0?[['gs','gol subiti'],['ps','rigori parati']]:[])];
     lines.push([m.nick,values.map(([k,label])=>(s[k]||0)+' '+label).join(' · ')]);
   }
   return {team,lines};
@@ -42,7 +61,7 @@ async function reportLogo(src){
   return new Promise(resolve=>{const img=new Image();const timeout=setTimeout(()=>resolve(null),6000);img.crossOrigin='anonymous';img.onload=()=>{clearTimeout(timeout);resolve(img)};img.onerror=()=>{clearTimeout(timeout);resolve(null)};img.src=src});
 }
 function reportScorers(x){
-  return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>({m:S.members.find(m=>m.id===id&&m.tid===x.tid&&m.role==='giocatore'),g:s.g})).filter(s=>s.m).sort((a,b)=>b.g-a.g).map(s=>s.m.nick+(s.g>1?' ×'+s.g:''));
+  return Object.entries(x.stats||{}).filter(([,s])=>s.g>0).map(([id,s])=>({m:(q=>q&&q.tid===x.tid&&q.role==='giocatore'?q:null)(mbr(x,id)),g:s.g})).filter(s=>s.m).sort((a,b)=>b.g-a.g).map(s=>s.m.nick+(s.g>1?' ×'+s.g:''));
 }
 async function reportPalette(team){
   let accent=team.color||'#f5c518';
@@ -51,10 +70,10 @@ async function reportPalette(team){
   return {accent:/^#[0-9a-f]{6}$/i.test(accent)?accent:'#f5c518',background:'#101216',text:'#f5f4ed'};
 }
 function reportPlayerStats(x){
-  const present=(x.present||[]).map(id=>S.members.find(m=>m.id===id)).filter(Boolean);
+  const present=(x.present||[]).map(id=>mbr(x,id)).filter(Boolean);
   const players=present.filter(m=>m.role==='giocatore').map(m=>{
     const s=(x.stats||{})[m.id]||{};
-    const parts=[['g','G'],['a','A'],['og','AG'],['y','AMM'],['r','ESP'],...(m.pos==='P'?[['gs','GS'],['ps','RP']]:[])].filter(([k])=>(s[k]||0)>0).map(([k,l])=>s[k]+' '+l);
+    const parts=[['g','G'],['a','A'],['og','AG'],['y','AMM'],['r','ESP'],...(m.pos==='P'||s.gs>0||s.ps>0?[['gs','GS'],['ps','RP']]:[])].filter(([k])=>(s[k]||0)>0).map(([k,l])=>s[k]+' '+l);
     return {nick:m.nick,stats:parts.join(' · ')||'—'};
   });
   const staff=present.filter(m=>m.role==='dirigente').map(m=>m.nick);
@@ -207,7 +226,7 @@ async function matchReportBlob(x,options={}){
 }
 // ===== Formazione: storia 1080×1920 con maglie numerate =====
 const FORMATION_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster']];
-function formationBench(x){const ids=new Set(formationData(x).players.filter(Boolean).map(String)),present=new Set((x.present||[]).map(String));return S.members.filter(m=>m.tid===x.tid&&m.role==='giocatore'&&present.has(String(m.id))&&!ids.has(String(m.id)))}
+function formationBench(x){const ids=new Set(formationData(x).players.filter(Boolean).map(String)),present=new Set((x.present||[]).map(String));return matchRoster(x).filter(m=>m.role==='giocatore'&&present.has(String(m.id))&&!ids.has(String(m.id)))}
 function formationPositions(scheme){return ({
   "3-1":[[.5,.83],[.18,.47],[.5,.53],[.82,.47],[.5,.16]],
   "2-2":[[.5,.83],[.27,.54],[.73,.54],[.27,.2],[.73,.2]],
@@ -267,7 +286,7 @@ function futsalLines(ctx,px,py,pw,ph,color,width){
 }
 function drawStarters(ctx,x,P,area,w,o){
   const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'],pos=formationPositions(f.scheme);
-  f.players.forEach((id,i)=>{const m=id&&S.members.find(q=>String(q.id)===String(id));if(!m||!pos[i])return;const cx=area.x+area.w*pos[i][0],cy=area.y+area.h*pos[i][1];jerseyCard(ctx,m,cx,cy-w*.62,w,P,{...o,keeper:labels[i]==='P'})});
+  f.players.forEach((id,i)=>{const m=id&&mbr(x,id);if(!m||!pos[i])return;const cx=area.x+area.w*pos[i][0],cy=area.y+area.h*pos[i][1];jerseyCard(ctx,m,cx,cy-w*.62,w,P,{...o,keeper:labels[i]==='P'})});
 }
 function drawBench(ctx,bench,P,top,o={}){
   if(!bench.length)return top;const W=1080,ink=o.ink||P.text;
@@ -304,7 +323,7 @@ async function formationStoryBlob(x,options={}){
     for(let i=0;i<W;i+=180){ctx.fillStyle=i/180%2?'rgba(255,255,255,.035)':'rgba(0,0,0,.12)';ctx.fillRect(i,0,180,H);ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(i,0,3,H)}
     const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,'rgba(0,0,0,.35)');shade.addColorStop(.4,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.4)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
     formationHeader(ctx,x,team,P,logos,140,P.text);
-    const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'],slots=f.players.map((id,i)=>({m:id&&S.members.find(q=>String(q.id)===String(id)),label:labels[i]})).filter(s=>s.m);
+    const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'],slots=f.players.map((id,i)=>({m:id&&mbr(x,id),label:labels[i]})).filter(s=>s.m);
     const rails=[[560,slots.slice(0,3)],[1010,slots.slice(3,5)]];
     for(const [ry,row] of rails){if(!row.length)continue;ctx.fillStyle=fxMix(P.accent,'#000000',.2);reportRoundRect(ctx,90,ry-9,900,18,9);ctx.fill();ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(100,ry-6,880,4);
       const gap=320,x0=W/2-(row.length-1)*gap/2;row.forEach((s,i)=>{const cx=x0+i*gap,w=230,top=ry+64;
@@ -350,12 +369,12 @@ async function previewFormation(id){
 // ===== Risultato: storia 1080×1920 con maglie, nello stile della formazione =====
 const RESULT_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster']];
 function resultData(x){
-  const st=x.stats||{},mem=id=>S.members.find(m=>String(m.id)===String(id)&&m.tid===x.tid&&m.role==='giocatore');
+  const st=x.stats||{},mem=id=>{const m=mbr(x,id);return m&&m.tid===x.tid&&m.role==='giocatore'?m:undefined};
   const all=Object.keys(st).map(id=>({m:mem(id),g:+st[id].g||0,a:+st[id].a||0,y:+st[id].y||0,r:+st[id].r||0})).filter(e=>e.m);
   const present=(x.present||[]).map(mem).filter(Boolean),b=typeof mvp==='function'?mvp(x):null;
   return {cards:{y:all.filter(e=>e.y>0).map(e=>e.m.nick+(e.y>1?' ×'+e.y:'')),r:all.filter(e=>e.r>0).map(e=>e.m.nick+(e.r>1?' ×'+e.r:''))},gf:+x.gf||0,ga:+x.ga||0,played:!!x.played,present,
     scorers:all.filter(e=>e.g>0).sort((p,q)=>q.g-p.g||q.a-p.a),assists:all.filter(e=>e.a>0&&!e.g).sort((p,q)=>q.a-p.a),
-    keeper:present.find(m=>m.pos==='P')||null,mvp:b&&b.m&&b.m.role==='giocatore'?b.m:null};
+    keeper:present.filter(m=>(+(st[m.id]||{}).gs||0)+(+(st[m.id]||{}).ps||0)>0).sort((p,q)=>(+st[q.id].gs||0)+(+st[q.id].ps||0)-(+st[p.id].gs||0)-(+st[p.id].ps||0))[0]||present.find(m=>m.pos==='P')||null,mvp:b&&b.m&&b.m.role==='giocatore'?b.m:null};
 }
 function resultOutcome(R){return !R.played?{label:'DA GIOCARE',color:'#8b95a3',foot:'Forza ragazzi'}:R.gf>R.ga?{label:'VITTORIA',color:'#2fbf71',foot:'Che squadra!'}:R.gf<R.ga?{label:'SCONFITTA',color:'#e5484d',foot:'Ci rifaremo'}:{label:'PAREGGIO',color:'#f5c518',foot:'Si va avanti'}}
 function resultFigures(R){
@@ -395,7 +414,7 @@ function drawScore(ctx,R,P,cx,base,size,ink,dash){
 }
 function drawPill(ctx,O,cx,cy,size){ctx.font=`700 ${size}px Oswald, sans-serif`;ctx.textAlign='center';const w=ctx.measureText(O.label).width+size*2.2,h=size*1.9;ctx.fillStyle=O.color;reportRoundRect(ctx,cx-w/2,cy-h/2,w,h,h/2);ctx.fill();ctx.fillStyle='#101216';ctx.fillText(O.label,cx,cy+size*.36)}
 function resultReport(ctx,x,R,P,top,limit,o={}){
-  const L=170,Rt=910,nick=id=>(S.members.find(m=>String(m.id)===String(id))||{}).nick||'?',known=id=>S.members.some(m=>String(m.id)===String(id)),
+  const L=170,Rt=910,nick=id=>(mbr(x,id)||{}).nick||'?',known=id=>!!mbr(x,id),
     evx=x.events||[],stx=x.stats||{},goalRows=[],cardRows=[],saveRows=[];
   const MIN=o.minutes!==false,up=t=>String(t||'').toUpperCase();
   if(MIN){
@@ -556,7 +575,8 @@ let LIVE={mid:null,p:null,assist:false,pick:null,sc:undefined,popAt:0},LV={};
 const lvEff=x=>{const o=LV[x.id];return o&&o.n>0?{...x,...o.d}:x};
 const lvStat=(d,p)=>d.stats[p]||(d.stats[p]={g:0,a:0,og:0,y:0,r:0,gs:0});
 const lvDec=(s,k)=>{if(s)s[k]=Math.max(0,(+s[k]||0)-1)};
-function lvKeepers(cur){return (cur.present||[]).filter(i=>{const m=S.members.find(m=>m.id===i);return m&&m.role==='giocatore'&&m.pos==='P'})}
+// Chi può stare in porta: tutti i presenti, prima i portieri (senza portiere ci va un giocatore di movimento o un ospite).
+function lvKeepers(cur){return livePlayers(cur).sort((a,b)=>(b.pos==='P')-(a.pos==='P')).map(m=>m.id)}
 const rq=()=>{if(rq.t)return;rq.t=requestAnimationFrame(()=>{rq.t=0;render()})};
 const lvBusy=()=>Object.values(LV).some(o=>o&&o.n>0);
 function lvApply(id,fn){
@@ -612,17 +632,14 @@ function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigat
 function liveAssist(id,a){
   if(a)lvApply(id,d=>{const e=d.events[d.events.length-1];if(e&&e.k==='g'&&!e.a){e.a=a;lvStat(d,a).a++}});
   LIVE.p=null;LIVE.assist=false;rq()}
-function liveOpp(id){const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.p=null;LIVE.assist=false;LIVE.pick='opp';
-  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
-function liveOwn(id){const p=LIVE.p;if(!p)return;const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.pick='og';
-  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
+function liveOpp(id){LIVE.p=null;LIVE.assist=false;LIVE.pick='opp';rq()}
+function liveOwn(id){if(!LIVE.p)return;LIVE.pick='og';rq()}
 function liveGk(id,gk){const k=LIVE.pick,p=LIVE.p;LIVE.pick=null;
   if(k==='opp')lvApply(id,d=>{d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'opp',gk:gk||null,t:lvNow(),...lvM(id)})});
   else if(k==='og'&&p)lvApply(id,d=>{lvStat(d,p).og++;d.ga++;if(gk)lvStat(d,gk).gs++;d.events.push({k:'og',p,gk:gk||null,t:lvNow(),...lvM(id)})});
   else if(k==='ps')lvApply(id,d=>{if(gk){const s=lvStat(d,gk);s.ps=(+s.ps||0)+1}d.events.push({k:'ps',gk:gk||null,t:lvNow(),...lvM(id)})});
   LIVE.p=null;rq()}
-function liveSave(id){const base=S.matches.find(m=>m.id===id);if(!base)return;const ks=lvKeepers(lvEff(base));LIVE.p=null;LIVE.assist=false;LIVE.pick='ps';
-  if(ks.length>1){rq();return}liveGk(id,ks[0]||null)}
+function liveSave(id){LIVE.p=null;LIVE.assist=false;LIVE.pick='ps';rq()}
 function liveGkCancel(){LIVE.pick=null;rq()}
 function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:lvNow(),...lvM(id)})});LIVE.p=null;rq()}
 function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
@@ -633,7 +650,7 @@ function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
   else lvDec(d.stats[e.p],e.k)});LIVE.p=null;LIVE.assist=false;rq()}
 function liveEnd(id){ask({title:'Fine partita?',msg:'La partita viene segnata come giocata con il risultato attuale.',ok:'Fine partita',fn:()=>{lvApply(id,d=>{d.played=true});liveClockStop(id)}})}
 function liveLog(x){
-  const nm=id=>esc(S.members.find(m=>m.id===id)?.nick||'?'),ev=x.events||[];
+  const nm=id=>esc(mbr(x,id)?.nick||'?'),ev=x.events||[];
   if(!ev.length)return '';
   // Cronaca a due colonne: a sinistra la nostra squadra, a destra l'avversario (gol avversari e autogol), minuto al centro.
   const T=S.teams.find(t=>t.id===x.tid)||{},mine=e=>e.k!=='opp'&&e.k!=='og';
@@ -653,20 +670,20 @@ function liveCardHtml(x){
   const cl=x.clock||{},sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=lvNow();LIVE.sc=sc;
   const reset=!x.played&&(cl.since||+cl.base)?`<button onclick="liveClockReset('${id}')">Azzera cronometro</button>`:'';
   return `<div class="card live"><div class="chips" style="margin-top:0">${chips}</div>${reset||!x.played?`<div class="row" style="margin-top:12px">${reset}${x.played?'':`<button class="p" onclick="liveEnd('${id}')">Fine partita</button>`}</div>`:''}${lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>'}${liveLog(x)}</div>`}
-const livePlayers=x=>(x.present||[]).map(i=>S.members.find(m=>m.id===i)).filter(m=>m&&m.role==='giocatore');
+const livePlayers=x=>(x.present||[]).map(i=>mbr(x,i)).filter(m=>m&&m.role==='giocatore');
 // Pannello delle azioni: sta fisso sopra la barra e ha sempre la stessa altezza, così nessun pulsante si sposta mentre si tocca.
 function liveDockHtml(x,tab){
   const ps=livePlayers(x),id=x.id;if(!ps.length)return '';
   const sel=LIVE.p&&ps.find(m=>m.id===LIVE.p);let title,row;
   if(LIVE.pick){const ks=lvKeepers(x);title=LIVE.pick==='og'?'Autogol: chi era in porta?':LIVE.pick==='ps'?'Rigore parato: chi era in porta?':'Gol avversario: chi era in porta?';
-    row=`<div class="lvact sc">${ks.map(i=>`<button class="chip" onclick="liveGk('${id}','${i}')">${esc(S.members.find(m=>m.id===i)?.nick||'?')}</button>`).join('')}<button class="chip" onclick="liveGk('${id}',null)">Nessuno</button><button class="chip" onclick="liveGkCancel()">Annulla</button></div>`}
+    row=`<div class="lvact sc"><button class="chip" onclick="liveGk('${id}',null)">Nessuno</button>${ks.map(i=>`<button class="chip" onclick="liveGk('${id}','${i}')">${esc(mbr(x,i)?.nick||'?')}</button>`).join('')}</div>`}
   else if(sel&&LIVE.assist){title=`Gol di ${esc(sel.nick)}! Assist?`;
     row=`<div class="lvact sc"><button class="chip" onclick="liveAssist('${id}',null)">Nessuno</button>${ps.filter(m=>m.id!==sel.id).map(m=>`<button class="chip" onclick="liveAssist('${id}','${m.id}')">${esc(m.nick)}</button>`).join('')}</div>`}
   else if(sel){title=esc(sel.nick);
     row=`<div class="lvact"><button class="p" onclick="liveGoal('${id}')">${ic('ball')} Gol</button><button class="lvico" onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')}</button><button class="lvico" onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')}</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div>`}
   else{title='<span class="mu">Tocca un giocatore</span>';
     row=`<div class="lvact"><button onclick="liveOpp('${id}')">${ic('plus')} Gol avversario</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div>`}
-  return `<div class="lvdock" id="lvdock"${tab==='live'?'':' hidden'}><div class="lvdh"><b>${title}</b>${LIVE.pick?'':`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div>`}
+  return `<div class="lvdock" id="lvdock"${tab==='live'?'':' hidden'}><div class="lvdh"><b>${title}</b>${LIVE.pick?`<button class="s" onclick="liveGkCancel()">Annulla</button>`:`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div>`}
 // Cronometro nell'intestazione: per chi gestisce è anche il tasto Avvia/Pausa, gli altri lo vedono quando è partito.
 function liveClockHead(x,mgr){
   if(x.played)return '';const cl=x.clock||{},on=!!cl.since,used=on||+cl.base>0;if(!mgr&&!used)return '';
