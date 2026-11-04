@@ -17,15 +17,15 @@ const tourNames=extra=>[...new Set([...(typeof trNames==='function'?trNames():[]
 const matchPlace=x=>[x.location,x.field?'Campo '+x.field:''].filter(Boolean).join(' · ');
 // Ospiti: giocatori non iscritti alla squadra che valgono per una sola partita. Stanno dentro la partita (x.guests), non nella rosa,
 // quindi i loro numeri restano nella partita e non entrano in classifiche, carte o traguardi.
-const matchGuests=x=>((x&&x.guests)||[]).map(g=>({id:g.id,nick:g.nick,name:g.nick,num:g.num||'',pos:'C',role:'giocatore',tid:x.tid,guest:true}));
+const matchGuests=x=>((x&&x.guests)||[]).map(g=>({id:g.id,nick:g.nick,name:g.nick,num:g.num||'',pos:POS[g.pos]?g.pos:'C',role:'giocatore',tid:x.tid,guest:true}));
 const matchRoster=x=>[...S.members.filter(m=>m.tid===x.tid),...matchGuests(x)];
 const mbr=(x,id)=>S.members.find(m=>String(m.id)===String(id))||matchGuests(x).find(g=>String(g.id)===String(id));
-function guestAdd(id){sheet(`<h2 style="margin-top:0">Aggiungi ospite</h2><p class="mu">Gioca solo questa partita: non entra nella rosa né nelle classifiche.</p><label for="gst-n">Nome</label><input id="gst-n" maxlength="30" autocomplete="off"><label for="gst-num">Numero di maglia</label><input id="gst-num" type="number" inputmode="numeric" min="0" max="99" onkeydown="if(event.key==='Enter')guestAddSave('${id}')"><div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="p" onclick="guestAddSave('${id}')">Aggiungi</button><button onclick="closeSheet()">Annulla</button></div>`);setTimeout(()=>document.getElementById('gst-n')?.focus(),0)}
+function guestAdd(id){sheet(`<h2 style="margin-top:0">Aggiungi ospite</h2><p class="mu">Gioca solo questa partita: non entra nella rosa né nelle classifiche.</p><label for="gst-n">Nome</label><input id="gst-n" maxlength="30" autocomplete="off"><label for="gst-pos">Ruolo</label><select id="gst-pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}" ${k==='C'?'selected':''}>${n}</option>`).join('')}</select><label for="gst-num">Numero di maglia</label><input id="gst-num" type="number" inputmode="numeric" min="0" max="99" onkeydown="if(event.key==='Enter')guestAddSave('${id}')"><div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="p" onclick="guestAddSave('${id}')">Aggiungi</button><button onclick="closeSheet()">Annulla</button></div>`);setTimeout(()=>document.getElementById('gst-n')?.focus(),0)}
 async function guestPut(x,patch,back){Object.assign(x,patch);render();
   try{await S.db.doc('matches/'+x.id).update(patch);return true}catch(e){Object.assign(x,back);render();toast('Ospite non salvato: verifica la connessione e riprova.');return false}}
 async function guestAddSave(id){
   const x=S.matches.find(m=>m.id===id),nick=(document.getElementById('gst-n')?.value||'').trim();if(!x)return closeSheet();if(!nick)return sheetErr('Scrivi il nome.');const num=(document.getElementById('gst-num')?.value||'').trim();if(num&&!(/^\d{1,2}$/.test(num)))return sheetErr('Il numero di maglia va da 0 a 99.');
-  const g={id:'osp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nick,num},dom=[...document.querySelectorAll('.pc:checked')].map(e=>e.value);
+  const g={id:'osp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nick,num,pos:document.getElementById('gst-pos')?.value||'C'},dom=[...document.querySelectorAll('.pc:checked')].map(e=>e.value);
   closeSheet();if(await guestPut(x,{guests:[...(x.guests||[]),g],present:[...new Set([...(dom.length?dom:x.present||[]),g.id])]},{guests:x.guests||[],present:x.present||[]}))toast(nick+' aggiunto ai presenti',true)}
 function guestDel(id,gid){
   const x=S.matches.find(m=>m.id===id),b=x&&lvEff(x);if(!b)return;
