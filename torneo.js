@@ -63,6 +63,7 @@
 
   function save(o) {
     const t = team(); if (!t) return;
+    delete st().ed;   // qualsiasi salvataggio chiude la modifica in corso (gli indici dei risultati possono cambiare)
     const cl = clone(o), patch = {};
     if (cl.id === 'legacy') { cl.id = newId(); st().id = cl.id; patch.tourn = null; t.tourn = null; }
     t.tourns = Object.assign({}, t.tourns || {}, { [cl.id]: cl }); patch.tourns = t.tourns;
@@ -235,8 +236,11 @@
     const o = clone(T()), h = val('tr-h'), a = val('tr-a'), gh = num(val('tr-gh')), ga = num(val('tr-ga'));
     if (!h || !a || h === a) return toast('Scegli due squadre diverse.');
     if (gh == null || ga == null) return toast('Inserisci i gol di entrambe le squadre.');
+    const ei = val('tr-ed') === '' ? -1 : +val('tr-ed');
+    o.res = o.res || [];
+    if (ei >= 0 && o.res[ei]) o.res.splice(ei, 1);   // modifica: tolgo il risultato originale (anche se sono cambiate le squadre)
     const k = pairKey(o, { h, a });
-    o.res = (o.res || []).filter(r => pairKey(o, r) !== k);
+    o.res = o.res.filter(r => pairKey(o, r) !== k);
     const dn = num(val('tr-dn')); const item = { h, a, gh, ga }; if (dn) item.dn = dn;
     o.res.push(item);
     save(o);
@@ -306,6 +310,8 @@
     st().imp = ''; save(o);
     toast('Torneo aggiornato' + (lost ? ' (' + lost + ' risultati di squadre tolte eliminati)' : ''), true);
   };
+  window.trEditRes = i => { st().ed = i; R(); setTimeout(() => { const f = document.getElementById('tr-form'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); };
+  window.trEdCancel = () => { delete st().ed; R(); };
   window.trDelRes = i => { const o = clone(T()); o.res.splice(i, 1); save(o); };
   window.trForce = g => { const o = clone(T()); o.force = o.force || {}; o.force[g] = !o.force[g]; save(o); };
   window.trSaveKo = key => {
@@ -410,10 +416,13 @@
     const force = mgr && hasKo(o) ? '<p><button class="s" onclick="trForce(\'' + g + '\')">' + ((o.force && o.force[g]) ? 'Riapri il girone' : 'Segna il girone come concluso') + '</button></p>' : '';
     const mine = mgr && !o.mine ? '<div class="card"><b>Qual è la tua squadra?</b><p class="mu" style="white-space:normal">Scegliila: le tue partite registrate nell’app con il nome «' + E(o.name) + '» entreranno da sole nelle classifiche.</p><select onchange="trMine(this.value)"><option value="">Scegli…</option>' +
       gl.map(x => '<optgroup label="' + (multi ? 'Girone ' + x : 'Squadre') + '">' + o.groups[x].map(n => '<option>' + E(n) + '</option>').join('') + '</optgroup>').join('') + '</select></div>' : '';
-    const names = o.groups[g], opts = names.map(n => '<option>' + E(n) + '</option>').join('');
-    const form = mgr ? '<div class="card"><h3>Inserisci un risultato' + (multi ? ' · Girone ' + g : '') + '</h3><div class="row"><select id="tr-h"><option value="">Casa</option>' + opts + '</select><select id="tr-a"><option value="">Ospite</option>' + opts + '</select></div>' +
-      '<div class="row" style="margin-top:8px"><input id="tr-gh" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol casa"><input id="tr-ga" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol ospite"></div>' +
-      '<div class="row" style="margin-top:8px"><input id="tr-dn" type="number" min="1" max="99" inputmode="numeric" placeholder="Giornata (facoltativa)"></div><p style="margin:10px 0 0"><button class="p" onclick="trAddRes()">Salva risultato</button></p>' +
+    const names = o.groups[g], man0 = o.res || [], inGr = n => names.some(x => norm(x) === norm(n));
+    const ed = Number.isInteger(s.ed) && man0[s.ed] && inGr(man0[s.ed].h) && inGr(man0[s.ed].a) ? man0[s.ed] : null;
+    const opts = cur => names.map(n => '<option' + (cur && norm(cur) === norm(n) ? ' selected' : '') + '>' + E(n) + '</option>').join(''), iv = f => ed && ed[f] != null ? ' value="' + E(ed[f]) + '"' : '';
+    const form = mgr ? '<div class="card" id="tr-form"' + (ed ? ' style="outline:2px solid var(--acf)"' : '') + '><h3>' + (ed ? 'Modifica il risultato' : 'Inserisci un risultato') + (multi ? ' · Girone ' + g : '') + '</h3>' + (ed ? '<input type="hidden" id="tr-ed" value="' + s.ed + '">' : '') +
+      '<div class="row"><select id="tr-h"><option value="">Casa</option>' + opts(ed && ed.h) + '</select><select id="tr-a"><option value="">Ospite</option>' + opts(ed && ed.a) + '</select></div>' +
+      '<div class="row" style="margin-top:8px"><input id="tr-gh" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol casa"' + iv('gh') + '><input id="tr-ga" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol ospite"' + iv('ga') + '></div>' +
+      '<div class="row" style="margin-top:8px"><input id="tr-dn" type="number" min="1" max="99" inputmode="numeric" placeholder="Giornata (facoltativa)"' + iv('dn') + '></div><p style="margin:10px 0 0"><button class="p" onclick="trAddRes()">' + (ed ? 'Salva modifica' : 'Salva risultato') + '</button>' + (ed ? ' <button class="s" onclick="trEdCancel()">Annulla</button>' : '') + '</p>' +
       '<p class="mu" style="white-space:normal">' + (two ? 'Andata e ritorno: la stessa coppia con casa e ospite invertiti è un’altra partita; se esiste già lo stesso incontro, viene sostituito.' : 'Se esiste già il risultato di quella coppia, viene sostituito (si gioca solo l’andata).') + '</p></div>' : '';
     const up = appList(o).filter(r => !r.played && r.g === g).sort((p, q) => (p.date + p.time) < (q.date + q.time) ? -1 : 1);
     const upH = up.length ? '<h2>Prossime partite' + (multi ? ' · Girone ' + g : '') + '</h2><div class="card">' + up.map(r => '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span></div><div class="tm"><span>' + E(r.a) + '</span></div><span class="mu">' + E([dmy(r.date), r.time].filter(Boolean).join(' · ') || 'data da definire') + '</span></div>').join('') + '</div>' : '';
@@ -422,7 +431,7 @@
     const rowH = r => {
       const i = r.auto ? -1 : man.findIndex(x => x.h === r.h && x.a === r.a && x.gh === r.gh && x.ga === r.ga);
       return '<div class="trk"><div class="tm"><span>' + E(r.h) + '</span><b>' + r.gh + '</b></div><div class="tm"><span>' + E(r.a) + '</span><b>' + r.ga + '</b></div>' +
-        (r.auto ? '<span class="mu">' + (r.date ? dmy(r.date) + ' · ' : '') + 'dalle partite dell’app</span>' : (mgr && i >= 0 ? '<button class="s" onclick="trDelRes(' + i + ')">Elimina</button>' : '')) + '</div>';
+        (r.auto ? '<span class="mu">' + (r.date ? dmy(r.date) + ' · ' : '') + 'dalle partite dell’app</span>' : (mgr && i >= 0 ? '<span style="display:flex;gap:6px"><button class="s" onclick="trEditRes(' + i + ')">Modifica</button><button class="s" onclick="trDelRes(' + i + ')">Elimina</button></span>' : '')) + '</div>';
     };
     const byDn = {}; list.forEach(r => { (byDn[r.dn || 0] = byDn[r.dn || 0] || []).push(r); });
     const maxDn = Math.max(0, ...Object.keys(byDn).map(Number));
