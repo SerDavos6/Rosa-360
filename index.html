@@ -247,7 +247,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=13"></script><script src="match-report.js?v=23"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=13"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=14"></script><script src="match-report.js?v=23"></script><script src="fluido.js?v=10"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=13"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=17"></script>
 
 <script>
@@ -384,13 +384,13 @@ function squadBlock(t){
   const row=(n,s)=>`<tr><td>${esc(n)}</td><td>${s.g}</td><td>${s.v}</td><td>${s.n}</td><td>${s.p}</td><td>${s.gf}</td><td>${s.ga}</td><td>${s.dr>0?"+":""}${s.dr}</td><td><b>${s.pt}</b></td></tr>`;
   return `<h2>Squadra · ${lab}</h2><div class="card tipw"><div class="pgrid">${tile(r.g,"GIOCATE")}${tile(r.v,"VITTORIE")}${tile(r.n,"PAREGGI")}${tile(r.p,"SCONFITTE")}${tile(r.gf,"GOL FATTI")}${tile(r.ga,"GOL SUBITI")}${tile((r.dr>0?"+":"")+r.dr,"DIFF. RETI")}${tile(r.pt,"PUNTI")}</div><div style="margin-top:12px"><span class="mu">Forma (ultime ${Math.min(8,l.length)})</span><div class="fmrow">${form}</div></div></div>
   ${trendChart(l)}<h2>Per torneo</h2>${[...tors,...(tors.length>1?[["Totale",r]]:[])].map(([n,x])=>`<div class="card"><b class="hd">${esc(n)}</b><div class="pgrid">${tile(x.g,"GIOCATE")}${tile(x.v,"VITTORIE")}${tile(x.n,"PAREGGI")}${tile(x.p,"SCONFITTE")}${tile(x.gf,"GOL FATTI")}${tile(x.ga,"GOL SUBITI")}${tile((x.dr>0?"+":"")+x.dr,"DIFF. RETI")}${tile(x.pt,"PUNTI")}</div></div>`).join("")}`}
-function stats(m){
+function stats(m,f){
   const t={p:0,g:0,a:0,og:0,y:0,r:0,gs:0,ps:0};
-  S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).forEach(x=>{
+  S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(!f||f(x))&&(x.present||[]).includes(m.id)).forEach(x=>{
     const s=(x.stats||{})[m.id]||{};t.p++;for(const k of["g","a","og","y","r","gs","ps"])t[k]+=+s[k]||0});
   return t}
-function ovr(m){
-  const t=stats(m);const w=W[m.pos]||[0,0];
+function ovr(m,f){
+  const t=stats(m,f);const w=W[m.pos]||[0,0];
   let o=55+t.g*w[0]+t.a*w[1]+t.p*.6-t.og*3-t.y*.5-t.r*2;
   if(m.pos==="P")o+=t.p*1-t.gs*.7+t.ps*2;
   return Math.max(40,Math.min(99,Math.round(o)))}

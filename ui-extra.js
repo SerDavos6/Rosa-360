@@ -92,7 +92,7 @@ async function shareImage(title,name,draw){
   }catch(e){const s=$('si-st');if(s)s.textContent='Impossibile generare l’immagine. Riprova.'}}
 function statHead(ctx,P,team,logo,kicker,y0=130){const W=1080;if(logo){ctx.save();ctx.beginPath();ctx.arc(W/2,y0+60,60,0,Math.PI*2);ctx.clip();ctx.drawImage(logo,W/2-60,y0,120,120);ctx.restore()}
   let sz=80;const nm=(team.name||'').toUpperCase();ctx.textAlign='center';ctx.fillStyle=P.text;do{sz-=4;ctx.font=`700 ${sz}px Oswald, sans-serif`}while(ctx.measureText(nm).width>900&&sz>36);ctx.fillText(nm,W/2,y0+215);
-  ctx.fillStyle=P.accent;ctx.font='700 34px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='8px';ctx.fillText(kicker,W/2+4,y0+275);if('letterSpacing' in ctx)ctx.letterSpacing='0px'}
+  ctx.fillStyle=P.accent;if('letterSpacing' in ctx)ctx.letterSpacing='8px';let ks=34;do{ctx.font=`700 ${ks}px Oswald, sans-serif`;ks-=2}while(ctx.measureText(kicker).width>960&&ks>22);ctx.fillText(reportFit(ctx,kicker,960),W/2+4,y0+275);if('letterSpacing' in ctx)ctx.letterSpacing='0px'}
 function statTile(ctx,P,x,y,w,h,val,label){ctx.fillStyle='rgba(255,255,255,.08)';reportRoundRect(ctx,x,y,w,h,24);ctx.fill();ctx.textAlign='center';ctx.fillStyle=P.accent;ctx.font=`700 ${Math.round(h*.42)}px Oswald, sans-serif`;ctx.fillText(val,x+w/2,y+h*.6);ctx.fillStyle=P.text;ctx.globalAlpha=.75;ctx.font='500 28px Oswald, sans-serif';ctx.fillText(label,x+w/2,y+h*.88);ctx.globalAlpha=1}
 async function drawAv(ctx,m,cx,cy,r,P){ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();const im=m.photo?await reportLogo(m.photo):null;
   if(im){const s=Math.max(2*r/im.width,2*r/im.height);ctx.drawImage(im,cx-im.width*s/2,cy-im.height*s/2,im.width*s,im.height*s)}else{ctx.fillStyle=P.accent;ctx.fillRect(cx-r,cy-r,2*r,2*r);ctx.fillStyle=fxContrast(P.accent);ctx.font=`700 ${r}px Oswald, sans-serif`;ctx.textAlign='center';ctx.fillText((m.nick||'?')[0].toUpperCase(),cx,cy+r*.35)}
@@ -119,14 +119,21 @@ function shareCard(id){const m=S.members.find(x=>x.id===id);if(!m)return;shareIm
   await drawAv(ctx,m,x+510,y+340,200,{...P,accent:ink});ctx.textAlign='center';ctx.fillStyle=ink;ctx.font='700 100px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(m.nick||'').toUpperCase(),680),x+w/2,y+700);
   ctx.fillRect(x+120,y+740,w-240,4);[[t.g,'GOL'],[t.a,'ASSIST'],[t.p,'PRES.']].forEach((e,i)=>{const cx=x+200+i*200;ctx.font='700 110px Oswald, sans-serif';ctx.fillText(e[0],cx,y+880);ctx.font='500 34px Oswald, sans-serif';ctx.fillText(e[1],cx,y+935)});
   ctx.font='500 32px Oswald, sans-serif';ctx.globalAlpha=.75;ctx.fillText(seasonLabel(),x+w/2,y+1030);ctx.globalAlpha=1;{const bl=badgeList(m).filter(b=>b.on).map(b=>b.short);if(bl.length){ctx.font='700 34px Oswald, sans-serif';ctx.fillText(reportFit(ctx,bl.join('  ·  '),680),x+w/2,y+1085)}}statHead(ctx,P,team,null,'',60);formationFooter(ctx,P.accent,1838,'Forza ragazzi')})}
-function shareRecap(id){const m=S.members.find(x=>x.id===id);if(!m)return;shareImage('Riepilogo di '+m.nick,'stagione-'+m.nick,async(ctx,P,team,logo)=>{
-  const t=stats(m),o=ovr(m),gm=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)),mv=gm.filter(x=>{const b=mvp(x);return b&&b.m.id===m.id}).length,best=gm.map(x=>({x,r:rate((x.stats||{})[m.id]||{})})).sort((a,b)=>b.r-a.r)[0];
-  statHead(ctx,P,team,logo,'LA MIA STAGIONE · '+seasonLabel(),90);await drawAv(ctx,m,540,620,150,P);ctx.textAlign='center';ctx.fillStyle=P.text;ctx.font='700 96px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(m.nick||'').toUpperCase(),900),540,865);
+// Riepilogo giocatore: stagione completa oppure un singolo torneo (tour = nome torneo, 'Amichevoli' per le partite senza torneo)
+let recapTours=[];
+function shareRecap(id,tour){const m=S.members.find(x=>x.id===id);if(!m)return;
+  if(tour===undefined){const tn=x=>x.tourn||'Amichevoli';recapTours=[...new Set(S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).map(tn))];
+    if(recapTours.some(n=>n!=='Amichevoli')){sheet(`<h2 style="margin-top:0">Riepilogo di ${esc(m.nick)}</h2><p class="mu">Scegli cosa riassumere (${esc(activeSeason()==='all'?'tutte le stagioni':'stagione '+activeSeason())}).</p><div style="display:grid;gap:8px"><button class="p" onclick="shareRecap('${m.id}',null)">${ic('trophy')} Stagione completa</button>${recapTours.map((n,i)=>`<button onclick="shareRecap('${m.id}',recapTours[${i}])">${esc(n)}</button>`).join('')}<button onclick="closeSheet()">Annulla</button></div>`);return}
+    tour=null}
+  const f=tour?(x=>(x.tourn||'Amichevoli')===tour):null,slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  shareImage('Riepilogo di '+m.nick+(tour?' · '+tour:''),(tour?'torneo-'+slug(tour)+'-':'stagione-')+m.nick,async(ctx,P,team,logo)=>{
+  const t=stats(m,f),o=ovr(m,f),gm=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(!f||f(x))&&(x.present||[]).includes(m.id)),mv=gm.filter(x=>{const b=mvp(x);return b&&b.m.id===m.id}).length,best=gm.map(x=>({x,r:rate((x.stats||{})[m.id]||{})})).sort((a,b)=>b.r-a.r)[0];
+  statHead(ctx,P,team,logo,tour?String(tour).toUpperCase()+(activeSeason()==='all'?'':' · '+seasonLabel()):'LA MIA STAGIONE · '+seasonLabel(),90);await drawAv(ctx,m,540,620,150,P);ctx.textAlign='center';ctx.fillStyle=P.text;ctx.font='700 96px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(m.nick||'').toUpperCase(),900),540,865);
   ctx.globalAlpha=.8;ctx.font='500 38px Oswald, sans-serif';ctx.fillText([POS[m.pos],m.num?'#'+m.num:''].filter(Boolean).join(' · ').toUpperCase(),540,925);ctx.globalAlpha=1;
   [[o,'OVERALL'],[t.p,'PRESENZE'],[t.g,'GOL'],[t.a,'ASSIST'],[t.p?(t.g/t.p).toFixed(2):'0.00','GOL/PART.'],[mv,'MVP'],[t.y,'GIALLI'],[t.r,'ROSSI'],m.pos==='P'?[t.gs,'SUBITI']:[t.og,'AUTOGOL']].forEach((e,i)=>statTile(ctx,P,90+(i%3)*310,980+Math.floor(i/3)*215,280,185,e[0],e[1]));
   if(best&&gm.length>1){ctx.fillStyle=P.text;ctx.globalAlpha=.85;ctx.font='500 34px Oswald, sans-serif';ctx.fillText(reportFit(ctx,'MIGLIOR PARTITA · vs '+String(best.x.opp).toUpperCase()+' '+best.x.gf+'-'+best.x.ga+' · VOTO '+best.r.toFixed(1),900),540,1700);ctx.globalAlpha=1}
-  formationFooter(ctx,P.accent,1838,'Che stagione!')})}
-const shareBtns=m=>`<div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic('share')} Condividi carta</button><button class="s" onclick="shareRecap('${m.id}')">${ic('trophy')} Riepilogo stagione</button></div>`;
+  formationFooter(ctx,P.accent,1838,tour&&tour!=='Amichevoli'?'Che torneo!':'Che stagione!')})}
+const shareBtns=m=>`<div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic('share')} Condividi carta</button><button class="s" onclick="shareRecap('${m.id}')">${ic('trophy')} Riepilogo</button></div>`;
 
 
 // ===== Traguardi e badge =====
