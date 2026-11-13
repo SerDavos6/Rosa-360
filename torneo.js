@@ -344,7 +344,23 @@
     '.trt .l{text-align:left}.trt .me td{font-weight:800;background:var(--sf)}.trt tr.cut td{border-bottom:2px solid var(--bd)}' +
     '.trk{padding:10px 0;border-bottom:1px solid var(--bd)}.trk .tm{display:flex;justify-content:space-between;gap:8px;padding:2px 0}' +
     '.trk .ph{color:var(--mu);font-style:italic}.trk input[type=number]{width:56px;min-height:40px;text-align:center}.trk .w{font-weight:800}' +
-    '.trk .ir{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}.trk details{margin-top:6px}.trk summary{cursor:pointer}';
+    '.trk .ir{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}.trk details{margin-top:6px}.trk summary{cursor:pointer}' +
+    // tabellone grafico: colonne = turni, linee che collegano ogni coppia di partite alla successiva
+    '.tbr{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 10px;margin:0 -4px}.tbc{display:flex;flex-direction:column;flex:0 0 auto;width:168px}' +
+    '.tbc .tbt{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);text-align:center;padding:0 0 6px}.tbc .tbl{flex:1;display:flex;flex-direction:column}' +
+    '.tbm{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;padding:6px 14px}.tbc:first-child .tbm{padding-left:4px}.tbc:last-child .tbm{padding-right:4px}' +
+    '.tbc:not(:last-child) .tbm::after{content:"";position:absolute;right:0;width:14px;border-color:var(--mu);opacity:.55;border-style:solid;border-width:0}' +
+    '.tbc:not(:last-child) .tbm:nth-child(odd)::after{top:50%;height:50%;border-top-width:2px;border-right-width:2px;border-top-right-radius:6px}' +
+    '.tbc:not(:last-child) .tbm:nth-child(even)::after{bottom:50%;height:50%;border-bottom-width:2px;border-right-width:2px;border-bottom-right-radius:6px}' +
+    '.tbc:not(:last-child) .tbl.one .tbm::after{height:0;border-right-width:0;border-radius:0}' +
+    '.tbc:not(:first-child) .tbm::before{content:"";position:absolute;left:0;top:50%;width:14px;border-top:2px solid var(--mu);opacity:.55}' +
+    '.tbx{display:block;width:100%;text-align:left;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:0;overflow:hidden;font:inherit;color:inherit;cursor:pointer;min-height:0}' +
+    '.tbx.on{outline:2px solid var(--acf);outline-offset:1px}.tbx.me{border-color:var(--acf)}.tbx .tbn{font-size:10px;color:var(--mu);padding:3px 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.tbx .tbr2{display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:13px;line-height:1.25}.tbx .tbr2+.tbr2{border-top:1px solid var(--bd)}' +
+    '.tbx .tbr2>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbx .tbr2 b{font-family:var(--num);font-size:15px;min-width:16px;text-align:right}' +
+    '.tbx .tph{color:var(--mu);font-style:italic;font-size:12px}.tbx .tw>span{font-weight:800}.tbx .tlo{opacity:.55}.tbx .tmine>span{color:var(--acf);font-weight:800}.tbx .tpk{font-size:11px;color:var(--mu);font-weight:400}' +
+    '.tbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:6px}' +
+    '.tbd{margin-top:4px}.tbd .trk{border-bottom:0;padding:0}';
   document.head.appendChild(css);
 
   const stRows = (o, g, full) => {
@@ -474,31 +490,73 @@
     return h + '</div>';
   }
 
-  window.st_c = c => { st().c = c; R(); };
+  window.st_c = c => { const s = st(); s.c = c; s.sel = null; s.sx = {}; R(); };
+  window.trSel = k => {
+    const s = st(); s.sel = s.sel === k ? null : k; R();
+    setTimeout(() => { const d = document.getElementById('tr-brd'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80);
+  };
+  window.trSx = (i, x) => { const s = st(); (s.sx = s.sx || {})[i] = x; };
+
+  // riquadro di una partita nel tabellone
+  function boxHtml(n, o) {
+    if (!n) return '';
+    const r = n.r, sel = st().sel === n.key, me = norm(o.mine);
+    // etichette brevi per i posti ancora da decidere (quella completa resta nel tooltip e nel dettaglio)
+    const sh = l => String(l || '').replace(/^Vincente /, 'Vinc. ').replace(/^Perdente /, 'Perd. ').replace(/ (Gold|Silver|Bronze|Copper)$/, '').replace(/ (Play Off|Play Out)/, '')
+      .replace(/Semifinale (\d)/, 'Semi $1').replace(/° Ottavo .*$/, '° Ottavo').replace(/Quarti di finale · partita /, 'Quarti ').replace(/Ottavi di finale · partita /, 'Ottavi ').replace(/Semifinali · partita /, 'Semi ').replace(/Turno (\d+) · partita /, 'Turno $1 · ');
+    const row = (x, lab, g, p) => {
+      const win = n.w && x && n.w === x, lose = n.w && x && n.w !== x;
+      const cls = (x ? '' : 'tph') + (win ? ' tw' : '') + (lose ? ' tlo' : '') + (x && me && norm(x) === me ? ' tmine' : '');
+      return '<div class="tbr2 ' + cls + '"><span title="' + E(x || lab) + '">' + E(x || sh(lab)) + '</span><b>' + (n.bye || g == null ? '' : g) + (p != null ? ' <span class="tpk">(' + p + ')</span>' : '') + '</b></div>';
+    };
+    const mine = me && ((n.h && norm(n.h) === me) || (n.a && norm(n.a) === me));
+    return '<button class="tbx' + (sel ? ' on' : '') + (mine ? ' me' : '') + '" onclick="trSel(\'' + n.key + '\')" aria-label="' + E(n.title) + '">' +
+      '<div class="tbn">' + E(String(n.title).replace(/ (Gold|Silver|Bronze|Copper)$/, '').replace(/ (Play Off|Play Out)/, '').replace(/ (Gold-Silver|Bronze-Copper)$/, '').replace(/^.* · partita /, 'Partita ')) + '</div>' + row(n.h, n.hl, r ? r.gh : null, r ? r.ph : null) + row(n.a, n.al, r ? r.ga : null, r ? r.pa : null) + '</button>';
+  }
+  // cols: [{ t: titolo del turno, keys: [...] }], ogni turno ha metà partite del precedente, in ordine (la partita j nasce da 2j e 2j+1)
+  let brI = 0;
+  function bracketHtml(cols, N, o) {
+    const i = brI++;
+    return '<div class="tbr" data-bi="' + i + '" onscroll="trSx(' + i + ',this.scrollLeft)">' + cols.map(c => '<div class="tbc"><div class="tbt">' + E(c.t) + '</div><div class="tbl' + (c.keys.length === 1 ? ' one' : '') + '">' +
+      c.keys.map(k => '<div class="tbm">' + boxHtml(N[k], o) + '</div>').join('') + '</div></div>').join('') + '</div>';
+  }
+  const restoreScroll = () => setTimeout(() => {
+    const sx = st().sx || {};
+    document.querySelectorAll('.tbr[data-bi]').forEach(el => { const x = sx[el.getAttribute('data-bi')]; if (x) el.scrollLeft = x; });
+  }, 0);
+  function detailHtml(N, o, mgr, names) {
+    const k = st().sel, n = k && N[k];
+    if (!n) return mgr ? '<p class="mu" style="white-space:normal">Tocca una partita del tabellone per inserire o correggere il risultato.</p>' : '';
+    const first = /^K1-/.test(k);
+    return '<div class="card tbd" id="tr-brd">' + nodeHtml(n, mgr, first, first ? names : null) + '<p style="margin:8px 0 0"><button class="s" onclick="trSel(\'' + k + '\')">Chiudi</button></p></div>';
+  }
+
   function bracketView(o, mgr) {
+    brI = 0; restoreScroll();
     const pend = GLn(o).filter(g => !gdone(o, g));
     const note = pend.length ? '<p class="mu" style="white-space:normal">Gironi non ancora conclusi: ' + pend.join(', ') + '. Le squadre compaiono qui quando il girone ha tutte le partite inserite.</p>' : '';
-    const pen = '<p class="mu" style="white-space:normal">Parità dopo i tempi regolamentari: calci di rigore' + (fmtOf(o) === 'memorial' ? ' (5 a testa)' : '') + '. Inserisci i rigori solo se il risultato è pari.</p>';
+    const pen = '<p class="mu" style="white-space:normal">Parità dopo i tempi regolamentari: calci di rigore' + (fmtOf(o) === 'memorial' ? ' (5 a testa)' : '') + '. I rigori sono tra parentesi.</p>';
     if (fmtOf(o) === 'memorial') {
       const N = bracketMemorial(o), s = st(), c = s.c || 'OT';
       const tabs = [['OT', 'Ottavi'], ...CATS.map(([k, n]) => [k, n])];
       const chips = '<div class="csl">' + tabs.map(([k, n]) => '<button class="chip' + (k === c ? ' on' : '') + '" onclick="st_c(\'' + k + '\')">' + n + '</button>').join('') + '</div>';
-      const sec = (t, keys) => '<h2>' + t + '</h2><div class="card">' + keys.map(k => nodeHtml(N[k], mgr)).join('') + '</div>';
       const rg = (p, n) => Array.from({ length: n }, (_, i) => p + (i + 1));
+      const grid = (t, keys) => '<h2>' + t + '</h2><div class="tbg">' + keys.map(k => boxHtml(N[k], o)).join('') + '</div>';
       let body;
-      if (c === 'OT') body = sec('Ottavi Gold-Silver', rg('OGS', 8)) + sec('Ottavi Bronze-Copper', rg('OBC', 8));
+      if (c === 'OT') body = grid('Ottavi Gold-Silver', rg('OGS', 8)) + '<p class="mu" style="white-space:normal;margin-top:0">Chi vince va nel tabellone Gold, chi perde nel Silver.</p>' +
+        grid('Ottavi Bronze-Copper', rg('OBC', 8)) + '<p class="mu" style="white-space:normal;margin-top:0">Chi vince va nel tabellone Bronze, chi perde nel Copper.</p>';
       else {
-        const nm = CATS.find(x => x[0] === c)[1];
-        body = sec('Quarti · ' + nm, rg('Q' + c, 4)) + sec('Semifinali Play Off · ' + nm, ['S' + c + 'off1', 'S' + c + 'off2']) + sec('Finale Play Off · ' + nm, ['F' + c + 'off']) +
-          sec('Semifinali Play Out · ' + nm, ['S' + c + 'out1', 'S' + c + 'out2']) + sec('Finale Play Out · ' + nm, ['F' + c + 'out']);
+        const nm = CATS.find(x => x[0] === c)[1], q = 'Q' + c;
+        // ordine dei quarti per allineare le semifinali: Semi 1 = Q1–Q4, Semi 2 = Q2–Q3
+        body = '<h2>Play Off · ' + nm + '</h2>' + bracketHtml([{ t: 'Quarti', keys: [q + '1', q + '4', q + '2', q + '3'] }, { t: 'Semifinali', keys: ['S' + c + 'off1', 'S' + c + 'off2'] }, { t: 'Finale', keys: ['F' + c + 'off'] }], N, o) +
+          '<h2>Play Out · ' + nm + '</h2><p class="mu" style="white-space:normal;margin-top:0">Le perdenti dei quarti.</p>' + bracketHtml([{ t: 'Semifinali', keys: ['S' + c + 'out1', 'S' + c + 'out2'] }, { t: 'Finale', keys: ['F' + c + 'out'] }], N, o);
       }
-      return chips + note + pen + body;
+      return chips + note + body + detailHtml(N, o, mgr, null) + pen;
     }
     const B = bracketGeneric(o);
     if (!B.rounds.length) return '<div class="card mu">La fase finale compare quando ci sono almeno 2 squadre qualificate.</div>';
     st().cur = o.ov || {};
-    const names = allTeams(o);
-    return note + pen + B.rounds.map(rd => '<h2>' + rd.title + '</h2><div class="card">' + rd.keys.map(k => nodeHtml(B.N[k], mgr, rd.first, names)).join('') + '</div>').join('');
+    return note + bracketHtml(B.rounds.map(rd => ({ t: rd.title, keys: rd.keys })), B.N, o) + detailHtml(B.N, o, mgr, allTeams(o)) + pen;
   }
 
   window.torneoView = function (t, mgr) {
