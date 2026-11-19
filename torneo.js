@@ -135,14 +135,50 @@
     if (r.ph != null && r.pa != null && r.ph !== r.pa) return r.ph > r.pa ? 'h' : 'a';
     return null;
   }
+  // Partite registrate nell'app nelle fasi finali (ottavi, quarti, semifinali, finali…), da usare nel tabellone quando non c'è un risultato inserito a mano.
+  // Dal dirigente/giocatori: quelle della propria squadra; dai tifosi: quelle di tutte le squadre iscritte.
+  function koApp(o) {
+    const x = X(), out = [], seen = new Set(), names = allTeams(o);
+    const find = n => names.find(y => nn(y) === nn(n)) || null;
+    const gOf = n => GL(o).find(g => (o.groups[g] || []).some(y => nn(y) === nn(n)));
+    const nameOf = tid => {
+      if (tid === (x ? x.tid : S.tid) && o.mine) return find(o.mine);
+      if (!x) return null;
+      const t = (x.teams || []).find(q => q.id === tid);
+      return t && t.name ? find(t.name) : null;
+    };
+    ((x ? x.matches : S.matches) || []).forEach(m => {
+      if (!m.played) return;
+      if (!x && m.tid !== S.tid) return;
+      if (norm(m.tourn) !== norm(o.name)) return;
+      if (m.ph === 'G') return;
+      const h = nameOf(m.tid), a = find(m.opp);
+      if (!h || !a || nn(h) === nn(a)) return;
+      if (!m.ph && hasGroups(o) && gOf(h) === gOf(a)) return;   // senza fase indicata e tra squadre dello stesso girone: è una partita del girone
+      const key = [nn(h), nn(a)].sort().join('|') + '|' + (m.date || '');
+      if (seen.has(key)) return; seen.add(key);
+      out.push({ h, a, gf: +m.gf || 0, ga: +m.ga || 0, date: m.date || '' });
+    });
+    return out.sort((p, q) => (p.date < q.date ? -1 : p.date > q.date ? 1 : 0));
+  }
+  // I nodi vengono creati turno dopo turno: ogni partita dell'app si usa una sola volta, nel primo incontro tra quelle due squadre ancora senza risultato.
+  let AUTO = null;
+  const autoStart = o => { AUTO = { list: koApp(o), used: new Set() }; };
+  function autoPick(hn, an) {
+    if (!AUTO || !hn || !an) return null;
+    const i = AUTO.list.findIndex((m, j) => !AUTO.used.has(j) && ((nn(m.h) === nn(hn) && nn(m.a) === nn(an)) || (nn(m.h) === nn(an) && nn(m.a) === nn(hn))));
+    if (i < 0) return null;
+    AUTO.used.add(i); const m = AUTO.list[i], same = nn(m.h) === nn(hn);
+    return { gh: same ? m.gf : m.ga, ga: same ? m.ga : m.gf, auto: true, date: m.date };
+  }
   const mkNode = (ko, key, title, H, A) => {
-    const r = ko[key] || null, w = winner(r), hn = H.n, an = A.n;
+    const r = ko[key] || autoPick(H.n, A.n), w = winner(r), hn = H.n, an = A.n;
     return { key, title, h: hn, a: an, hl: H.l, al: A.l, r, w: w && hn && an ? (w === 'h' ? hn : an) : null, l: w && hn && an ? (w === 'h' ? an : hn) : null };
   };
 
   // Memorial: tabellone fisso con le quattro categorie
   function bracketMemorial(o) {
-    const N = {}, ko = o.ko || {};
+    const N = {}, ko = o.ko || {}; autoStart(o);
     const mk = (key, title, H, A) => { N[key] = mkNode(ko, key, title, H, A); };
     const ref = (key, side) => { const x = N[key]; return { n: x ? x[side] : null, l: (side === 'w' ? 'Vincente ' : 'Perdente ') + (x ? x.title : '') }; };
     [['OGS', OT, 'Ottavo Gold-Silver'], ['OBC', OB, 'Ottavo Bronze-Copper']].forEach(([p, defs, tt]) =>
@@ -161,7 +197,7 @@
   }
   // Fase finale generica a eliminazione diretta: teste di serie (prima i primi di ogni girone, poi i secondi…), bye alle teste di serie più alte
   function bracketGeneric(o) {
-    const ko = o.ko || {}, ov = o.ov || {}, N = {}, rounds = [];
+    const ko = o.ko || {}, ov = o.ov || {}, N = {}, rounds = []; autoStart(o);
     let seeds = [];
     if (fmtOf(o) === 'ko') seeds = (o.teams || []).map((n, i) => ({ n, l: (i + 1) + '° testa di serie' }));
     else for (let pos = 1; pos <= qOf(o); pos++) GLn(o).forEach(g => seeds.push(slot(o, pos, g)));
@@ -385,6 +421,72 @@
       '</div><p style="margin:8px 0 4px"><button class="s" onclick="trOpen();trPick(\'' + E(o.id) + '\')">' + ic('trophy') + ' Apri il torneo</button></p></div>';
   };
 
+  // ---------- riquadro nella pagina principale (solo con un torneo in corso) ----------
+  const myCat = k => { const m = /^(?:Q|S|F)(GOLD|SILVER|BRONZE|COPPER)/.exec(k); return m ? m[1] : null; };
+  function homeItem(o) {
+    if (!o.mine) return null;
+    const me = norm(o.mine), inN = n => n && ((n.h && norm(n.h) === me) || (n.a && norm(n.a) === me));
+    const apps = (S.matches || []).filter(m => m.tid === S.tid && norm(m.tourn) === norm(o.name));
+    const anyRes = (o.res || []).length || Object.keys(o.ko || {}).length || apps.length;
+    if (!anyRes) return null;                                            // non ancora iniziato
+    if (apps.length) {                                                   // nessuna partita nell'ultimo mese e niente in programma: torneo lasciato a metà
+      const lim = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+      if (!apps.some(m => !m.played || (m.date || '') >= lim)) return null;
+    }
+    const gl = GLn(o), myG = gl.find(g => o.groups[g].some(y => norm(y) === me));
+    const groupsOpen = gl.length && gl.some(g => !gdone(o, g));
+    if (groupsOpen || !hasKo(o)) {
+      if (!myG) return null;
+      if (!hasKo(o) && !groupsOpen) return null;                         // campionato concluso
+      return { o, ph: 'g', g: myG };
+    }
+    let N, keys, finals;
+    if (fmtOf(o) === 'memorial') { N = bracketMemorial(o); keys = Object.keys(N); finals = keys.filter(k => k[0] === 'F'); }
+    else { const B = bracketGeneric(o); if (!B.rounds.length) return null; N = B.N; keys = B.rounds.flatMap(r => r.keys); finals = B.rounds[B.rounds.length - 1].keys; }
+    if (finals.every(k => N[k] && N[k].w)) return null;                 // tutte le finali giocate: torneo finito
+    const mine = keys.filter(k => inN(N[k]));
+    return { o, ph: 'b', N, last: mine.length ? mine[mine.length - 1] : null };
+  }
+  window.trHomeGo = (id, v, c, sel) => { trOpen(); const s = st(); s.id = id; s.v = v; s.g = null; s.c = c || null; s.sel = sel || null; s.sx = {}; R(); };
+  window.torneoHome = function () {
+    if (X()) return '';
+    let items = [];
+    try { items = tourList().map(homeItem).filter(Boolean); } catch (e) { return ''; }
+    return items.map(it => {
+      const o = it.o, id = E(o.id), me = norm(o.mine);
+      const head = (sub, v, c) => '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><b>' + E(o.name) + '</b><div class="mu" style="white-space:normal">' + sub + '</div></div>' +
+        '<button class="s" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' + ic('trophy') + ' Apri</button></div>';
+      if (it.ph === 'g') {
+        const rows = standings(o, it.g), pos = rows.findIndex(r => norm(r.n) === me) + 1, r = rows[pos - 1];
+        const sub = (GLn(o).length > 1 ? 'Fase a gironi · Girone ' + it.g : 'Classifica') + ' · ' + pos + 'ª su ' + rows.length + ' · ' + r.pt + ' pt in ' + r.g + (r.g === 1 ? ' partita' : ' partite');
+        return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'g') + '<div style="overflow-x:auto">' + stRows(o, it.g, false) + '</div></div>';
+      }
+      const N = it.N, k = it.last, n = k ? N[k] : null;
+      let sub = 'Fase finale', cols = null, extra = '', c = null;
+      if (n) {
+        const opp = norm(n.h) === me ? n.a : n.h;
+        if (n.w) sub = (norm(n.w) === me ? 'Vinta: ' : 'Persa: ') + n.title;
+        else sub = n.title + ' · ' + (opp ? 'contro ' + opp : 'avversaria da decidere');
+      }
+      if (fmtOf(o) === 'memorial') {
+        c = k ? myCat(k) : null;
+        if (c) {
+          const q = 'Q' + c, out = /out/.test(k);
+          cols = out ? [{ t: 'Semifinali', keys: ['S' + c + 'out1', 'S' + c + 'out2'] }, { t: 'Finale', keys: ['F' + c + 'out'] }]
+            : [{ t: 'Quarti', keys: [q + '1', q + '4', q + '2', q + '3'] }, { t: 'Semifinali', keys: ['S' + c + 'off1', 'S' + c + 'off2'] }, { t: 'Finale', keys: ['F' + c + 'off'] }];
+        } else if (n) {
+          const gs = /^OGS/.test(k);
+          extra = '<div style="max-width:260px">' + boxHtml(n, o, 'trHomeSel') + '</div><p class="mu" style="white-space:normal;margin:6px 0 4px">' + (gs ? 'Chi vince va nel tabellone Gold, chi perde nel Silver.' : 'Chi vince va nel tabellone Bronze, chi perde nel Copper.') + '</p>';
+          c = 'OT';
+        }
+      } else {
+        const B = bracketGeneric(o); cols = B.rounds.map(rd => ({ t: rd.title, keys: rd.keys }));
+      }
+      window['trHomeSel'] = key => trHomeGo(o.id, 'b', c, key);
+      return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'b', c) + (cols ? bracketHtml(cols, N, o, 'trHomeSel') : extra) + '</div>';
+    }).join('');
+  };
+
   window.torneoBtn = function (t, mgr) {
     const n = tourList().length;
     if (!n && !mgr) return '';
@@ -481,8 +583,10 @@
       const k = n.key, v = (x, f) => x && x[f] != null ? ' value="' + x[f] + '"' : '';
       h += '<div class="ir"><input id="k-' + k + '-gh" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol"' + v(r, 'gh') + ' aria-label="Gol ' + E(n.h) + '"><span>–</span><input id="k-' + k + '-ga" type="number" min="0" max="99" inputmode="numeric" placeholder="Gol"' + v(r, 'ga') + ' aria-label="Gol ' + E(n.a) + '">' +
         '<span class="mu">rigori</span><input id="k-' + k + '-ph" type="number" min="0" max="99" inputmode="numeric" placeholder="–"' + v(r, 'ph') + ' aria-label="Rigori ' + E(n.h) + '"><span>–</span><input id="k-' + k + '-pa" type="number" min="0" max="99" inputmode="numeric" placeholder="–"' + v(r, 'pa') + ' aria-label="Rigori ' + E(n.a) + '">' +
-        '<button class="s" onclick="trSaveKo(\'' + k + '\')">Salva</button>' + (r ? '<button class="s" onclick="trClearKo(\'' + k + '\')">Azzera</button>' : '') + '</div>';
+        '<button class="s" onclick="trSaveKo(\'' + k + '\')">Salva</button>' + (r && !r.auto ? '<button class="s" onclick="trClearKo(\'' + k + '\')">Azzera</button>' : '') + '</div>';
     }
+    if (r && r.auto) h += '<p class="mu" style="white-space:normal;margin:6px 0 0">Risultato preso dalla partita registrata nell’app' + (r.date ? ' (' + dmy(r.date) + ')' : '') + '.' +
+      (r.gh === r.ga ? (mgr ? ' È finita in parità: aggiungi i rigori e salva per decidere chi passa.' : ' È finita in parità: chi passa si decide ai rigori.') : (mgr ? ' Se serve correggerlo, inserisci qui il risultato giusto.' : '')) + '</p>';
     if (mgr && first && allNames) {
       const k = n.key, sel = (side, cur) => '<select onchange="trOv(\'' + k + '\',\'' + side + '\',this.value)" aria-label="Squadra ' + (side === 'h' ? 'casa' : 'ospite') + '"><option value="">' + (side === 'h' ? 'Casa' : 'Ospite') + ': automatica</option>' + allNames.map(x => '<option' + (cur === x ? ' selected' : '') + '>' + E(x) + '</option>').join('') + '</select>';
       h += '<details><summary class="mu">Cambia le squadre di questa partita</summary><div class="ir">' + sel('h', (st().cur || {})[k + ':h']) + sel('a', (st().cur || {})[k + ':a']) + '</div></details>';
@@ -498,7 +602,7 @@
   window.trSx = (i, x) => { const s = st(); (s.sx = s.sx || {})[i] = x; };
 
   // riquadro di una partita nel tabellone
-  function boxHtml(n, o) {
+  function boxHtml(n, o, act) {
     if (!n) return '';
     const r = n.r, sel = st().sel === n.key, me = norm(o.mine);
     // etichette brevi per i posti ancora da decidere (quella completa resta nel tooltip e nel dettaglio)
@@ -510,15 +614,15 @@
       return '<div class="tbr2 ' + cls + '"><span title="' + E(x || lab) + '">' + E(x || sh(lab)) + '</span><b>' + (n.bye || g == null ? '' : g) + (p != null ? ' <span class="tpk">(' + p + ')</span>' : '') + '</b></div>';
     };
     const mine = me && ((n.h && norm(n.h) === me) || (n.a && norm(n.a) === me));
-    return '<button class="tbx' + (sel ? ' on' : '') + (mine ? ' me' : '') + '" onclick="trSel(\'' + n.key + '\')" aria-label="' + E(n.title) + '">' +
+    return '<button class="tbx' + (sel ? ' on' : '') + (mine ? ' me' : '') + '" onclick="' + (act || 'trSel') + '(\'' + n.key + '\')" aria-label="' + E(n.title) + '">' +
       '<div class="tbn">' + E(String(n.title).replace(/ (Gold|Silver|Bronze|Copper)$/, '').replace(/ (Play Off|Play Out)/, '').replace(/ (Gold-Silver|Bronze-Copper)$/, '').replace(/^.* · partita /, 'Partita ')) + '</div>' + row(n.h, n.hl, r ? r.gh : null, r ? r.ph : null) + row(n.a, n.al, r ? r.ga : null, r ? r.pa : null) + '</button>';
   }
   // cols: [{ t: titolo del turno, keys: [...] }], ogni turno ha metà partite del precedente, in ordine (la partita j nasce da 2j e 2j+1)
   let brI = 0;
-  function bracketHtml(cols, N, o) {
-    const i = brI++;
-    return '<div class="tbr" data-bi="' + i + '" onscroll="trSx(' + i + ',this.scrollLeft)">' + cols.map(c => '<div class="tbc"><div class="tbt">' + E(c.t) + '</div><div class="tbl' + (c.keys.length === 1 ? ' one' : '') + '">' +
-      c.keys.map(k => '<div class="tbm">' + boxHtml(N[k], o) + '</div>').join('') + '</div></div>').join('') + '</div>';
+  function bracketHtml(cols, N, o, act) {
+    const i = act ? -1 : brI++;
+    return '<div class="tbr"' + (act ? '' : ' data-bi="' + i + '" onscroll="trSx(' + i + ',this.scrollLeft)"') + '>' + cols.map(c => '<div class="tbc"><div class="tbt">' + E(c.t) + '</div><div class="tbl' + (c.keys.length === 1 ? ' one' : '') + '">' +
+      c.keys.map(k => '<div class="tbm">' + boxHtml(N[k], o, act) + '</div>').join('') + '</div></div>').join('') + '</div>';
   }
   const restoreScroll = () => setTimeout(() => {
     const sx = st().sx || {};
