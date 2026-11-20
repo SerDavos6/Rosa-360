@@ -16,7 +16,8 @@
     }
   };
   // Memorial: accoppiamenti fissi degli ottavi [posizione, girone, posizione, girone]
-  const OT = [[1, 'A', 4, 'C'], [1, 'B', 4, 'D'], [1, 'C', 4, 'A'], [1, 'D', 4, 'B'], [2, 'A', 3, 'C'], [2, 'B', 3, 'D'], [2, 'C', 3, 'A'], [2, 'D', 3, 'B']];
+  // accoppiamenti come pubblicati dagli organizzatori (sito Sporting Club Mezzana): 2° ottavo 1B–3D e 6° ottavo 2B–4D
+  const OT = [[1, 'A', 4, 'C'], [1, 'B', 3, 'D'], [1, 'C', 4, 'A'], [1, 'D', 4, 'B'], [2, 'A', 3, 'C'], [2, 'B', 4, 'D'], [2, 'C', 3, 'A'], [2, 'D', 3, 'B']];
   const OB = [[5, 'A', 8, 'C'], [5, 'B', 8, 'D'], [5, 'C', 8, 'A'], [5, 'D', 8, 'B'], [6, 'A', 7, 'C'], [6, 'B', 7, 'D'], [6, 'C', 7, 'A'], [6, 'D', 7, 'B']];
   const QP = [[1, 8], [2, 7], [3, 6], [4, 5]];
 
