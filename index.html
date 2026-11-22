@@ -159,7 +159,7 @@ table{border-collapse:collapse;width:100%;min-width:430px}td,th{padding:4px;text
 .mclk i{font-style:normal;font-size:12px;color:var(--ac)}
 .lvdock{flex:none;padding:8px 14px 10px;background:var(--sf);border-top:1px solid var(--bd)}
 .lvdock[hidden]{display:none}
-body:has(.lvdock:not([hidden])) .a2hs{display:none}
+body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 @media (max-width:380px){.bar .thm{display:none}}
 .lvdh{display:flex;align-items:center;gap:10px;min-height:40px;margin-bottom:6px}
 .lvdh b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -174,6 +174,21 @@ body:has(.lvdock:not([hidden])) .a2hs{display:none}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
+/* --- partita: tasti della diretta in alto, scelta del giocatore in un foglio dal basso --- */
+.lvact.lvbig{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lvact.lvbig>button{min-height:64px;font-size:16px;font-weight:800;border-radius:18px;white-space:normal;line-height:1.15}
+.lvact.lvsm{margin:10px 0 14px}.lvact.lvsm>button{min-height:46px;font-size:14px;border-radius:14px}
+.lvact.lvsm>button.lvundo{color:var(--dg)}.lvact.lvsm>button:disabled{opacity:.45}
+.lvcr{margin-top:0}
+.lvend{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.lvfine{width:100%;min-height:54px;border-radius:16px;background:var(--tx);color:var(--bg);border:0;font-weight:800;font-size:16px}
+.lvsheet{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.45);animation:lvin .16s ease-out}
+.lvsheet[hidden]{display:none}
+.lvsheet .lvbk{flex:1;min-height:0;background:none;border:0;box-shadow:none;padding:0}
+.lvsheet .lvdock{border-radius:26px 26px 0 0;border-top:0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));max-height:80vh;overflow-y:auto}
+.lvgrab{display:block;width:40px;height:5px;border-radius:3px;background:var(--bd);margin:0 auto 8px}
+@keyframes lvin{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.lvsheet{animation:none}}
 /* --- partita: gol in un tocco e statistiche a righe --- */
 .lvg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px 6px;max-height:46vh;overflow-y:auto;margin:0 -4px}
 .lvg>button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0;min-height:0;background:none;border:0;box-shadow:none;color:var(--tx)}
@@ -264,8 +279,8 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=24"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=14"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
-<script src="torneo.js?v=23"></script>
+<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=14"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="torneo.js?v=24"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};

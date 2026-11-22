@@ -404,6 +404,9 @@
     '.tstp .ok .d{background:var(--acf);border-color:var(--acf);color:var(--on)}.tstp .now .d{border:3px solid var(--acf);background:var(--sf)}' +
     '.tstp .st span{font-size:11px;font-weight:700;color:var(--mu);white-space:nowrap}.tstp .ok span{color:var(--tx)}.tstp .now span{color:var(--acf);font-weight:800}' +
     '.tstp .ln{flex:0 0 10px;height:2px;margin-top:11px;background:var(--bd)}.tstp .ln.ok{background:var(--acf)}' +
+    '.thc{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:14px 14px 12px;margin-top:14px}.thc .thh{display:flex;align-items:center;gap:10px}.thc .thh>span{flex:1;min-width:0;display:flex;flex-direction:column}' +
+    '.thc .thk{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}.thc b{font-size:17px;font-weight:800}.thc .thh .ic{color:var(--mu)}.thc .tstp{margin:12px 0 8px}' +
+    '.thc .ths{display:block;font-size:13px;color:var(--mu);white-space:normal}' +
     '.tqui{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ac2,rgba(11,122,67,.12));margin:8px 0 4px;white-space:normal}.tqui .ic{flex:none;color:var(--acf)}';
   document.head.appendChild(css);
 
@@ -484,12 +487,16 @@
     try { items = tourList().map(homeItem).filter(Boolean); } catch (e) { return ''; }
     return items.map(it => {
       const o = it.o, id = E(o.id), me = norm(o.mine);
+      // Riquadro compatto: nome, tappe del torneo e una riga sulla propria squadra; il tabellone completo si apre toccandolo
+      const card = (sub, v, c) => '<button class="card thc" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' +
+        '<span class="thh"><span><span class="thk">Torneo in corso</span><b>' + E(o.name) + '</b></span>' + ic('chev') + '</span>' + tourSteps(o, it) +
+        '<span class="ths">' + E(sub) + '</span></button>';
       const head = (sub, v, c) => '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><b>' + E(o.name) + '</b><div class="mu" style="white-space:normal">' + sub + '</div></div>' +
         '<button class="s" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' + ic('trophy') + ' Apri</button></div>';
       if (it.ph === 'g') {
         const rows = standings(o, it.g), pos = rows.findIndex(r => norm(r.n) === me) + 1, r = rows[pos - 1];
         const sub = (GLn(o).length > 1 ? 'Fase a gironi · Girone ' + it.g : 'Classifica') + ' · ' + pos + 'ª su ' + rows.length + ' · ' + r.pt + ' pt in ' + r.g + (r.g === 1 ? ' partita' : ' partite');
-        return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'g') + tourSteps(o, it) + '<div style="overflow-x:auto">' + stRows(o, it.g, false) + '</div></div>';
+        return card(sub, 'g', null);
       }
       const N = it.N, k = it.last, n = k ? N[k] : null;
       let sub = 'Fase finale', cols = null, extra = '', c = null;
@@ -512,8 +519,7 @@
       } else {
         const B = bracketGeneric(o); cols = B.rounds.map(rd => ({ t: rd.title, keys: rd.keys }));
       }
-      window['trHomeSel'] = key => trHomeGo(o.id, 'b', c, key);
-      return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'b', c) + tourSteps(o, it) + (cols ? bracketHtml(cols, N, o, 'trHomeSel') : extra) + '</div>';
+      return card(sub, 'b', c);
     }).join('');
   };
 

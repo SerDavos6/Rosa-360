@@ -674,8 +674,12 @@ function liveCardHtml(x){
   const ps=livePlayers(x),id=x.id;
   if(!ps.length)return '<div class="card"><b class="hd">Gol in diretta</b><p class="mu">Segna prima le presenze (scheda Info) e premi Salva: poi potrai registrare i gol con un tocco.</p></div>';
   const cl=x.clock||{},sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=lvNow();LIVE.sc=sc;
-  const reset=!x.played&&(cl.since||+cl.base)?`<button onclick="liveClockReset('${id}')">Azzera cronometro</button>`:'';
-  return `<div class="card live">${reset||!x.played?`<div class="row" style="margin-top:0">${reset}${x.played?'':`<button class="p" onclick="liveEnd('${id}')">Fine partita</button>`}</div>`:''}${lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>'}${liveLog(x)}</div>`}
+  const reset=!x.played&&(cl.since||+cl.base)?`<button class="s" onclick="liveClockReset('${id}')">Azzera cronometro</button>`:'';
+  const acts=x.played?'':`<div class="lvact lvbig"><button class="p" onclick="liveGoalPick()">${ic('plus')} Gol nostro</button><button onclick="liveOpp('${id}')">${ic('plus')} Gol ${esc(x.opp||'avversario')}</button></div>
+  <div class="lvact lvsm"><button onclick="liveWho()">${ic('card','y')} Cartellino</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button><button class="lvundo" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button></div>`;
+  const wait=lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'';
+  const log=liveLog(x);
+  return `${acts}${wait}<div class="card live lvcr"><b class="hd">Cronaca</b>${log||'<p class="mu" style="margin:8px 0 0">Ancora nessun evento. Ogni tocco si salva subito, non serve premere Salva.</p>'}</div>${x.played?'':`<div class="lvend">${reset}<button class="lvfine" onclick="liveEnd('${id}')">Fine partita</button></div>`}`}
 const livePlayers=x=>(x.present||[]).map(i=>mbr(x,i)).filter(m=>m&&m.role==='giocatore');
 // Pannello delle azioni: sta fisso sopra la barra e ha sempre la stessa altezza, così nessun pulsante si sposta mentre si tocca.
 function liveDockHtml(x,tab){
@@ -692,10 +696,9 @@ function liveDockHtml(x,tab){
     row=grid(ps.filter(m=>m.id!==sel.id),m=>`liveAssist('${id}','${m.id}')`)+`<button class="lvwide p" onclick="liveAssist('${id}',null)">Nessun assist</button>`}
   else if(sel){title=esc(sel.nick);cancel=true;
     row=`<div class="lvact"><button class="lvico" onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')} Giallo</button><button class="lvico" onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')} Rosso</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div>`}
-  else{title='<span class="mu">Diretta</span>';
-    row=`<div class="lvact lvbig"><button class="p" onclick="liveGoalPick()">${ic('plus')} Gol nostro</button><button onclick="liveOpp('${id}')">${ic('plus')} Gol ${esc(x.opp||'avversario')}</button></div>
-    <div class="lvact" style="margin-top:8px"><button onclick="liveWho()">${ic('card','y')} Cartellino / autogol</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div>`}
-  return `<div class="lvdock" id="lvdock"${tab==='live'?'':' hidden'}><div class="lvdh"><b>${title}</b>${cancel?`<button class="s" onclick="liveGkCancel()">Chiudi</button>`:`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div>`}
+  else return '';
+  const close=sel&&LIVE.assist?`liveAssist('${id}',null)`:'liveGkCancel()';
+  return `<div class="lvsheet" id="lvdock"${tab==='live'?'':' hidden'}><button class="lvbk" onclick="${close}" aria-label="Chiudi"></button><div class="lvdock" role="dialog" aria-label="${title.replace(/<[^>]+>/g,'')}"><i class="lvgrab"></i><div class="lvdh"><b>${title}</b>${cancel?`<button class="s" onclick="liveGkCancel()">Chiudi</button>`:`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div></div>`}
 // Cronometro nell'intestazione: per chi gestisce è anche il tasto Avvia/Pausa, gli altri lo vedono quando è partito.
 function liveClockHead(x,mgr){
   if(x.played)return '';const cl=x.clock||{},on=!!cl.since,used=on||+cl.base>0;if(!mgr&&!used)return '';
