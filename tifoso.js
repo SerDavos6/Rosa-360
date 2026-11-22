@@ -50,7 +50,7 @@ async function poll(){
 // ---- ingresso / uscita ----
 function core(){
   F.sig={};F.tour=null;F.res=null;F.q="";
-  S.teams=[];S.members=[];S.matches=[];S.reqs=[];S.tid=null;S.tab="cal";S.mid=null;S.pd=null;S.flt="";S.mf="";S.cs="sq";
+  S.teams=[];S.members=[];S.matches=[];S.reqs=[];S.tid=null;S.tab="home";S.mid=null;S.pd=null;S.flt="";S.mf="";S.cs="sq";S.rk="";
   const no=()=>Promise.resolve();   // in sola lettura nessuna scrittura può partire
   S.db={doc:()=>({set:no,update:no,delete:no,onSnapshot:()=>()=>{}}),collection:()=>({onSnapshot:()=>()=>{}})};
   if(!F.wrapped){F.wrapped=true;const r0=render;render=function(){return S.fan?fanRender():r0.apply(this,arguments)}}
@@ -90,7 +90,7 @@ window.fanOpen=async function(id,mid){
   {const tt=S.teams.find(x=>x.id===id);if(tt)addRecent({k:"t",id,name:String(tt.name||"Squadra").slice(0,80),logo:/^https:\/\//.test(tt.logo||"")?tt.logo:""})}
   const ss=[...new Set(S.matches.filter(x=>x.tid===id&&x.date).map(x=>seasonOf(x.date)))].sort().reverse(),a=activeSeason();
   if(ss.length&&a!=="all"&&!ss.includes(a))S.season=ss[0];
-  S.tid=id;S.tab="cal";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
+  S.tid=id;S.tab=mid?"cal":"home";S.rk="";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
   render()};
 window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
 window.fanHome=function(){F.tv=false;S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
@@ -209,13 +209,13 @@ function teamBar(t){
   // nome grande per intero (si rimpicciolisce se serve, mai spezzato a metà parola); il tasto tema qui non serve: sta già in Aspetto
   return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn fn" style="font-size:${nameFs(t.name,17,12)}px">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
-  const nav=[["cal",ic("ball"),"Partite"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
+  const nav=[["home",ic("home"),"Home"],["cal",ic("cal"),"Partite"],["rosa",ic("users"),"Rosa"]];
   if(!S.browse)nav.push(["imp",ic("user"),"Profilo"]);
-  if(S.browse&&S.tab==="imp")S.tab="cal";
-  const mx=S.tab==="cal"&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(S.tab==="cal"&&S.mid&&!mx)S.mid=null;
+  if(S.browse&&S.tab==="imp")S.tab="home";
+  const onM=S.tab==="cal"||S.tab==="home",mx=onM&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(onM&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,false);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body=({rosa:rosaView,cal:calView,cls:clsView,imp:fanProfile,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||calView)(t,false)}
+  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:calView,cls:rosaView,imp:fanProfile,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,false)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}</button>`).join("")}<button onclick="fanHome()"><span>${SRCH}</span>Cerca</button>${S.browse?`<button onclick="fanLeave()"><span>${XI}</span>Chiudi</button>`:""}</nav>`}
 
 window.fanRender=function(){
@@ -224,7 +224,7 @@ window.fanRender=function(){
   if(t||!F.tour||!F.tour.bracket)window.trExt=null;   // il torneo a gironi "esterno" vale solo nella pagina del torneo cercato
   applyTheme(t?t.color:null,t?t.bg:null);applyMode();syncBar();
   let html,key;
-  if(t){html=teamHtml(t);key=["f",S.tid,S.tab,S.mid||"",S.cs||"",S.ps||""].join("|")}
+  if(t){html=teamHtml(t);key=["f",S.tid,S.tab,S.mid||"",S.cs||"",S.rk||"",S.ps||""].join("|")}
   else if(F.tour){html=plain(tourHtml());key="ft|"+F.tour.name+"|"+(F.ts||"")+"|"+(S.tr&&S.tr.v||"")+(S.tr&&S.tr.g||"")+(S.tr&&S.tr.c||"")}
   else{html=plain(homeHtml());key="fh"}
   morphInto(a,html);keepScroll(key,oldTop);if(t)fxAfter(fx);

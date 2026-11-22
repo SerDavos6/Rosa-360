@@ -235,7 +235,7 @@
   window.trDn = k => { st().dn = k === 'all' ? 'all' : +k; R(); };
   window.trGo = (v, g) => { const s = st(); if (v) s.v = v; if (g) s.g = g; R(); };
   window.trOpen = () => { S.tab = 'trn'; S.tr = { v: 'g', id: null }; R(); };
-  window.trBack = () => { S.tab = 'cal'; R(); };
+  window.trBack = () => { S.tab = 'home'; R(); };
   window.trList = () => { const s = st(); s.id = null; s.v = 'g'; s.imp = ''; R(); };
   window.trPick = id => { const s = st(), o = tourList().find(q => q.id === id); if (!o) return; s.id = id; s.v = hasGroups(o) ? 'g' : 'b'; s.g = null; s.imp = ''; R(); };
   window.trNew = () => { const s = st(); s.v = 'new'; s.id = null; s.sw = s.sw || swDef(); R(); };
@@ -397,7 +397,14 @@
     '.tbx .tbr2>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbx .tbr2 b{font-family:var(--num);font-size:15px;min-width:16px;text-align:right}' +
     '.tbx .tph{color:var(--mu);font-style:italic;font-size:12px}.tbx .tw>span{font-weight:800}.tbx .tlo{opacity:.55}.tbx .tmine>span{color:var(--acf);font-weight:800}.tbx .tpk{font-size:11px;color:var(--mu);font-weight:400}' +
     '.tbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:6px}' +
-    '.tbd{margin-top:4px}.tbd .trk{border-bottom:0;padding:0}';
+    '.tbd{margin-top:4px}.tbd .trk{border-bottom:0;padding:0}' +
+    // tappe del torneo nel riquadro della Home e fascia "Siete qui" nel tabellone
+    '.tstp{display:flex;align-items:flex-start;margin:4px 0 12px}.tstp .st{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}' +
+    '.tstp .d{width:24px;height:24px;border-radius:50%;box-sizing:border-box;border:2px solid var(--bd);background:var(--bg);display:grid;place-items:center}.tstp .d .ic{width:14px;height:14px;stroke-width:3}' +
+    '.tstp .ok .d{background:var(--acf);border-color:var(--acf);color:var(--on)}.tstp .now .d{border:3px solid var(--acf);background:var(--sf)}' +
+    '.tstp .st span{font-size:11px;font-weight:700;color:var(--mu);white-space:nowrap}.tstp .ok span{color:var(--tx)}.tstp .now span{color:var(--acf);font-weight:800}' +
+    '.tstp .ln{flex:0 0 10px;height:2px;margin-top:11px;background:var(--bd)}.tstp .ln.ok{background:var(--acf)}' +
+    '.tqui{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ac2,rgba(11,122,67,.12));margin:8px 0 4px;white-space:normal}.tqui .ic{flex:none;color:var(--acf)}';
   document.head.appendChild(css);
 
   const stRows = (o, g, full) => {
@@ -448,6 +455,28 @@
     const mine = keys.filter(k => inN(N[k]));
     return { o, ph: 'b', N, last: mine.length ? mine[mine.length - 1] : null };
   }
+  // Tappe del torneo: fatte (spunta), quella in corso (cerchio verde) e quelle future
+  function stepsHtml(names, cur, curDone) {
+    return '<div class="tstp" role="list" aria-label="Tappe del torneo">' + names.map((n, i) => {
+      const st = i < cur || (i === cur && curDone) ? 'ok' : i === cur ? 'now' : '';
+      return (i ? '<i class="ln' + (i <= cur ? ' ok' : '') + '"></i>' : '') + '<div class="st ' + st + '" role="listitem"' + (st === 'now' ? ' aria-current="step"' : '') + '><i class="d">' + (st === 'ok' ? ic('check') : '') + '</i><span>' + E(n) + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function tourSteps(o, it) {
+    if (fmtOf(o) === 'memorial') {
+      const names = ['Gironi', 'Ottavi', 'Quarti', 'Semi', 'Finale'];
+      if (it.ph === 'g') return stepsHtml(names, 0, false);
+      const k = it.last || '', n = k ? it.N[k] : null, cur = /^O/.test(k) ? 1 : /^Q/.test(k) ? 2 : /^S/.test(k) ? 3 : /^F/.test(k) ? 4 : 1;
+      return stepsHtml(names, cur, !!(n && n.w));
+    }
+    const B = it.ph === 'g' || !hasKo(o) ? null : bracketGeneric(o);
+    const rn = B ? B.rounds.map(r => String(r.title).replace(/ di finale$/, '').replace(/^Semifinali$/, 'Semi')) : [];
+    const names = (hasGroups(o) ? ['Gironi'] : []).concat(rn.length ? rn : hasKo(o) ? ['Fase finale'] : []);
+    if (names.length < 2) return '';
+    if (it.ph === 'g') return stepsHtml(names, 0, false);
+    const ri = B ? B.rounds.findIndex(r => r.keys.includes(it.last)) : -1, off = hasGroups(o) ? 1 : 0, n = it.last ? it.N[it.last] : null;
+    return stepsHtml(names, Math.max(off, ri + off), !!(n && n.w));
+  }
   window.trHomeGo = (id, v, c, sel) => { trOpen(); const s = st(); s.id = id; s.v = v; s.g = null; s.c = c || null; s.sel = sel || null; s.sx = {}; R(); };
   window.torneoHome = function () {
     if (X()) return '';
@@ -460,7 +489,7 @@
       if (it.ph === 'g') {
         const rows = standings(o, it.g), pos = rows.findIndex(r => norm(r.n) === me) + 1, r = rows[pos - 1];
         const sub = (GLn(o).length > 1 ? 'Fase a gironi · Girone ' + it.g : 'Classifica') + ' · ' + pos + 'ª su ' + rows.length + ' · ' + r.pt + ' pt in ' + r.g + (r.g === 1 ? ' partita' : ' partite');
-        return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'g') + '<div style="overflow-x:auto">' + stRows(o, it.g, false) + '</div></div>';
+        return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'g') + tourSteps(o, it) + '<div style="overflow-x:auto">' + stRows(o, it.g, false) + '</div></div>';
       }
       const N = it.N, k = it.last, n = k ? N[k] : null;
       let sub = 'Fase finale', cols = null, extra = '', c = null;
@@ -484,7 +513,7 @@
         const B = bracketGeneric(o); cols = B.rounds.map(rd => ({ t: rd.title, keys: rd.keys }));
       }
       window['trHomeSel'] = key => trHomeGo(o.id, 'b', c, key);
-      return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'b', c) + (cols ? bracketHtml(cols, N, o, 'trHomeSel') : extra) + '</div>';
+      return '<h2>Torneo in corso</h2><div class="card" style="padding:12px 10px 6px">' + head(E(sub), 'b', c) + tourSteps(o, it) + (cols ? bracketHtml(cols, N, o, 'trHomeSel') : extra) + '</div>';
     }).join('');
   };
 
@@ -636,6 +665,15 @@
     return '<div class="card tbd" id="tr-brd">' + nodeHtml(n, mgr, first, first ? names : null) + '<p style="margin:8px 0 0"><button class="s" onclick="trSel(\'' + k + '\')">Chiudi</button></p></div>';
   }
 
+  // "Siete qui": l'ultima partita del tabellone in cui compare la propria squadra
+  function quiHtml(o, N, keys) {
+    const me = norm(o.mine); if (!me) return '';
+    const mine = keys.filter(k => N[k] && ((N[k].h && norm(N[k].h) === me) || (N[k].a && norm(N[k].a) === me)));
+    if (!mine.length) return '';
+    const n = N[mine[mine.length - 1]], opp = norm(n.h) === me ? n.a : n.h;
+    const t = n.w ? (norm(n.w) === me ? 'Avete vinto: ' : 'Avete perso: ') + n.title : n.title + ' · ' + (opp ? 'contro ' + opp : 'avversaria da decidere');
+    return '<div class="tqui">' + ic('pin') + '<span><b>Siete qui:</b> ' + E(t) + '</span></div>';
+  }
   function bracketView(o, mgr) {
     brI = 0; restoreScroll();
     const pend = GLn(o).filter(g => !gdone(o, g));
@@ -648,12 +686,13 @@
       const rg = (p, n) => Array.from({ length: n }, (_, i) => p + (i + 1));
       const grid = (t, keys) => '<h2>' + t + '</h2><div class="tbg">' + keys.map(k => boxHtml(N[k], o)).join('') + '</div>';
       let body;
-      if (c === 'OT') body = grid('Ottavi Gold-Silver', rg('OGS', 8)) + '<p class="mu" style="white-space:normal;margin-top:0">Chi vince va nel tabellone Gold, chi perde nel Silver.</p>' +
+      if (c === 'OT') body = quiHtml(o, N, rg('OGS', 8).concat(rg('OBC', 8))) + grid('Ottavi Gold-Silver', rg('OGS', 8)) + '<p class="mu" style="white-space:normal;margin-top:0">Chi vince va nel tabellone Gold, chi perde nel Silver.</p>' +
         grid('Ottavi Bronze-Copper', rg('OBC', 8)) + '<p class="mu" style="white-space:normal;margin-top:0">Chi vince va nel tabellone Bronze, chi perde nel Copper.</p>';
       else {
         const nm = CATS.find(x => x[0] === c)[1], q = 'Q' + c;
         // ordine dei quarti per allineare le semifinali: Semi 1 = Q1–Q4, Semi 2 = Q2–Q3
-        body = '<h2>Play Off · ' + nm + '</h2>' + bracketHtml([{ t: 'Quarti', keys: [q + '1', q + '4', q + '2', q + '3'] }, { t: 'Semifinali', keys: ['S' + c + 'off1', 'S' + c + 'off2'] }, { t: 'Finale', keys: ['F' + c + 'off'] }], N, o) +
+        const ck = Object.keys(N).filter(k => myCat(k) === c);
+        body = quiHtml(o, N, ck) + '<h2>Play Off · ' + nm + '</h2>' + bracketHtml([{ t: 'Quarti', keys: [q + '1', q + '4', q + '2', q + '3'] }, { t: 'Semifinali', keys: ['S' + c + 'off1', 'S' + c + 'off2'] }, { t: 'Finale', keys: ['F' + c + 'off'] }], N, o) +
           '<h2>Play Out · ' + nm + '</h2><p class="mu" style="white-space:normal;margin-top:0">Le perdenti dei quarti.</p>' + bracketHtml([{ t: 'Semifinali', keys: ['S' + c + 'out1', 'S' + c + 'out2'] }, { t: 'Finale', keys: ['F' + c + 'out'] }], N, o);
       }
       return chips + note + body + detailHtml(N, o, mgr, null) + pen;
@@ -661,7 +700,7 @@
     const B = bracketGeneric(o);
     if (!B.rounds.length) return '<div class="card mu">La fase finale compare quando ci sono almeno 2 squadre qualificate.</div>';
     st().cur = o.ov || {};
-    return note + bracketHtml(B.rounds.map(rd => ({ t: rd.title, keys: rd.keys })), B.N, o) + detailHtml(B.N, o, mgr, allTeams(o)) + pen;
+    return note + quiHtml(o, B.N, B.rounds.flatMap(r => r.keys)) + bracketHtml(B.rounds.map(rd => ({ t: rd.title, keys: rd.keys })), B.N, o) + detailHtml(B.N, o, mgr, allTeams(o)) + pen;
   }
 
   window.torneoView = function (t, mgr) {

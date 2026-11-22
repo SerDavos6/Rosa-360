@@ -632,6 +632,13 @@ function liveGoal(id){const p=LIVE.p;if(!p)return;try{navigator.vibrate&&navigat
 function liveAssist(id,a){
   if(a)lvApply(id,d=>{const e=d.events[d.events.length-1];if(e&&e.k==='g'&&!e.a){e.a=a;lvStat(d,a).a++}});
   LIVE.p=null;LIVE.assist=false;rq()}
+// Gol in un tocco: "Gol nostro" apre la griglia dei presenti, il tocco sul giocatore registra subito il gol.
+function liveGoalPick(){LIVE.p=null;LIVE.assist=false;LIVE.pick='gol';rq()}
+function liveGoalBy(id,p){LIVE.pick=null;LIVE.p=p;liveGoal(id)}
+function liveGoalAnon(id){LIVE.pick=null;LIVE.p=null;LIVE.assist=false;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}try{confetti()}catch(e){}
+  lvApply(id,d=>{d.gf++;d.events.push({k:'g',p:null,t:lvNow(),...lvM(id)})});toast('Gol registrato: il marcatore lo puoi indicare dopo in Statistiche.',true)}
+function liveWho(){LIVE.p=null;LIVE.assist=false;LIVE.pick='who';rq()}
+function livePickP(p){LIVE.pick=null;LIVE.p=p;LIVE.assist=false;rq()}
 function liveOpp(id){LIVE.p=null;LIVE.assist=false;LIVE.pick='opp';rq()}
 function liveOwn(id){if(!LIVE.p)return;LIVE.pick='og';rq()}
 function liveGk(id,gk){const k=LIVE.pick,p=LIVE.p;LIVE.pick=null;
@@ -640,7 +647,7 @@ function liveGk(id,gk){const k=LIVE.pick,p=LIVE.p;LIVE.pick=null;
   else if(k==='ps')lvApply(id,d=>{if(gk){const s=lvStat(d,gk);s.ps=(+s.ps||0)+1}d.events.push({k:'ps',gk:gk||null,t:lvNow(),...lvM(id)})});
   LIVE.p=null;rq()}
 function liveSave(id){LIVE.p=null;LIVE.assist=false;LIVE.pick='ps';rq()}
-function liveGkCancel(){LIVE.pick=null;rq()}
+function liveGkCancel(){LIVE.pick=null;LIVE.p=null;LIVE.assist=false;rq()}
 function liveCard(id,k){const p=LIVE.p;if(!p)return;lvApply(id,d=>{lvStat(d,p)[k]++;d.events.push({k,p,t:lvNow(),...lvM(id)})});LIVE.p=null;rq()}
 function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
   if(e.k==='g'){lvDec(d.stats[e.p],'g');d.gf=Math.max(0,d.gf-1);if(e.a)lvDec(d.stats[e.a],'a')}
@@ -656,7 +663,7 @@ function liveLog(x){
   const T=S.teams.find(t=>t.id===x.tid)||{},mine=e=>e.k!=='opp'&&e.k!=='og';
   // Riga con icona + testo che può andare a capo: i nomi lunghi si leggono per intero invece di essere tagliati.
   const ln=(i,t,c)=>'<div class="lvn'+(c?' '+c:'')+'">'+i+'<span>'+t+'</span></div>';
-  const txt=e=>e.k==='g'?ln(ic('ball'),'<b>'+nm(e.p)+'</b>')+(e.a?ln(ic('assist'),nm(e.a),'as'):'')
+  const txt=e=>e.k==='g'?ln(ic('ball'),'<b>'+(e.p?nm(e.p):'Gol')+'</b>')+(e.a?ln(ic('assist'),nm(e.a),'as'):'')
     :e.k==='opp'?ln(ic('ball'),'<b>Gol</b>')
     :e.k==='og'?ln(ic('og'),'<b>Autogol</b>')+ln('',nm(e.p),'as')
     :e.k==='ps'?ln(ic('glove'),'<b>Rigore parato</b>')+(e.gk?ln('',nm(e.gk),'as'):'')
@@ -666,24 +673,29 @@ function liveLog(x){
 function liveCardHtml(x){
   const ps=livePlayers(x),id=x.id;
   if(!ps.length)return '<div class="card"><b class="hd">Gol in diretta</b><p class="mu">Segna prima le presenze (scheda Info) e premi Salva: poi potrai registrare i gol con un tocco.</p></div>';
-  const chips=ps.map(m=>`<button class="chip${m.id===LIVE.p?' on':''}" onclick="liveSel('${m.id}')">${m.num?'<i>'+esc(m.num)+'</i>':''}${esc(m.nick)}</button>`).join('');
   const cl=x.clock||{},sc=x.gf+'-'+x.ga;if(LIVE.sc!==undefined&&LIVE.sc!==sc)LIVE.popAt=lvNow();LIVE.sc=sc;
   const reset=!x.played&&(cl.since||+cl.base)?`<button onclick="liveClockReset('${id}')">Azzera cronometro</button>`:'';
-  return `<div class="card live"><div class="chips" style="margin-top:0">${chips}</div>${reset||!x.played?`<div class="row" style="margin-top:12px">${reset}${x.played?'':`<button class="p" onclick="liveEnd('${id}')">Fine partita</button>`}</div>`:''}${lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>'}${liveLog(x)}</div>`}
+  return `<div class="card live">${reset||!x.played?`<div class="row" style="margin-top:0">${reset}${x.played?'':`<button class="p" onclick="liveEnd('${id}')">Fine partita</button>`}</div>`:''}${lvPending(x.id)&&LV[x.id].wait?'<p class="lvwait">In attesa di rete: gli eventi sono salvati sul telefono e partono da soli.</p>':'<p class="mu" style="margin:8px 0 0">Ogni tocco si salva subito, non serve premere Salva.</p>'}${liveLog(x)}</div>`}
 const livePlayers=x=>(x.present||[]).map(i=>mbr(x,i)).filter(m=>m&&m.role==='giocatore');
 // Pannello delle azioni: sta fisso sopra la barra e ha sempre la stessa altezza, così nessun pulsante si sposta mentre si tocca.
 function liveDockHtml(x,tab){
   const ps=livePlayers(x),id=x.id;if(!ps.length)return '';
-  const sel=LIVE.p&&ps.find(m=>m.id===LIVE.p);let title,row;
-  if(LIVE.pick){const ks=lvKeepers(x);title=LIVE.pick==='og'?'Autogol: chi era in porta?':LIVE.pick==='ps'?'Rigore parato: chi era in porta?':'Gol avversario: chi era in porta?';
-    row=`<div class="lvact sc"><button class="chip" onclick="liveGk('${id}',null)">Nessuno</button>${ks.map(i=>`<button class="chip" onclick="liveGk('${id}','${i}')">${esc(mbr(x,i)?.nick||'?')}</button>`).join('')}</div>`}
+  const av=m=>`<span class="av">${m.photo?`<img src="${safeSrc(m.photo)}" alt="">`:esc((m.nick||'?').slice(0,2).toUpperCase())}</span>`;
+  const grid=(list,fn,extra)=>`<div class="lvg">${list.map(m=>`<button onclick="${fn(m)}">${av(m)}<span class="n">${esc(m.nick)}</span></button>`).join('')}${extra||''}</div>`;
+  const sel=LIVE.p&&ps.find(m=>m.id===LIVE.p);let title,row,cancel=false;
+  if(LIVE.pick==='gol'){title='Chi ha segnato?';cancel=true;
+    row=grid(ps,m=>`liveGoalBy('${id}','${m.id}')`)+`<button class="lvwide" onclick="liveGoalAnon('${id}')">Non so chi · lo indico dopo</button>`}
+  else if(LIVE.pick==='who'){title='A chi?';cancel=true;row=grid(ps,m=>`livePickP('${m.id}')`)}
+  else if(LIVE.pick){const ks=lvKeepers(x);cancel=true;title=LIVE.pick==='og'?'Autogol: chi era in porta?':LIVE.pick==='ps'?'Rigore parato: chi era in porta?':'Gol avversario: chi era in porta?';
+    row=grid(ks.map(i=>mbr(x,i)).filter(Boolean),m=>`liveGk('${id}','${m.id}')`)+`<button class="lvwide" onclick="liveGk('${id}',null)">Nessuno / non so</button>`}
   else if(sel&&LIVE.assist){title=`Gol di ${esc(sel.nick)}! Assist?`;
-    row=`<div class="lvact sc"><button class="chip" onclick="liveAssist('${id}',null)">Nessuno</button>${ps.filter(m=>m.id!==sel.id).map(m=>`<button class="chip" onclick="liveAssist('${id}','${m.id}')">${esc(m.nick)}</button>`).join('')}</div>`}
-  else if(sel){title=esc(sel.nick);
-    row=`<div class="lvact"><button class="p" onclick="liveGoal('${id}')">${ic('ball')} Gol</button><button class="lvico" onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')}</button><button class="lvico" onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')}</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div>`}
-  else{title='<span class="mu">Tocca un giocatore</span>';
-    row=`<div class="lvact"><button onclick="liveOpp('${id}')">${ic('plus')} Gol avversario</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div>`}
-  return `<div class="lvdock" id="lvdock"${tab==='live'?'':' hidden'}><div class="lvdh"><b>${title}</b>${LIVE.pick?`<button class="s" onclick="liveGkCancel()">Annulla</button>`:`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div>`}
+    row=grid(ps.filter(m=>m.id!==sel.id),m=>`liveAssist('${id}','${m.id}')`)+`<button class="lvwide p" onclick="liveAssist('${id}',null)">Nessun assist</button>`}
+  else if(sel){title=esc(sel.nick);cancel=true;
+    row=`<div class="lvact"><button class="lvico" onclick="liveCard('${id}','y')" aria-label="Giallo">${ic('card','y')} Giallo</button><button class="lvico" onclick="liveCard('${id}','r')" aria-label="Rosso">${ic('card','r')} Rosso</button><button onclick="liveOwn('${id}')">${ic('og')} Autogol</button></div>`}
+  else{title='<span class="mu">Diretta</span>';
+    row=`<div class="lvact lvbig"><button class="p" onclick="liveGoalPick()">${ic('plus')} Gol nostro</button><button onclick="liveOpp('${id}')">${ic('plus')} Gol ${esc(x.opp||'avversario')}</button></div>
+    <div class="lvact" style="margin-top:8px"><button onclick="liveWho()">${ic('card','y')} Cartellino / autogol</button><button onclick="liveSave('${id}')">${ic('glove')} Rigore parato</button></div>`}
+  return `<div class="lvdock" id="lvdock"${tab==='live'?'':' hidden'}><div class="lvdh"><b>${title}</b>${cancel?`<button class="s" onclick="liveGkCancel()">Chiudi</button>`:`<button class="s" onclick="liveUndo('${id}')" ${(x.events||[]).length?'':'disabled'}>${ic('undo')} Annulla</button>`}</div>${row}</div>`}
 // Cronometro nell'intestazione: per chi gestisce è anche il tasto Avvia/Pausa, gli altri lo vedono quando è partito.
 function liveClockHead(x,mgr){
   if(x.played)return '';const cl=x.clock||{},on=!!cl.since,used=on||+cl.base>0;if(!mgr&&!used)return '';

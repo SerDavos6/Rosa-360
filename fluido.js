@@ -77,7 +77,7 @@ function fluidoStart(){
   setTimeout(hide,5000);if(app.querySelector('.pg:not([aria-busy])'))hide();
 
   // Scorciatoie dall'icona (?v=cal|rosa|cls) e richiamo di sincronizzazione della barra indietro.
-  const qv=new URLSearchParams(location.search).get('v');let sc=!['cal','rosa','cls'].includes(qv);
+  const qv=new URLSearchParams(location.search).get('v');let sc=!['home','cal','rosa','cls'].includes(qv);
   let pushed=false,tm=0;
   const open=()=>!!(S.mid||S.pd||document.getElementById('sheet'));
   const sync=()=>{clearTimeout(tm);tm=setTimeout(()=>{const o=open();

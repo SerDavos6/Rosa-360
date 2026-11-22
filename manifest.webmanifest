@@ -47,7 +47,7 @@
     {
       "name": "Prossima partita",
       "short_name": "Partite",
-      "url": "./?v=cal",
+      "url": "./?v=home",
       "icons": [
         {
           "src": "icon-192.png",
