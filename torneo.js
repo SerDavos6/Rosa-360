@@ -234,7 +234,19 @@
   window.trNames = () => tourList().map(o => o.name);
   window.trDn = k => { st().dn = k === 'all' ? 'all' : +k; R(); };
   window.trGo = (v, g) => { const s = st(); if (v) s.v = v; if (g) s.g = g; R(); };
-  window.trOpen = () => { S.tab = 'trn'; S.tr = { v: 'g', id: null }; R(); };
+  // La scheda Torneo si apre direttamente sul torneo in corso: nella fase finale sul tabellone della propria categoria, nei gironi sul proprio girone
+  function trAuto() {
+    const items = tourList().map(homeItem).filter(Boolean);
+    if (items.length) {
+      const it = items[0];
+      if (it.ph === 'b') return { id: it.o.id, v: 'b', c: fmtOf(it.o) === 'memorial' ? (it.last ? myCat(it.last) || 'OT' : 'OT') : null, sx: {} };
+      return { id: it.o.id, v: 'g', g: it.g };
+    }
+    const l = tourList();
+    if (l.length === 1) { const o = l[0]; return { id: o.id, v: hasKo(o) && !(hasGroups(o) && GLn(o).some(g => !gdone(o, g))) ? 'b' : 'g' }; }
+    return null;
+  }
+  window.trOpen = () => { S.tab = 'trn'; S.tr = { v: 'g', id: null }; try { const a = trAuto(); if (a) Object.assign(S.tr, a); } catch (e) {} R(); };
   window.trBack = () => { S.tab = 'home'; R(); };
   window.trList = () => { const s = st(); s.id = null; s.v = 'g'; s.imp = ''; R(); };
   window.trPick = id => { const s = st(), o = tourList().find(q => q.id === id); if (!o) return; s.id = id; s.v = hasGroups(o) ? 'g' : 'b'; s.g = null; s.imp = ''; R(); };
@@ -480,7 +492,7 @@
     const ri = B ? B.rounds.findIndex(r => r.keys.includes(it.last)) : -1, off = hasGroups(o) ? 1 : 0, n = it.last ? it.N[it.last] : null;
     return stepsHtml(names, Math.max(off, ri + off), !!(n && n.w));
   }
-  window.trHomeGo = (id, v, c, sel) => { trOpen(); const s = st(); s.id = id; s.v = v; s.g = null; s.c = c || null; s.sel = sel || null; s.sx = {}; R(); };
+  window.trHomeGo = (id, v, c, sel) => { trOpen(); const s = st(); const same = s.id === id; s.id = id; s.v = v; if (!same) s.g = null; s.c = c || null; s.sel = sel || null; s.sx = {}; R(); };
   window.torneoHome = function () {
     if (X()) return '';
     let items = [];

@@ -174,6 +174,14 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
+/* --- home: ultime partite in righe compatte --- */
+.hlist{padding:2px 0;overflow:hidden}
+.hrow{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 16px;background:none;border:0;border-radius:0;box-shadow:none;text-align:left;font:inherit;color:inherit}
+.hrow+.hrow{border-top:1px solid var(--bd)}
+.hrow .rb{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;color:#111}
+.hrow .hm{flex:1;min-width:0;display:flex;flex-direction:column}.hrow .hm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .hm .mu{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .hs{font:600 22px var(--num);white-space:nowrap}
 /* --- partita: tasti della diretta in alto, scelta del giocatore in un foglio dal basso --- */
 .lvact.lvbig{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .lvact.lvbig>button{min-height:64px;font-size:16px;font-weight:800;border-radius:18px;white-space:normal;line-height:1.15}
@@ -279,8 +287,8 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=15"></script><script src="tifoso.js?v=14"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
-<script src="torneo.js?v=24"></script>
+<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=16"></script><script src="tifoso.js?v=14"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="torneo.js?v=25"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -743,9 +751,12 @@ function calView(t,mgr,home){
   const row=x=>`<div class="card mrow ${x.played?(x.gf>x.ga?"w":x.gf<x.ga?"l":"d"):"u"}" onclick="S.mid='${x.id}';render()">${(d=>`<div class="db"><b>${d.d}</b>${d.m}</div>`)(dt(x.date))}${crest(x.oppLogo,ic("shield"),"sm")}<div class="mid"><b class="hd">vs ${esc(x.opp)}</b><div class="mu">${esc([x.tourn||"Amichevoli",matchPhase(x)].filter(Boolean).join(" · "))}${x.played?" · "+(x.present||[]).length+" in campo":""}</div><div class="mu">${esc([matchPlace(x),matchDetail(x).time].filter(Boolean).join(" · "))}</div>${(m=>m?`<div class="gold">${ic("trophy")} MVP ${esc(m.m.nick)}</div>`:"")(x.played?mvp(x):null)}</div>
   <div class="rs">${x.played?`<b class="hd">${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?"v":x.gf<x.ga?"p":"n"}">${x.gf>x.ga?"V":x.gf<x.ga?"P":"N"}</i>`:'<span class="tag">Da giocare</span>'}</div></div>`;
   if(home){const rec=pl.slice(0,5);
-    return `${form}${nextMatch(all)}${typeof torneoHome==="function"?torneoHome():""}${last?heroMatch(last,t):""}
+    // riga compatta: V/N/P, avversario, competizione e data, risultato
+    const hr=x=>{const r=x.gf>x.ga?"v":x.gf<x.ga?"p":"n";return `<button class="hrow" onclick="S.mid='${x.id}';render()"><i class="rb ${r}">${r.toUpperCase()}</i><span class="hm"><b>${esc(x.opp)}</b><span class="mu">${esc([matchComp(x),dt(x.date).f].filter(Boolean).join(" · "))}</span></span><b class="hs">${esc(x.gf)}–${esc(x.ga)}</b></button>`};
+    return `${form}${nextMatch(all)}${typeof torneoHome==="function"?torneoHome():""}
   <div class="tool"><h2>Ultime partite</h2>${all.length?`<button class="s" onclick="S.tab='cal';S.mf='';render()">Vedi tutte</button>`:""}</div>
-  ${rec.map(row).join("")||(all.length?'<p class="mu">Nessuna partita giocata in questa stagione.</p>':emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="S.tab='cal';openNm()">${ic("plus")} Nuova partita</button>`:""))}`}
+  ${rec.length?`<div class="card hlist">${rec.map(hr).join("")}</div>`:""}${rec.length?"":
+(all.length?'<p class="mu">Nessuna partita giocata in questa stagione.</p>':emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="S.tab='cal';openNm()">${ic("plus")} Nuova partita</button>`:""))}`}
   return `${form}
   <div class="tool"><h2>Partite</h2>${S.fan&&typeof torneoBtn==="function"?torneoBtn(t,mgr):""}${mgr&&!S.nm?`<button class="p s plus" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""}</div>
   <div class="seg">${[["","Tutte"],["todo","Da giocare"],["done","Giocate"]].map(([k,n])=>`<button class="${mf===k?"on":""}" onclick="S.mf='${k}';render()">${n} <i style="font-style:normal;opacity:.65">${cnt[k]}</i></button>`).join("")}</div>
