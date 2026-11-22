@@ -90,7 +90,7 @@ window.fanOpen=async function(id,mid){
   {const tt=S.teams.find(x=>x.id===id);if(tt)addRecent({k:"t",id,name:String(tt.name||"Squadra").slice(0,80),logo:/^https:\/\//.test(tt.logo||"")?tt.logo:""})}
   const ss=[...new Set(S.matches.filter(x=>x.tid===id&&x.date).map(x=>seasonOf(x.date)))].sort().reverse(),a=activeSeason();
   if(ss.length&&a!=="all"&&!ss.includes(a))S.season=ss[0];
-  S.tid=id;S.tab=mid?"cal":"home";S.rk="";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
+  S.tid=id;S.tab="home";S.rk="";S.mid=mid&&S.matches.some(x=>x.id===mid)?mid:null;S.pd=null;S.rq="";S.rf="";S.cs="sq";S.flt="";S.mf="";
   render()};
 window.fanBack=function(){S.tid=null;S.mid=null;S.pd=null;render()};
 window.fanHome=function(){F.tv=false;S.tid=null;S.mid=null;S.pd=null;F.tour=null;render();focusQ()};
@@ -209,13 +209,13 @@ function teamBar(t){
   // nome grande per intero (si rimpicciolisce se serve, mai spezzato a metà parola); il tasto tema qui non serve: sta già in Aspetto
   return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn fn" style="font-size:${nameFs(t.name,17,12)}px">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
-  const nav=[["home",ic("home"),"Home"],["cal",ic("cal"),"Partite"],["rosa",ic("users"),"Rosa"]];
+  const nav=[["home",ic("home"),"Home"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
   if(!S.browse)nav.push(["imp",ic("user"),"Profilo"]);
   if(S.browse&&S.tab==="imp")S.tab="home";
   const onM=S.tab==="cal"||S.tab==="home",mx=onM&&S.mid?S.matches.find(x=>x.id===S.mid):null;if(onM&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,false);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:calView,cls:rosaView,imp:fanProfile,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,false)}
+  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:homeTab,cls:x=>clsView(x),imp:fanProfile,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,false)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="S.tab='${k}';S.mid=null;S.pd=null;render()"><span>${i}</span>${n}</button>`).join("")}<button onclick="fanHome()"><span>${SRCH}</span>Cerca</button>${S.browse?`<button onclick="fanLeave()"><span>${XI}</span>Chiudi</button>`:""}</nav>`}
 
 window.fanRender=function(){

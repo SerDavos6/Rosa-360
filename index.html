@@ -287,7 +287,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=16"></script><script src="tifoso.js?v=14"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=18"></script><script src="tifoso.js?v=15"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=25"></script>
 
 <script>
@@ -540,12 +540,12 @@ function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
 function teamView(t){
   const mgr=canManage(),pend=S.reqs.filter(r=>r.tid===t.id);
   const hasTrn=typeof torneoBtn==="function"&&!!torneoBtn(t,mgr);
-  const nav=[["home",ic("home"),"Home"],["cal",ic("cal"),"Partite"],...(hasTrn?[["trn",ic("trophy"),"Torneo"]]:[]),["rosa",ic("users"),"Rosa"]];
+  const nav=[["home",ic("home"),"Home"],...(hasTrn?[["trn",ic("trophy"),"Torneo"]]:[]),["rosa",ic("users"),"Rosa"],["cls",ic("chart"),"Classifiche"]];
   const onM=S.tab==="cal"||S.tab==="home",mx=onM&&S.mid?S.matches.find(x=>x.id===S.mid):null;
   if(onM&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:calView,cls:rosaView,imp:impView,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,mgr)}
+  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:homeTab,cls:x=>clsView(x),imp:impView,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,mgr)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="${k==="trn"?"S.mid=null;S.pd=null;trOpen()":`S.tab='${k}';S.mid=null;S.pd=null;render()`}"><span>${i}</span>${n}</button>`).join("")}</nav>`}
 function rosaGroups(ms){
   const pl=ms.filter(m=>m.role==="giocatore"),srt=(a,b)=>(b.captain?1:0)-(a.captain?1:0)||(parseInt(a.num)||999)-(parseInt(b.num)||999)||(a.nick||"").localeCompare(b.nick||"");
@@ -567,11 +567,9 @@ function rosaCtl(m){const mgr=canManage();return rosaCtl0(m,mgr)}
 const RK=[["","Rosa"],["ov","Overall"],["g","Marcatori"],["a","Assist"],["p","Presenze"],["sq","Squadra"]];
 function rosaTabs(){const k=S.tab==="cls"?(S.cs||"sq"):(S.rk||"");return `<div class="csl" style="margin-bottom:6px">${RK.map(([c,n])=>`<button class="chip${k===c?" on":""}" onclick="S.tab='rosa';S.rk='${c}';if('${c}')S.cs='${c}';render()">${n}</button>`).join("")}</div>`}
 function rosaView(t,mgr){
-  if(S.rk)S.cs=S.rk;
-  if(S.tab==="cls"||S.rk)return rosaTabs()+clsView(t,true);
   const ms=S.members.filter(m=>m.tid===t.id);
   const ctl=m=>rosaCtl0(m,mgr,true);
-  return `${rosaTabs()}${rosaBody(ms,ctl)}
+  return `${rosaBody(ms,ctl)}
   ${mgr?`<details class="card add"><summary>${ic("plus")} Aggiungi membro senza account</summary><div class="in">
   <div class="row"><input id="an" placeholder="Soprannome"><input id="aq" placeholder="Nome e cognome"></div>
   <label>Ruolo</label><select id="ar" onchange="$('apf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente">Dirigente</option></select>
@@ -750,18 +748,11 @@ function calView(t,mgr,home){
   <label>Logo avversario (facoltativo)</label><input type="file" accept="image/*" onchange="oppLogo(this)"><div class="mu" id="lg"></div><div class="row" style="margin-top:12px"><button class="p" onclick="addMatch()">Aggiungi</button><button onclick="S.nm=false;logoTmp=null;render()">Annulla</button></div></div>`:"";
   const row=x=>`<div class="card mrow ${x.played?(x.gf>x.ga?"w":x.gf<x.ga?"l":"d"):"u"}" onclick="S.mid='${x.id}';render()">${(d=>`<div class="db"><b>${d.d}</b>${d.m}</div>`)(dt(x.date))}${crest(x.oppLogo,ic("shield"),"sm")}<div class="mid"><b class="hd">vs ${esc(x.opp)}</b><div class="mu">${esc([x.tourn||"Amichevoli",matchPhase(x)].filter(Boolean).join(" · "))}${x.played?" · "+(x.present||[]).length+" in campo":""}</div><div class="mu">${esc([matchPlace(x),matchDetail(x).time].filter(Boolean).join(" · "))}</div>${(m=>m?`<div class="gold">${ic("trophy")} MVP ${esc(m.m.nick)}</div>`:"")(x.played?mvp(x):null)}</div>
   <div class="rs">${x.played?`<b class="hd">${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?"v":x.gf<x.ga?"p":"n"}">${x.gf>x.ga?"V":x.gf<x.ga?"P":"N"}</i>`:'<span class="tag">Da giocare</span>'}</div></div>`;
-  if(home){const rec=pl.slice(0,5);
-    // riga compatta: V/N/P, avversario, competizione e data, risultato
-    const hr=x=>{const r=x.gf>x.ga?"v":x.gf<x.ga?"p":"n";return `<button class="hrow" onclick="S.mid='${x.id}';render()"><i class="rb ${r}">${r.toUpperCase()}</i><span class="hm"><b>${esc(x.opp)}</b><span class="mu">${esc([matchComp(x),dt(x.date).f].filter(Boolean).join(" · "))}</span></span><b class="hs">${esc(x.gf)}–${esc(x.ga)}</b></button>`};
-    return `${form}${nextMatch(all)}${typeof torneoHome==="function"?torneoHome():""}
-  <div class="tool"><h2>Ultime partite</h2>${all.length?`<button class="s" onclick="S.tab='cal';S.mf='';render()">Vedi tutte</button>`:""}</div>
-  ${rec.length?`<div class="card hlist">${rec.map(hr).join("")}</div>`:""}${rec.length?"":
-(all.length?'<p class="mu">Nessuna partita giocata in questa stagione.</p>':emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="S.tab='cal';openNm()">${ic("plus")} Nuova partita</button>`:""))}`}
-  return `${form}
+  return `${form}${home?nextMatch(all)+(typeof torneoHome==="function"?torneoHome():""):""}
   <div class="tool"><h2>Partite</h2>${S.fan&&typeof torneoBtn==="function"?torneoBtn(t,mgr):""}${mgr&&!S.nm?`<button class="p s plus" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""}</div>
   <div class="seg">${[["","Tutte"],["todo","Da giocare"],["done","Giocate"]].map(([k,n])=>`<button class="${mf===k?"on":""}" onclick="S.mf='${k}';render()">${n} <i style="font-style:normal;opacity:.65">${cnt[k]}</i></button>`).join("")}</div>
   ${cnt.todo?`<p style="margin:8px 0"><button class="s" onclick="addToCalendar()">${ic("plus")} Aggiungi ${cnt.todo===1?"la partita":"le "+cnt.todo+" partite"} al calendario</button></p>`:""}${tor.length>1||S.flt?`<div style="margin:8px 0 4px"><select onchange="S.flt=this.value;render()" aria-label="Torneo"><option value="">Tutti i tornei</option>${tor.map(n=>`<option ${S.flt===n?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
-  <div style="margin-top:12px">${list.map(row).join("")}${list.length?"":(ms.length?emptyState("ball","Nessuna partita con questi filtri","Prova a cambiare filtro o torneo.",""):emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""))}</div>`}
+  <div style="margin-top:12px">${(S.allM?list:list.slice(0,5)).map(row).join("")}${list.length>5?`<p style="margin:4px 0 0;text-align:center"><button class="s" onclick="S.allM=!S.allM;render()">${S.allM?"Mostra solo le ultime 5":"Vedi altre ("+(list.length-5)+")"}</button></p>`:""}${list.length?"":(ms.length?emptyState("ball","Nessuna partita con questi filtri","Prova a cambiare filtro o torneo.",""):emptyState("ball","Nessuna partita",mgr?"Crea la prima partita per registrare gol, presenze e formazione.":"Il dirigente non ha ancora inserito partite.",mgr?`<button class="p" onclick="openNm()">${ic("plus")} Nuova partita</button>`:""))}</div>`}
 function openNm(){S.nm=true;S.nmOpp=null;S.nmSug=null;render();toTop()}
 async function addMatch(){
   if(!v("md")||!v("mo"))return;

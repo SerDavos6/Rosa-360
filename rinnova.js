@@ -1,20 +1,21 @@
 // ===== Scheda "Prossima partita" grande, con confermati e tasto "Ci sono". Per toglierla basta togliere questo file e la riga <script> in index.html =====
 (function(){const st=document.createElement('style');st.textContent=`
-.rn-hero{padding:18px 18px 14px;border-radius:24px;background:#0b7a43;color:#fff;border:0}
+.rn-hero{padding:18px 18px 14px;border-radius:24px}
 .rn-hero .eb{color:inherit;opacity:.9}
 .rn-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.rn-pill{padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.rn-pill{padding:5px 11px;border-radius:999px;background:color-mix(in srgb,var(--on) 18%,transparent);font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
 .rn-vs{display:flex;align-items:center;gap:8px;margin:16px 0 14px}
 .rn-vs>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .rn-vs b{font-size:15px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
 .rn-x{font:600 22px var(--num);opacity:.8}
-.rn-lg{width:54px;height:54px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.18);display:grid;place-items:center;font:700 18px var(--num)}
-.rn-lg.me{background:#fff;color:#0b7a43}
+.rn-lg{width:54px;height:54px;border-radius:50%;object-fit:cover;background:color-mix(in srgb,var(--on) 18%,transparent);display:grid;place-items:center;font:700 18px var(--num)}
+.rn-lg.me{background:var(--on);color:var(--acf)}
 img.rn-lg{background:#fff}
 .rn-dt{display:flex;align-items:center;gap:8px;font-size:13px;opacity:.95}.rn-dt .ic{flex:none}
-.rn-go{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin-top:14px;border:0;border-radius:14px;background:#fff;color:#0b7a43;font-weight:800;font-size:15px}
+.rn-go{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin-top:14px;border:0;border-radius:14px;background:var(--on);color:var(--acf);font-weight:800;font-size:15px}
 .rn-go .ic{width:18px;height:18px}
-.rn-go.on{background:rgba(255,255,255,.22);color:#fff}
+.rn-go.on{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on)}
+.rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st);
 const installa=()=>{window.nextMatch=function(ms){
@@ -28,9 +29,10 @@ const installa=()=>{window.nextMatch=function(ms){
   const ph=[matchPhase(x)||x.tourn,when].filter(Boolean).join(" · ");
   const play='<svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l12 8-12 8z"/></svg>';
   // dirigente: avvia la diretta · giocatore: conferma la presenza · tifoso: apre la partita
-  const btn=mgr?`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">${play} Avvia la diretta</button>`
-    :me?`<button class="rn-go${isIn?" on":""}" onclick="event.stopPropagation();myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono":"Ci sei? Conferma la presenza"}</button>`
-    :`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">Vai alla partita</button>`;
+  const live=`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">${play} Avvia la diretta</button>`,
+    pres=me&&me.role==="giocatore"?`<button class="rn-go${isIn?" on":""}" onclick="event.stopPropagation();myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono":"Ci sei?"}</button>`:"";
+  const btn=mgr?(pres?`<div class="rn-two">${pres}${live}</div>`:live)
+    :pres||`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">Vai alla partita</button>`;
   return `<div class="card nxt rn-hero" onclick="S.mid='${x.id}';render()">
   <div class="rn-top"><span class="eb">Prossima partita</span><span class="rn-pill">${esc(ph)}</span></div>
   <div class="rn-vs"><div>${logo(T.logo,T.name,true)}<b>${esc(T.name||"Noi")}</b></div><span class="rn-x">VS</span><div>${logo(x.oppLogo,x.opp)}<b>${esc(x.opp)}</b></div></div>
