@@ -77,19 +77,22 @@ function addToCalendar(id){const T=S.teams.find(t=>t.id===S.tid)||{},today=new D
 
 // ===== Immagini da condividere: classifica, carta, riepilogo stagione =====
 const seasonLabel=()=>{const a=activeSeason();return a==='all'?'TUTTE LE STAGIONI':String(a)};
-async function shareImage(title,name,draw){
-  sheet(`<h2 style="margin-top:0">${title}</h2><p class="mu" id="si-st">Generazione immagine…</p><div id="si-img"></div><div class="row" style="margin-top:12px"><button class="p" id="si-sh" disabled>Condividi immagine</button><button id="si-dl" disabled>Scarica PNG</button><button onclick="closeSheet()">Chiudi</button></div>`);
-  try{
+async function shareImage(title,name,draw,layouts,key){
+  let lay=layouts?(()=>{try{const v=localStorage.getItem(key);return layouts.some(l=>l[0]===v)?v:layouts[0][0]}catch(e){return layouts[0][0]}})():null,url=null,ver=0;
+  sheet(`<h2 style="margin-top:0">${title}</h2>${layouts?`<div class="seg seg-wrap" id="si-lay">${layouts.map(([k,n])=>`<button type="button" data-l="${k}" class="${k===lay?"on":""}">${n}</button>`).join("")}</div>`:""}<p class="mu" id="si-st">Generazione immagine…</p><div id="si-img"></div><div class="row" style="margin-top:12px"><button class="p" id="si-sh" disabled>Condividi immagine</button><button id="si-dl" disabled>Scarica PNG</button><button onclick="closeSheet()">Chiudi</button></div>`);
+  const go=async()=>{const v=++ver;try{
     if(document.fonts){await Promise.all([document.fonts.load('700 100px Oswald'),document.fonts.load('500 30px Oswald'),ensureCaveat()]).catch(()=>{});await document.fonts.ready}
     const team=S.teams.find(t=>t.id===S.tid)||{},P={...formationDefaults(team,await reportPalette(team)),...(teamShareStyle(team,'result').palette||{})},logo=await reportLogo(team.logo),c=document.createElement('canvas');c.width=1080;c.height=1920;const ctx=c.getContext('2d');
     ctx.fillStyle=P.background;ctx.fillRect(0,0,1080,1920);const g=ctx.createRadialGradient(540,0,60,540,0,1100);g.addColorStop(0,P.accent);g.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=.35;ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);ctx.globalAlpha=1;
-    await draw(ctx,P,team,logo);
-    const blob=await new Promise((r,j)=>c.toBlob(b=>b?r(b):j(),'image/png'));if(!document.getElementById('si-img'))return;
-    const url=URL.createObjectURL(blob),file=new File([blob],name+'.png',{type:'image/png'}),im=new Image();im.src=url;im.alt=title;im.style.cssText='display:block;height:min(55vh,600px);width:auto;max-width:100%;margin:0 auto;border-radius:12px';$('si-img').replaceChildren(im);
-    const can=!!navigator.canShare?.({files:[file]}),dl=()=>{const a=document.createElement('a');a.href=url;a.download=name+'.png';a.click()};
+    await draw(ctx,P,team,logo,lay);
+    const blob=await new Promise((r,j)=>c.toBlob(b=>b?r(b):j(),'image/png'));if(v!==ver||!document.getElementById('si-img'))return;
+    if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(blob);const file=new File([blob],name+'.png',{type:'image/png'}),im=new Image();im.src=url;im.alt=title;im.style.cssText='display:block;height:min(55vh,600px);width:auto;max-width:100%;margin:0 auto;border-radius:12px';$('si-img').replaceChildren(im);
+    const can=!!navigator.canShare?.({files:[file]}),u=url,dl=()=>{const a=document.createElement('a');a.href=u;a.download=name+'.png';a.click()};
     $('si-st').textContent=can?'Immagine pronta: scegli Instagram e poi Storia.':'Immagine pronta. Scarica il PNG e caricalo nella tua storia.';$('si-sh').textContent=can?'Condividi immagine':'Salva immagine';
     $('si-sh').onclick=async()=>{if(!can)return dl();try{await navigator.share({files:[file],title})}catch(e){if(e.name!=='AbortError')$('si-st').textContent='Condivisione non riuscita. Usa Scarica PNG.'}};$('si-dl').onclick=dl;$('si-sh').disabled=$('si-dl').disabled=false;
-  }catch(e){const s=$('si-st');if(s)s.textContent='Impossibile generare l’immagine. Riprova.'}}
+  }catch(e){const s=$('si-st');if(s&&v===ver)s.textContent='Impossibile generare l’immagine. Riprova.'}};
+  if(layouts)document.querySelectorAll('#si-lay button').forEach(b=>b.onclick=()=>{lay=b.dataset.l;try{localStorage.setItem(key,lay)}catch(e){}document.querySelectorAll('#si-lay button').forEach(x=>x.classList.toggle('on',x===b));$('si-st').textContent='Generazione immagine…';$('si-sh').disabled=$('si-dl').disabled=true;go()});
+  await go()}
 function statHead(ctx,P,team,logo,kicker,y0=130){const W=1080;if(logo){ctx.save();ctx.beginPath();ctx.arc(W/2,y0+60,60,0,Math.PI*2);ctx.clip();ctx.drawImage(logo,W/2-60,y0,120,120);ctx.restore()}
   let sz=80;const nm=(team.name||'').toUpperCase();ctx.textAlign='center';ctx.fillStyle=P.text;do{sz-=4;ctx.font=`700 ${sz}px Oswald, sans-serif`}while(ctx.measureText(nm).width>900&&sz>36);ctx.fillText(nm,W/2,y0+215);
   ctx.fillStyle=P.accent;if('letterSpacing' in ctx)ctx.letterSpacing='8px';let ks=34;do{ctx.font=`700 ${ks}px Oswald, sans-serif`;ks-=2}while(ctx.measureText(kicker).width>960&&ks>22);ctx.fillText(reportFit(ctx,kicker,960),W/2+4,y0+275);if('letterSpacing' in ctx)ctx.letterSpacing='0px'}
@@ -110,7 +113,46 @@ function shareClass(){const t=S.teams.find(x=>x.id===S.tid)||{},cs=['ov','g','a'
         await drawAv(ctx,a.m,260,y,36,P);const nm=(a.m.nick||'').toUpperCase(),ov=cs==='ov';let fs=46;ctx.textAlign='left';ctx.fillStyle=P.text;do{ctx.font=`700 ${fs}px Oswald, sans-serif`;fs-=2}while(ctx.measureText(nm).width>(ov?540:480)&&fs>26);ctx.fillText(nm,320,ov?y:y+16);ctx.textAlign='right';ctx.fillStyle=P.accent;ctx.font='700 60px Oswald, sans-serif';ctx.fillText(a.v,955,ov?y+12:y+20);
         if(ov){ctx.fillStyle=P.text;ctx.globalAlpha=.7;ctx.font='500 20px Oswald, sans-serif';ctx.fillText('OVERALL',955,y+40);ctx.textAlign='left';ctx.font='500 28px Oswald, sans-serif';ctx.fillText('GOL '+a.s.g+'  ·  ASSIST '+a.s.a,320,y+36);ctx.globalAlpha=1}}}
     formationFooter(ctx,P.accent,1838,'Forza ragazzi')})}
-function shareCard(id){const m=S.members.find(x=>x.id===id);if(!m)return;shareImage('Carta di '+m.nick,'carta-'+m.nick,async(ctx,P,team,logo)=>{
+// Altri stili per "Condividi carta" (giocatori e dirigenti): numeri grandi, scheda a righe, poster
+const CARD_LAYOUTS=[['carta','Carta'],['numeri','Numeri'],['scheda','Scheda'],['poster','Poster']];
+async function cardAlt(layout,ctx,P,team,logo,m){
+  const W=1080,S0=isStaff(m),t=stats(m),o=S0?'':ovr(m),ss=S0?staffStats(m):null,role=S0?'DIRIGENTE':String(POS[m.pos]||'').toUpperCase(),nick=(m.nick||'').toUpperCase();
+  const diff=ss?(ss.gf-ss.gs>0?'+':'')+(ss.gf-ss.gs):'',gpp=t.p?(t.g/t.p).toFixed(2):'0';
+  const four=S0?[[ss.p,'PRESENZE'],[ss.v,'VITTORIE'],[ss.pct+'%','% VITTORIE'],[diff,'DIFF. RETI']]:[[o,'OVERALL'],[t.g,'GOL'],[t.a,'ASSIST'],[t.p,'PRESENZE']];
+  const six=S0?[['Presenze',ss.p],['Vittorie',ss.v],['Pareggi',ss.n],['Sconfitte',ss.s],['% vittorie',ss.pct+'%'],['Gol fatti / subiti',ss.gf+' / '+ss.gs]]
+    :[['Overall',o],['Presenze',t.p],['Gol',t.g],['Assist',t.a],['Gol a partita',gpp],['Cartellini',(t.y||0)+' gialli · '+(t.r||0)+' rossi']];
+  const fitTxt=(txt,max,size,min)=>{let s=size;do{ctx.font=`700 ${s}px Oswald, sans-serif`;s-=4}while(ctx.measureText(txt).width>max&&s>min);return s};
+  if(layout==='numeri'){
+    statHead(ctx,P,team,logo,(S0?'IL DIRIGENTE':'IL GIOCATORE')+' · '+seasonLabel().toUpperCase());
+    await drawAv(ctx,m,W/2,640,190,P);
+    ctx.textAlign='center';ctx.fillStyle=P.text;fitTxt(nick,940,120,60);ctx.fillText(nick,W/2,950);
+    ctx.fillStyle=P.accent;ctx.font='700 36px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='8px';ctx.fillText([role,!S0&&m.num?'#'+m.num:''].filter(Boolean).join('  ·  '),W/2,1010);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    four.forEach((e,i)=>statTile(ctx,P,110+(i%2)*450,1080+Math.floor(i/2)*330,410,300,String(e[0]),e[1]));
+    formationFooter(ctx,P.accent,1850,S0?'Sempre in panchina con noi':'Forza ragazzi');return}
+  if(layout==='scheda'){
+    statHead(ctx,P,team,logo,S0?'SCHEDA DIRIGENTE':'SCHEDA GIOCATORE');
+    await drawAv(ctx,m,250,620,140,P);
+    ctx.textAlign='left';ctx.fillStyle=P.text;fitTxt(nick,560,100,48);ctx.fillText(nick,430,610);
+    ctx.fillStyle=P.accent;ctx.font='700 34px Oswald, sans-serif';ctx.fillText([role,!S0&&m.num?'#'+m.num:''].filter(Boolean).join('  ·  '),432,665);
+    if(m.name){ctx.fillStyle=P.text;ctx.globalAlpha=.7;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(reportFit(ctx,m.name,560),432,712);ctx.globalAlpha=1}
+    six.forEach(([l,v],i)=>{const y=860+i*140;ctx.fillStyle='rgba(255,255,255,.06)';reportRoundRect(ctx,100,y,880,118,22);ctx.fill();
+      ctx.textAlign='left';ctx.fillStyle=P.text;ctx.font='500 40px Oswald, sans-serif';ctx.fillText(l.toUpperCase(),140,y+74);
+      ctx.textAlign='right';ctx.fillStyle=P.accent;fitTxt(String(v),420,72,34);ctx.fillText(String(v),940,y+84)});
+    ctx.textAlign='center';ctx.fillStyle=P.text;ctx.globalAlpha=.7;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(seasonLabel(),W/2,1760);ctx.globalAlpha=1;
+    formationFooter(ctx,P.accent,1860,'Forza ragazzi');return}
+  // poster: fascia nel colore della squadra, numero gigante sullo sfondo, foto e tre numeri
+  const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,640);ctx.lineTo(0,820);ctx.closePath();ctx.fill();
+  ctx.save();ctx.globalAlpha=.14;ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 620px Oswald, sans-serif';ctx.fillText(S0?'DIR':(m.num||o||''),W/2,620);ctx.restore();
+  ctx.save();ctx.translate(W/2,170);ctx.rotate(-.05);ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 italic 104px Caveat, cursive';ctx.fillText(S0?'Il nostro mister':'Player card',0,0);ctx.restore();
+  ctx.fillStyle=ink;ctx.textAlign='center';ctx.font='700 40px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(team.name||'').toUpperCase(),900),W/2,260);
+  await drawAv(ctx,m,W/2,690,230,{...P,accent:P.text});
+  ctx.fillStyle=P.text;fitTxt(nick,960,150,64);ctx.fillText(nick,W/2,1090);
+  ctx.font='700 34px Oswald, sans-serif';const pl=[role,!S0&&m.num?'#'+m.num:'',!S0?'OVR '+o:''].filter(Boolean).join('  ·  '),pw=ctx.measureText(pl).width+80;ctx.fillStyle=P.accent;reportRoundRect(ctx,W/2-pw/2,1130,pw,64,32);ctx.fill();ctx.fillStyle=ink;ctx.fillText(pl,W/2,1174);
+  const three=S0?four.slice(0,3):four.slice(1);three.forEach((e,i)=>{const cx=W/2+(i-1)*320;ctx.fillStyle=P.text;ctx.font='700 150px Oswald, sans-serif';ctx.fillText(String(e[0]),cx,1440);ctx.globalAlpha=.75;ctx.font='500 34px Oswald, sans-serif';ctx.fillText(e[1],cx,1495);ctx.globalAlpha=1});
+  ctx.fillStyle=P.text;ctx.globalAlpha=.6;ctx.font='500 30px Oswald, sans-serif';ctx.fillText(seasonLabel(),W/2,1610);ctx.globalAlpha=1;
+  formationFooter(ctx,P.accent,1850,'Forza ragazzi');
+}
+function shareCard(id){const m=S.members.find(x=>x.id===id);if(!m)return;shareImage('Carta di '+m.nick,'carta-'+m.nick,async(ctx,P,team,logo,layout)=>{if(layout&&layout!=='carta')return cardAlt(layout,ctx,P,team,logo,m);
   const S0=isStaff(m),ss=S0?staffStats(m):null,t=stats(m),o=ovr(m),tr=S0?(c=>[mix(c,'#000000',72),mix(c,'#000000',52),mix(c,'#000000',32)])((getComputedStyle(document.documentElement).getPropertyValue('--acf').trim().match(/^#[0-9a-f]{6}$/i)||['#0b7a43'])[0]):o>=88?['#fff3a8','#ffd54a','#c9962b']:o>=75?['#ffe69a','#ffd54a','#b8860b']:o>=65?['#f4f6f9','#d5dbe3','#9aa5b1']:['#e3a46b','#cd7f32','#8a5420'],ink=S0?'#f4f6f9':'#1b1408',x=140,y=330,w=800,h=1160,g=ctx.createLinearGradient(x,y,x+w,y+h);
   g.addColorStop(0,tr[0]);g.addColorStop(.5,tr[1]);g.addColorStop(1,tr[2]);ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=50;ctx.shadowOffsetY=20;ctx.fillStyle=g;
   ctx.beginPath();ctx.moveTo(x+70,y);ctx.lineTo(x+w-70,y);ctx.quadraticCurveTo(x+w,y,x+w,y+70);ctx.lineTo(x+w,y+h-150);ctx.quadraticCurveTo(x+w,y+h,x+w-150,y+h);ctx.lineTo(x+150,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-150);ctx.lineTo(x,y+70);ctx.quadraticCurveTo(x,y,x+70,y);ctx.closePath();ctx.fill();ctx.restore();ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=6;ctx.stroke();
@@ -118,7 +160,7 @@ function shareCard(id){const m=S.members.find(x=>x.id===id);if(!m)return;shareIm
   if(logo){ctx.save();ctx.beginPath();ctx.arc(x+135,y+450,45,0,Math.PI*2);ctx.clip();ctx.drawImage(logo,x+90,y+405,90,90);ctx.restore()}
   await drawAv(ctx,m,x+510,y+340,200,{...P,accent:ink});ctx.textAlign='center';ctx.fillStyle=ink;ctx.font='700 100px Oswald, sans-serif';ctx.fillText(reportFit(ctx,(m.nick||'').toUpperCase(),680),x+w/2,y+700);
   ctx.fillRect(x+120,y+740,w-240,4);(S0?[[ss.p,'PRESENZE'],[ss.v,'VITTORIE'],[ss.pct+'%','% VITT.']]:[[t.g,'GOL'],[t.a,'ASSIST'],[t.p,'PRES.']]).forEach((e,i)=>{const cx=x+200+i*200;ctx.font='700 110px Oswald, sans-serif';ctx.fillText(e[0],cx,y+880);ctx.font='500 34px Oswald, sans-serif';ctx.fillText(e[1],cx,y+935)});
-  ctx.font='500 32px Oswald, sans-serif';ctx.globalAlpha=.75;ctx.fillText(seasonLabel(),x+w/2,y+1030);ctx.globalAlpha=1;if(!S0){const bl=badgeList(m).filter(b=>b.on).map(b=>b.short);if(bl.length){ctx.font='700 34px Oswald, sans-serif';ctx.fillText(reportFit(ctx,bl.join('  ·  '),680),x+w/2,y+1085)}}statHead(ctx,P,team,null,'',60);formationFooter(ctx,P.accent,1838,'Forza ragazzi')})}
+  ctx.font='500 32px Oswald, sans-serif';ctx.globalAlpha=.75;ctx.fillText(seasonLabel(),x+w/2,y+1030);ctx.globalAlpha=1;if(!S0){const bl=badgeList(m).filter(b=>b.on).map(b=>b.short);if(bl.length){ctx.font='700 34px Oswald, sans-serif';ctx.fillText(reportFit(ctx,bl.join('  ·  '),680),x+w/2,y+1085)}}statHead(ctx,P,team,null,'',60);formationFooter(ctx,P.accent,1838,'Forza ragazzi')},CARD_LAYOUTS,'cardLayout')}
 // Riepilogo giocatore: stagione completa oppure un singolo torneo (tour = nome torneo, 'Amichevoli' per le partite senza torneo)
 let recapTours=[];
 function shareRecap(id,tour){const m=S.members.find(x=>x.id===id);if(!m)return;

@@ -225,7 +225,7 @@ async function matchReportBlob(x,options={}){
   return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Immagine non disponibile')),'image/png'));
 }
 // ===== Formazione: storia 1080×1920 con maglie numerate =====
-const FORMATION_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster']];
+const FORMATION_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster'],['lista','Lista'],['carte','Carte'],['minimal','Essenziale']];
 function formationBench(x){const ids=new Set(formationData(x).players.filter(Boolean).map(String)),present=new Set((x.present||[]).map(String));return matchRoster(x).filter(m=>m.role==='giocatore'&&present.has(String(m.id))&&!ids.has(String(m.id)))}
 function formationPositions(scheme){return ({
   "3-1":[[.5,.83],[.18,.47],[.5,.53],[.82,.47],[.5,.16]],
@@ -330,6 +330,45 @@ async function formationStoryBlob(x,options={}){
         ctx.strokeStyle='#c9ccd1';ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.arc(cx,ry+4,16,Math.PI,Math.PI*2.4);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,ry+22);ctx.lineTo(cx-w*.38,top+10);ctx.moveTo(cx,ry+22);ctx.lineTo(cx+w*.38,top+10);ctx.stroke();ctx.lineCap='butt';
         jerseyCard(ctx,s.m,cx,top,w,P,{keeper:s.label==='P',role:formationRoleName(s.label),size:34,maxW:290})})}
     drawBench(ctx,bench,P,1500);formationFooter(ctx,P.accent);
+  }else if(layout==='lista'){
+    // Elenco stile TV: numero di maglia, nome e ruolo dei cinque titolari, panchina sotto
+    const glow=ctx.createRadialGradient(W/2,0,60,W/2,0,1100);glow.addColorStop(0,P.accent);glow.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=.3;ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+    formationHeader(ctx,x,team,P,logos,140,P.text);
+    const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'],rows=f.players.map((id,i)=>({m:id&&mbr(x,id),label:labels[i]})).filter(s=>s.m);
+    ctx.textAlign='left';ctx.fillStyle=P.accent;ctx.font='700 30px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='8px';ctx.fillText('TITOLARI · '+f.scheme,90,455);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    rows.forEach((s,i)=>{const y=485+i*172,ink=fxContrast(P.accent);
+      ctx.fillStyle='rgba(255,255,255,.07)';reportRoundRect(ctx,80,y,920,150,28);ctx.fill();
+      ctx.fillStyle=s.label==='P'?P.keeper:P.accent;reportRoundRect(ctx,80,y,170,150,28);ctx.fill();
+      ctx.fillStyle=s.label==='P'?fxContrast(P.keeper):ink;ctx.textAlign='center';ctx.font='700 96px Oswald, sans-serif';ctx.fillText(s.m.num||'–',165,y+112);
+      ctx.textAlign='left';ctx.fillStyle=P.text;const nm=(s.m.nick||s.m.name||'').toUpperCase();ctx.font=`700 ${fitFormationName(ctx,nm,560,72,36)}px Oswald, sans-serif`;ctx.fillText(nm+(s.m.captain?' ©':''),290,y+92);
+      ctx.globalAlpha=.7;ctx.font='500 28px Oswald, sans-serif';ctx.fillText(formationRoleName(s.label).toUpperCase(),292,y+130);ctx.globalAlpha=1});
+    drawBench(ctx,bench,P,1400,{max:6});formationFooter(ctx,P.accent,1850);
+  }else if(layout==='carte'){
+    // Cinque carte in stile figurina: overall, ruolo, foto o iniziale, soprannome
+    const glow=ctx.createRadialGradient(W/2,H/2,60,W/2,H/2,1100);glow.addColorStop(0,P.accent);glow.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=.25;ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+    formationHeader(ctx,x,team,P,logos,140,P.text);
+    const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'],slots=f.players.map((id,i)=>({m:id&&mbr(x,id),label:labels[i]})).filter(s=>s.m);
+    const top=slots.slice(0,Math.min(3,slots.length)),bot=slots.slice(3),cw=290,ch=410;
+    const card=async(s,cx,cy)=>{const m=s.m,x0=cx-cw/2,g=ctx.createLinearGradient(x0,cy,x0+cw,cy+ch),c=s.label==='P'?P.keeper:P.accent;g.addColorStop(0,fxMix(c,'#ffffff',.25));g.addColorStop(1,fxMix(c,'#000000',.35));
+      ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=30;ctx.shadowOffsetY=12;ctx.fillStyle=g;reportRoundRect(ctx,x0,cy,cw,ch,34);ctx.fill();ctx.restore();ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=4;reportRoundRect(ctx,x0,cy,cw,ch,34);ctx.stroke();
+      const ink=fxContrast(c),o=m.tid&&typeof ovr==='function'&&m.role==='giocatore'?ovr(m):'';ctx.fillStyle=ink;ctx.textAlign='left';ctx.font='700 70px Oswald, sans-serif';ctx.fillText(o,x0+24,cy+82);ctx.font='700 30px Oswald, sans-serif';ctx.fillText(s.label,x0+28,cy+120);
+      if(typeof drawAv==='function')await drawAv(ctx,m,cx+40,cy+120,78,{...P,accent:ink});
+      ctx.textAlign='center';const nm=(m.nick||m.name||'').toUpperCase();ctx.font=`700 ${fitFormationName(ctx,nm,cw-40,46,24)}px Oswald, sans-serif`;ctx.fillText(nm,cx,cy+278);
+      ctx.fillRect(x0+40,cy+300,cw-80,3);ctx.font='700 64px Oswald, sans-serif';ctx.fillText(m.num?'#'+m.num:'',cx,cy+380);if(m.captain){ctx.font='700 34px Oswald, sans-serif';ctx.textAlign='right';ctx.fillText('©',x0+cw-22,cy+50)}};
+    for(let i=0;i<top.length;i++)await card(top[i],W/2+(i-(top.length-1)/2)*320,450);
+    for(let i=0;i<bot.length;i++)await card(bot[i],W/2+(i-(bot.length-1)/2)*320,900);
+    drawBench(ctx,bench,P,1400,{max:6});formationFooter(ctx,P.accent,1850);
+  }else if(layout==='minimal'){
+    // Essenziale: modulo enorme e nomi in colonna, niente disegni
+    ctx.textAlign='center';ctx.fillStyle=P.accent;ctx.font='700 30px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='10px';ctx.fillText('FORMAZIONE',W/2,170);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    const f=formationData(x),labels=FORMATIONS[f.scheme]||FORMATIONS['3-1'];ctx.fillStyle=P.text;ctx.font='700 300px Oswald, sans-serif';ctx.fillText(f.scheme,W/2,470);
+    const vs=((team.name||'')+'  vs  '+(x.opp||'')).toUpperCase();ctx.font=`700 ${fitFormationName(ctx,vs,940,52,28)}px Oswald, sans-serif`;ctx.fillText(vs,W/2,570);
+    ctx.globalAlpha=.7;ctx.font='500 28px Oswald, sans-serif';ctx.fillText(reportFit(ctx,[dt(x.date).f,x.time?'ORE '+x.time:'',matchPlace(x)].filter(Boolean).join('   ·   ').toUpperCase(),920),W/2,620);ctx.globalAlpha=1;
+    ctx.fillStyle=P.accent;ctx.fillRect(W/2-60,660,120,6);
+    f.players.forEach((id,i)=>{const m=id&&mbr(x,id);if(!m)return;const y=790+i*150;ctx.fillStyle=P.text;const nm=(m.nick||m.name||'').toUpperCase()+(m.captain?' ©':'');ctx.font=`700 ${fitFormationName(ctx,nm,900,96,44)}px Oswald, sans-serif`;ctx.fillText(nm,W/2,y);
+      ctx.fillStyle=P.accent;ctx.font='500 26px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='6px';ctx.fillText([m.num?'#'+m.num:'',formationRoleName(labels[i])].filter(Boolean).join('  ·  ').toUpperCase(),W/2,y+42);if('letterSpacing' in ctx)ctx.letterSpacing='0px'});
+    if(bench.length){ctx.fillStyle=P.text;ctx.globalAlpha=.75;ctx.font='500 30px Oswald, sans-serif';wrapReport(ctx,'PANCHINA:  '+bench.map(m=>(m.nick||m.name||'').toUpperCase()).join('  ·  '),920).slice(0,3).forEach((l,i)=>ctx.fillText(l,W/2,1580+i*44));ctx.globalAlpha=1}
+    formationFooter(ctx,P.accent,1850);
   }else{
     const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,560);ctx.lineTo(0,720);ctx.closePath();ctx.fill();
     ctx.save();ctx.globalAlpha=.12;ctx.fillStyle=ink;ctx.font='700 300px Oswald, sans-serif';ctx.textAlign='left';ctx.fillText('LINE',-20,330);ctx.fillText('UP',560,640);ctx.restore();
@@ -367,7 +406,7 @@ async function previewFormation(id){
   FORMATION_COLORS.forEach(([k])=>q('#formation-'+k).addEventListener('input',renderImage));q('#formation-reset').onclick=()=>{setColors(pref.palette||defaults);renderImage()};await renderImage();
 }
 // ===== Risultato: storia 1080×1920 con maglie, nello stile della formazione =====
-const RESULT_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster']];
+const RESULT_LAYOUTS=[['campo','Campo'],['lavagna','Lavagna'],['spogliatoio','Spogliatoio'],['poster','Poster'],['tabellone','Tabellone'],['giornale','Giornale'],['minimal','Essenziale']];
 function resultData(x){
   const st=x.stats||{},mem=id=>{const m=mbr(x,id);return m&&m.tid===x.tid&&m.role==='giocatore'?m:undefined};
   const all=Object.keys(st).map(id=>({m:mem(id),g:+st[id].g||0,a:+st[id].a||0,y:+st[id].y||0,r:+st[id].r||0})).filter(e=>e.m);
@@ -523,6 +562,48 @@ async function resultStoryBlob(x,options={}){
     const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;reportRoundRect(ctx,190,410,700,220,30);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=5;ctx.stroke();
     drawScore(ctx,R,P,W/2,570,170,ink,ink);drawPill(ctx,O,W/2,632,30);
     resultReport(ctx,x,R,P,730,1500,{empty,minutes:options.minutes});pres(1540);formationFooter(ctx,P.accent,1838,O.foot);
+  }else if(layout==='tabellone'){
+    // Tabellone luminoso: cifre ambra su pannello scuro, come il segnapunti del palazzetto
+    ctx.fillStyle='#07090c';ctx.fillRect(0,0,W,H);const amber='#ffb020',PL={...P,text:'#f2f4f7',background:'#07090c'};
+    ctx.fillStyle='rgba(255,176,32,.07)';for(let gx=20;gx<W;gx+=28)for(let gy=20;gy<H;gy+=28){ctx.beginPath();ctx.arc(gx,gy,2.4,0,Math.PI*2);ctx.fill()}
+    ctx.textAlign='center';ctx.fillStyle=amber;ctx.font='700 34px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='10px';ctx.fillText(kick,W/2,150);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    ctx.fillStyle='#f2f4f7';ctx.globalAlpha=.8;ctx.font='500 28px Oswald, sans-serif';ctx.fillText(reportFit(ctx,[dt(x.date).f,matchPlace(x)].filter(Boolean).join('   ·   ').toUpperCase(),900),W/2,200);ctx.globalAlpha=1;
+    ctx.fillStyle='#111419';reportRoundRect(ctx,60,260,960,640,36);ctx.fill();ctx.strokeStyle='#2a2f38';ctx.lineWidth=10;ctx.stroke();
+    const side=(name,img,cx)=>{if(img){const r=Math.min(110/img.width,110/img.height);ctx.drawImage(img,cx-img.width*r/2,330-img.height*r/2,img.width*r,img.height*r)}
+      ctx.fillStyle='#f2f4f7';ctx.font=`700 ${fitFormationName(ctx,name.toUpperCase(),380,46,26)}px Oswald, sans-serif`;ctx.textAlign='center';ctx.fillText(name.toUpperCase(),cx,img?440:400)};
+    side(team.name||'NOI',logos[0],290);side(x.opp||'OSPITI',logos[1],790);
+    for(const [v,cx] of [[R.played?R.gf:'–',290],[R.played?R.ga:'–',790]]){ctx.fillStyle='#050608';reportRoundRect(ctx,cx-170,480,340,300,22);ctx.fill();
+      ctx.save();ctx.shadowColor=amber;ctx.shadowBlur=40;ctx.fillStyle=amber;ctx.font='700 250px Oswald, sans-serif';ctx.textAlign='center';ctx.fillText(v,cx,730);ctx.restore()}
+    ctx.fillStyle=amber;ctx.beginPath();ctx.arc(W/2,590,12,0,Math.PI*2);ctx.arc(W/2,670,12,0,Math.PI*2);ctx.fill();
+    drawPill(ctx,O,W/2,845,30);
+    resultReport(ctx,x,R,PL,980,1700,{empty,minutes:options.minutes});if(options.full)resultPresent(ctx,R,PL,1730);
+    ctx.fillStyle=amber;ctx.font='700 30px Oswald, sans-serif';ctx.textAlign='center';if('letterSpacing' in ctx)ctx.letterSpacing='10px';ctx.fillText(R.played?'FINALE':'PROSSIMA PARTITA',W/2,1860);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  }else if(layout==='giornale'){
+    // Prima pagina di giornale: carta chiara, titolone con l'esito, risultato e tabellino
+    const paper='#f3efe6',ink='#151515',PG={...P,text:ink,background:paper};ctx.fillStyle=paper;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(0,0,0,.035)';for(let i=0;i<2600;i++){ctx.fillRect((i*733)%W,(i*389)%H,2,2)}
+    ctx.textAlign='center';ctx.fillStyle=ink;ctx.font='700 30px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='12px';ctx.fillText('EDIZIONE STRAORDINARIA',W/2,110);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    const mast=(team.name||'La nostra squadra').toUpperCase();ctx.font=`700 ${fitFormationName(ctx,mast,960,92,44)}px Oswald, sans-serif`;ctx.fillText(mast,W/2,215);
+    ctx.fillRect(60,245,960,8);ctx.fillRect(60,262,960,3);
+    ctx.font='500 28px Oswald, sans-serif';ctx.fillText(reportFit(ctx,[dt(x.date).f,kick,matchPlace(x)].filter(Boolean).join('   ·   ').toUpperCase(),940),W/2,305);ctx.fillRect(60,325,960,3);
+    const head=R.played?(R.gf>R.ga?'VITTORIA!':R.gf<R.ga?'SCONFITTA':'PAREGGIO'):'SI GIOCA!';ctx.fillStyle=R.played&&R.gf>R.ga?P.accent:ink;
+    ctx.font=`700 ${fitFormationName(ctx,head,960,230,120)}px Oswald, sans-serif`;ctx.fillText(head,W/2,560);
+    ctx.fillStyle=ink;const line=(team.name||'Noi')+'  '+(R.played?R.gf+' – '+R.ga:'vs')+'  '+(x.opp||'');ctx.font=`700 ${fitFormationName(ctx,line,960,76,40)}px Oswald, sans-serif`;ctx.fillText(line,W/2,680);
+    ctx.font='italic 500 34px Georgia, serif';ctx.globalAlpha=.8;ctx.fillText(reportFit(ctx,R.scorers.length?'Decidono '+R.scorers.slice(0,3).map(e=>e.m.nick).join(', ')+(R.scorers.length>3?' e altri':''):O.foot,940),W/2,745);ctx.globalAlpha=1;
+    ctx.fillRect(60,790,960,3);
+    resultReport(ctx,x,R,PG,850,1650,{empty,minutes:options.minutes});if(options.full)resultPresent(ctx,R,PG,1680);
+    ctx.fillRect(60,1790,960,3);ctx.font='italic 500 34px Georgia, serif';ctx.fillText(O.foot,W/2,1850);
+  }else if(layout==='minimal'){
+    // Essenziale: solo il risultato enorme, i nomi delle squadre e i marcatori
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.textAlign='center';
+    ctx.fillStyle=P.accent;ctx.font='700 30px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='10px';ctx.fillText(kick,W/2,200);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    ctx.fillStyle=P.text;ctx.globalAlpha=.7;ctx.font='500 28px Oswald, sans-serif';ctx.fillText(dt(x.date).f.toUpperCase(),W/2,250);ctx.globalAlpha=1;
+    ctx.font='700 420px Oswald, sans-serif';ctx.fillStyle=P.text;ctx.textAlign='right';ctx.fillText(R.played?R.gf:'–',W/2-60,720);ctx.textAlign='left';ctx.fillText(R.played?R.ga:'–',W/2+60,720);
+    ctx.fillStyle=P.accent;ctx.fillRect(W/2-22,520,44,14);
+    ctx.fillStyle=P.text;ctx.textAlign='center';for(const [nm,cx] of [[team.name||'Noi',W/2-230],[x.opp||'',W/2+230]]){ctx.font=`700 ${fitFormationName(ctx,nm.toUpperCase(),420,44,24)}px Oswald, sans-serif`;ctx.fillText(nm.toUpperCase(),cx,800)}
+    ctx.fillStyle=O.color;ctx.font='700 40px Oswald, sans-serif';if('letterSpacing' in ctx)ctx.letterSpacing='12px';ctx.fillText(O.label,W/2,890);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+    ctx.fillStyle=P.text;ctx.globalAlpha=.2;ctx.fillRect(W/2-200,940,400,3);ctx.globalAlpha=1;
+    resultReport(ctx,x,R,P,1010,1720,{empty,minutes:options.minutes});if(options.full)resultPresent(ctx,R,P,1740);
   }else{
     const ink=fxContrast(P.accent);ctx.fillStyle=P.accent;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,560);ctx.lineTo(0,720);ctx.closePath();ctx.fill();
     ctx.save();ctx.globalAlpha=.12;ctx.fillStyle=ink;ctx.font='700 300px Oswald, sans-serif';ctx.textAlign='left';ctx.fillText('FULL',-20,330);ctx.fillText('TIME',560,640);ctx.restore();
