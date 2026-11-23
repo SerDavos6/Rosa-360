@@ -60,7 +60,7 @@ function confetti(){if(confetti.on||matchMedia('(prefers-reduced-motion: reduce)
 // ===== Storico contro un avversario =====
 function h2hCard(tid,opp,exId,quiet){const k=String(opp||'').trim().toLowerCase();if(!k)return '';
   const l=S.matches.filter(x=>x.tid===tid&&x.played&&x.id!==exId&&String(x.opp||'').trim().toLowerCase()===k).sort((a,b)=>a.date<b.date?1:-1);
-  if(!l.length)return quiet?'':`<div class="card"><b>Storico contro ${esc(opp)}</b><p class="mu" style="margin:6px 0 0">Prima volta contro questa squadra.</p></div>`;
+  if(!l.length)return quiet?'':`<div class="card h2n">${ic('shield')}<div><b>${esc(opp)}</b><span class="mu">Nessun precedente tra voi</span></div><span class="tag2 on">Prima sfida</span></div>`;
   const r=teamRec(l);return `<div class="card"><b>Storico contro ${esc(opp)}</b><p class="mu" style="margin:6px 0 8px">${r.g} ${r.g===1?'partita':'partite'} · ${r.v}V ${r.n}N ${r.p}P · gol ${r.gf}-${r.ga}</p>${l.slice(0,5).map(x=>`<div class="lr"><span class="mu" style="width:78px">${esc(dt(x.date).f)}</span><span class="mu" style="flex:1">${esc(x.tourn||'Amichevoli')}</span><b>${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?'v':x.gf<x.ga?'p':'n'}" style="margin:0 0 0 8px">${x.gf>x.ga?'V':x.gf<x.ga?'P':'N'}</i></div>`).join('')}</div>`}
 function h2hLive(v){const e=document.getElementById('h2h-live');if(e)e.innerHTML=h2hCard(S.tid,v,null,true)}
 
