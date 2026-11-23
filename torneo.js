@@ -492,6 +492,33 @@
     const ri = B ? B.rounds.findIndex(r => r.keys.includes(it.last)) : -1, off = hasGroups(o) ? 1 : 0, n = it.last ? it.N[it.last] : null;
     return stepsHtml(names, Math.max(off, ri + off), !!(n && n.w));
   }
+  // Palmarès per la carta dei dirigenti: i tornei conclusi e come è andata la propria squadra
+  window.trPalmares = tid => {
+    if (tid !== S.tid) return [];
+    const out = [];
+    tourList().forEach(o => {
+      try {
+        if (!o.mine) return;
+        const me = norm(o.mine);
+        if (hasKo(o)) {
+          let N, keys, finals;
+          if (fmtOf(o) === 'memorial') { N = bracketMemorial(o); keys = Object.keys(N); finals = keys.filter(k => k[0] === 'F'); }
+          else { const B = bracketGeneric(o); if (!B.rounds.length) return; N = B.N; keys = B.rounds.flatMap(r => r.keys); finals = B.rounds[B.rounds.length - 1].keys; }
+          if (!finals.every(k => N[k] && N[k].w)) return;
+          const mine = keys.filter(k => N[k] && ((N[k].h && norm(N[k].h) === me) || (N[k].a && norm(N[k].a) === me)));
+          if (!mine.length) return;
+          const k = mine[mine.length - 1], n = N[k], won = n.w && norm(n.w) === me;
+          out.push({ name: o.name, txt: finals.includes(k) ? (won ? 'Vinto: ' : 'Finale persa: ') + n.title : 'Fuori: ' + n.title });
+        } else if (hasGroups(o)) {
+          const gl = GLn(o), g = gl.find(x => o.groups[x].some(y => norm(y) === me));
+          if (!g || gl.some(x => !gdone(o, x))) return;
+          const pos = standings(o, g).findIndex(r => norm(r.n) === me) + 1;
+          if (pos) out.push({ name: o.name, txt: pos + 'º posto' + (gl.length > 1 ? ' nel girone ' + g : '') });
+        }
+      } catch (e) {}
+    });
+    return out;
+  };
   window.trHomeGo = (id, v, c, sel) => { trOpen(); const s = st(); const same = s.id === id; s.id = id; s.v = v; if (!same) s.g = null; s.c = c || null; s.sel = sel || null; s.sx = {}; R(); };
   window.torneoHome = function () {
     if (X()) return '';

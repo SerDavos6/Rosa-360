@@ -181,6 +181,7 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .iotop{display:flex;align-items:center;gap:10px}.iotop h1{flex:1;margin:0}.iotop .s .ic{width:18px;height:18px}
 .iose{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:14px 16px;margin:12px 0}.iose>span{flex:1;min-width:0;display:flex;flex-direction:column;white-space:normal}.iose .ic{flex:none;width:22px;height:22px;color:var(--mu)}
 .iohd{display:flex;gap:14px;align-items:center;margin:12px 0}.iohd>.fw{flex:0 0 168px}.iohd>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;white-space:normal}
+.fut.staff{background:linear-gradient(160deg,#3a4458,#121823);color:#f4f6f9;border-color:#c0c7d1}.fut.staff .ov .ic{width:30px;height:30px}.fut.staff .ps{letter-spacing:.1em}.fut.staff .ph{background:rgba(255,255,255,.12)}
 .iopr{border:2px solid var(--acf)}.iopr .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .iopr .row2 button{min-height:46px;font-weight:800}.iopr .row2 button.on{background:var(--acf);color:var(--on);border-color:var(--acf)}
 /* --- home: ultime partite in righe compatte --- */
@@ -296,8 +297,8 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=16"></script><script src="match-report.js?v=26"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
-<script src="torneo.js?v=25"></script>
+<script src="ui-extra.js?v=17"></script><script src="match-report.js?v=26"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="torneo.js?v=26"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -449,10 +450,19 @@ function ovr(m,f){
   let o=55+t.g*w[0]+t.a*w[1]+t.p*.6-t.og*3-t.y*.5-t.r*2;
   if(m.pos==="P")o+=t.p*1-t.gs*.7+t.ps*2;
   return Math.max(40,Math.min(99,Math.round(o)))}
+// Bilancio della squadra nella stagione: è la "statistica" dei dirigenti, che non giocano
+function staffStats(tid){const ms=S.matches.filter(x=>x.tid===tid&&x.played&&inSeason(x)),p=ms.length,v=ms.filter(x=>x.gf>x.ga).length,n=ms.filter(x=>x.gf===x.ga).length,gf=ms.reduce((a,x)=>a+(+x.gf||0),0),gs=ms.reduce((a,x)=>a+(+x.ga||0),0);
+  return {p,v,n,s:p-v-n,gf,gs,pct:p?Math.round(v/p*100):0,gfp:p?(gf/p).toFixed(1):"0.0",gsp:p?(gs/p).toFixed(1):"0.0"}}
+const isStaff=m=>m&&m.role==="dirigente";
 function fut(m,ctl){
   const t=stats(m),player=m.role==="giocatore",ini=esc((m.nick||"?").slice(0,1).toUpperCase());
   const ph=m.photo?`<img class="ph" src="${safeSrc(m.photo)}" alt="">`:`<div class="ph">${ini}</div>`;
   const ps=m.role==="dirigente"?"DIR":m.pos,o=player?ovr(m):0,tier=!player?"":o>=88?"t-x":o>=75?"t-g":o>=65?"t-s":"t-b";
+  if(isStaff(m)){const s=staffStats(m.tid),l=S.teams.find(t=>t.id===m.tid)?.logo;
+    return `<div class="card" style="padding:0;border:0;background:none"><div class="fut staff ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
+  <div class="ov">${ic("shield")}</div><div class="ps">DIR</div>${l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""}
+  ${ph}<div class="nk">${esc(m.nick)}</div><div class="st"><div><b>${s.p}</b>PART</div><div><b>${s.v}</b>VITT</div><div><b>${s.pct}%</b>VITT.</div></div></div>
+  <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${ctl?(m.uid?"":" · senza account"):""}</div>${ctl||""}</div>`}
   return `<div class="card" style="padding:0;border:0;background:none"><div class="fut ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
   ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
   ${ph}<div class="nk">${esc(m.nick)}${m.captain?" ©":""}</div>
@@ -749,16 +759,15 @@ function playerModal(id,inline){
   const rows=gm.map(x=>{const s=(x.stats||{})[m.id]||{},bits=[s.g?ic("ball")+s.g:"",s.a?ic("assist")+s.a:"",s.og?ic("og")+s.og:"",s.y?ic("card","y")+s.y:"",s.r?ic("card","r")+s.r:"",m.pos==="P"&&s.gs?ic("glove")+s.gs:"",m.pos==="P"&&s.ps?"rig. parati "+s.ps:""].filter(Boolean).join(" ");
     return `<div class="lr"><span class="mu" style="width:64px">${esc(dt(x.date).f.slice(0,6))}</span><b style="flex:1">vs ${esc(x.opp)} <span class="mu">${esc(x.gf)}–${esc(x.ga)}</span></b><span>${bits||"–"}</span></div>`}).join("");
   const info=`${m.desc?`<div class="pdesc">${esc(m.desc)}</div>`:""}
-  <div class="pgrid">${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
-  ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}`;
+  ${isStaff(m)?staffInfo(m,tile):""}<div class="pgrid"${isStaff(m)?' style="display:none"':""}>${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
+  ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}${isStaff(m)?"":`<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}`}`;
   if(inline)return info;
   return `<div class="pmw" onclick="if(event.target===this){S.pd=null;render()}"><div class="pm"><button class="s" style="float:right" onclick="S.pd=null;render()">✕ Chiudi</button>
   <h2 style="margin-top:0">${esc(m.nick)}${m.captain?" ©":""}</h2><div class="mu">${esc([m.name,m.role==="dirigente"?"Dirigente":POS[m.pos],pl&&m.num?"#"+m.num:""].filter(Boolean).join(" · "))}</div>
   ${info}</div></div>`}
 // Scheda "Io": la propria carta, la presenza alla prossima partita e le proprie statistiche; impostazioni e profilo dall'ingranaggio
 function ioView(t,can){
-  const me=myMember(),top=`<div class="iotop"><h1>Io</h1><button class="s" onclick="S.tab='imp';render()">${ic("gear")} Impostazioni</button></div>`,
-    set=`<button class="card iose" onclick="S.tab='imp';render()">${ic("gear")}<span><b>Impostazioni e profilo</b><span class="mu">Foto e nome, aspetto, notifiche, squadra e account</span></span>${ic("chev")}</button>`;
+  const me=myMember(),top=`<div class="iotop"><h1>Io</h1><button class="s" onclick="S.tab='imp';render()">${ic("gear")} Impostazioni</button></div>`;
   if(!me)return top+impView(t,can);
   const pl=me.role==="giocatore",n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
   const x=S.matches.filter(m=>m.tid===t.id&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0];
@@ -767,9 +776,13 @@ function ioView(t,can){
     pres=`<div class="card iopr"><b>vs ${esc(x.opp)}${matchPhase(x)?" · "+esc(matchPhase(x)):""}</b><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${matchPlace(x)?" · "+esc(matchPlace(x)):""}</div>
     <div class="row2"><button class="${isIn?"on":""}" onclick="myPresence('${x.id}','${me.id}',true)">${isIn?"✓ ":""}Ci sono</button><button onclick="myPresence('${x.id}','${me.id}',false)">Non ci sono</button></div></div>`}
   const hd=pl?`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><span class="eb">La tua stagione</span><span class="mu">Overall, gol e presenze si aggiornano dopo ogni partita.</span><button onclick="shareCard('${me.id}')">${ic("share")} Condividi la carta</button></div></div>`
-    :`<div class="card pcard">${crest(me.photo,ic("user"),"xl")}<div class="nm2">${esc(me.nick)}</div><div class="mu">Dirigente</div></div>`;
-  return top+hd+pres+set+playerModal(me.id,true)+set}
+    :`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><span class="eb">La tua squadra</span><span class="mu">Il bilancio della stagione e i tornei conclusi.</span>${can?`<button onclick="setEdit(true);S.tab='home';S.mid=null;openNm()">${ic("plus")} Nuova partita</button>${x?`<button class="p" onclick="liveStart('${x.id}')">Avvia la diretta</button>`:""}`:""}</div></div>`;
+  return top+hd+pres+playerModal(me.id,true)}
 
+function staffInfo(m,tile){const s=staffStats(m.tid),pal=typeof trPalmares==="function"?trPalmares(m.tid):[];
+  return `<h2>Bilancio della squadra</h2><div class="pgrid">${tile(s.p,"PARTITE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
+  ${pal.length?`<h2>Palmarès</h2><div class="card" style="padding:4px 14px">${pal.map(p=>`<div class="lr">${ic("trophy")}<b style="flex:1">${esc(p.name)}</b><span>${esc(p.txt)}</span></div>`).join("")}</div>`:""}
+  <div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
 function homeTab(t,mgr){return calView(t,mgr,true)}
 function calView(t,mgr,home){
   const all=S.matches.filter(x=>x.tid===t.id),ms=all.filter(inSeason),tor=[...new Set(ms.map(x=>x.tourn||"Amichevoli"))];
