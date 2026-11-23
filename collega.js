@@ -61,6 +61,8 @@
     }).catch(() => {}).finally(() => { c.busy = false; c.t = Date.now(); });
   }
 
+  // dati della partita collegata (squadra avversaria iscritta), per la scheda Info: marcatori solo se il server li manda
+  window.PAIRDATA = id => { const c = PAIR[id]; return c && c.d ? c.d : null; };
   window.pairedBox = function (x) {
     if (!x || S.fan || !x.id) return '';
     pairLoad(x.id);

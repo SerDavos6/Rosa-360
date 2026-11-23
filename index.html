@@ -177,6 +177,23 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
+/* --- partita: intestazione con esito, Info e Statistiche compatte --- */
+.mres{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.1em}
+.mres.v{background:rgba(34,197,94,.16);color:#4ade80}.mres.p{background:rgba(255,155,107,.16);color:#ff9b6b}.mres.n{background:rgba(148,163,184,.18);color:var(--mu)}
+.ich{display:flex;align-items:center;gap:10px;margin:0 0 12px}.tag2{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:var(--bg);border:1px solid var(--bd);font-size:13px;font-weight:800}
+.tag2.on{background:color-mix(in srgb,var(--acf) 16%,transparent);border-color:transparent;color:var(--acf)}.tag2 .ic{width:15px;height:15px}
+.idg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.idt{display:flex;flex-direction:column;gap:4px;min-width:0}.idt>span{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}.idt .ic{width:14px;height:14px}.idt b{font-size:15px;overflow-wrap:anywhere}
+.ipl{display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd);margin-top:12px;padding-top:12px}.ipl>.ic{flex:none;color:var(--mu)}.ipl b{flex:1;min-width:0}.ipl .s{flex:none}
+.ik{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.imc{display:grid;grid-template-columns:1fr 1fr;gap:12px}.imc>div{display:flex;flex-direction:column;gap:8px;min-width:0}.imc .r{align-items:flex-end;text-align:right}.imc>div:only-child{grid-column:1/-1}
+.isc{display:flex;align-items:center;gap:8px;font-weight:600}.isc .ic{flex:none;width:16px;height:16px;color:var(--acf)}.isc b{color:var(--mu);font-size:13px}
+.stt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:4px 0}.stt>div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0}.stt .ic{width:18px;height:18px;color:var(--acf)}.stt b{font:600 24px/1 var(--num)}.stt span{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.04em}
+.stb{padding:0;overflow:hidden}.sth,.str{display:grid;grid-template-columns:34px minmax(0,1fr) 40px 40px 52px;align-items:center;gap:10px;padding:10px 14px}
+.sth{padding-bottom:4px;font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}.sth>span{grid-column:1/3;padding-left:44px}.sth .ic{width:15px;height:15px;justify-self:center}
+.str+.str{border-top:1px solid var(--bd)}.str b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.str>span:not(.sav){text-align:center;font:600 18px var(--num)}.str .z,.sgk .z{color:var(--mu);opacity:.5}
+.sav{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--acf) 16%,transparent);color:var(--acf);font:700 13px var(--num);overflow:hidden}.sav img{width:100%;height:100%;object-fit:cover}
+.sgk{display:flex;align-items:center;gap:12px}.sgk .k{background:var(--tx);color:var(--bg)}.sgk .k .ic{width:18px;height:18px}.sgk .n{flex:1;min-width:0;display:flex;flex-direction:column}.sgk .v{display:flex;flex-direction:column;align-items:flex-end}.sgk .v b{font:600 22px var(--num)}.sgk .v span{font-size:10px;font-weight:700;color:var(--mu)}
+.lr.lrm{cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;border-radius:10px}.lr.lrm>.ic{flex:none;width:16px;height:16px;color:var(--mu)}
 /* --- link Instagram nella scheda giocatore --- */
 .tnw{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}.tnw .tn{flex:none;width:100%}
 .tnw .ssn{min-height:28px;padding:2px 8px;font-size:12px;border-radius:8px;max-width:100%}
@@ -307,7 +324,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=29"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=29"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
 <script src="torneo.js?v=26"></script>
 
 <script>
@@ -341,6 +358,8 @@ const IC={
  ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>',
  pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',
  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ field:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.5"/>',
  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
@@ -805,7 +824,7 @@ function playerModal(id,inline){
   const t=stats(m),pl=m.role==="giocatore",gm=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).sort((a,b)=>a.date<b.date?1:-1);
   const tile=(n,l)=>`<div class="tl"><b>${n}</b>${l}</div>`;
   const rows=gm.map(x=>{const s=(x.stats||{})[m.id]||{},bits=[s.g?ic("ball")+s.g:"",s.a?ic("assist")+s.a:"",s.og?ic("og")+s.og:"",s.y?ic("card","y")+s.y:"",s.r?ic("card","r")+s.r:"",m.pos==="P"&&s.gs?ic("glove")+s.gs:"",m.pos==="P"&&s.ps?"rig. parati "+s.ps:""].filter(Boolean).join(" ");
-    return `<div class="lr"><span class="mu" style="width:64px">${esc(dt(x.date).f.slice(0,6))}</span><b style="flex:1">vs ${esc(x.opp)} <span class="mu">${esc(x.gf)}–${esc(x.ga)}</span></b><span>${bits||"–"}</span></div>`}).join("");
+    return `<button class="lr lrm" onclick="openMatchFromPlayer('${x.id}')"><span class="mu" style="width:64px">${esc(dt(x.date).f.slice(0,6))}</span><b style="flex:1">vs ${esc(x.opp)} <span class="mu">${esc(x.gf)}–${esc(x.ga)}</span></b><span>${bits||"–"}</span>${ic("chev")}</button>`}).join("");
   const info=`${igLink(m)}${m.desc?`<div class="pdesc">${esc(m.desc)}</div>`:""}
   ${isStaff(m)?staffInfo(m,tile):""}<div class="pgrid"${isStaff(m)?' style="display:none"':""}>${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
   ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}${isStaff(m)?"":`<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}`}`;
@@ -831,6 +850,8 @@ function staffInfo(m,tile){const s=staffStats(m),pal=typeof trPalmares==="functi
   return `<h2>Bilancio nelle partite con te presente</h2><div class="pgrid">${tile(s.p,"PRESENZE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
   ${pal.length?`<h2>Palmarès</h2><div class="card" style="padding:4px 14px">${pal.map(p=>`<div class="lr">${ic("trophy")}<b style="flex:1">${esc(p.name)}</b><span>${esc(p.txt)}</span></div>`).join("")}</div>`:""}
   <div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
+// dalla scheda di un giocatore si apre la partita (scheda Statistiche, dove si vede cosa ha fatto)
+function openMatchFromPlayer(id){S.pd=null;if(S.tab!=="home"&&S.tab!=="cal")S.tab="home";S.mid=id;LIVE.mid=null;render();S.mt="stats";setTimeout(render,0)}
 function homeTab(t,mgr){return calView(t,mgr,true)}
 function calView(t,mgr,home){
   const all=S.matches.filter(x=>x.tid===t.id),ms=all.filter(inSeason),tor=[...new Set(ms.map(x=>x.tourn||"Amichevoli"))];
@@ -934,19 +955,33 @@ function matchParts(x,mgr){
   <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>
   ${mgr?`<p style="margin-top:22px"><button class="d" style="width:100%" onclick="ask({title:'Eliminare la partita?',msg:'Spariscono anche gol, presenze e statistiche. Non si può annullare.',ok:'Elimina',danger:1,fn:()=>{del('matches/${x.id}');S.mid=null;S.mt=null}})">Elimina partita</button></p>`:""}`;
 
-  // vista del giocatore (sola lettura): risultato, la sua presenza, storico, dettagli
+  // vista del giocatore (sola lettura): presenza in un'etichetta, dettagli su una riga, marcatori, storico
   const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=rs.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
-  const infoP=`${me?`<div class="card"><b>Presenza</b>${x.played?`<p style="margin:8px 0 0">${isIn?"Eri presente a questa partita.":"Non risulti presente a questa partita."}</p>`:`<p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button>`}</div>`:""}
-  <div class="card"><b>Dettagli</b>${md.location?`<div class="mu" style="margin-top:10px">Luogo</div><div>${esc(md.location)}</div>`:""}${md.field?`<div class="mu" style="margin-top:10px">Campo</div><div>${esc(md.field)}</div>`:""}${md.time?`<div class="mu" style="margin-top:10px">Ora</div><div>${esc(md.time)}</div>`:""}<p style="margin:12px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p></div>
-  ${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
-  <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`;
+  const pc=(typeof PAIRDATA==="function"?PAIRDATA(x.id):null),oppSc=pc&&Array.isArray(pc.scorers)?pc.scorers:null;
+  const ours=rs.filter(m=>pr.includes(m.id)&&+((x.stats||{})[m.id]||{}).g>0).map(m=>({n:m.nick,g:+x.stats[m.id].g})).sort((a,b)=>b.g-a.g);
+  const scRow=(n,g)=>`<div class="isc">${ic("ball")}<span>${esc(n)}</span>${g>1?`<b>×${g}</b>`:""}</div>`;
+  const marc=x.played&&(ours.length||(oppSc&&oppSc.length))?`<div class="card"><span class="ik">Marcatori</span><div class="imc"><div>${ours.map(o=>scRow(o.n,o.g)).join("")||'<span class="mu">Nessun marcatore registrato</span>'}</div>${oppSc&&oppSc.length?`<div class="r">${oppSc.map(o=>scRow(o.nick||o.n||"",+o.g||1)).join("")}</div>`:""}</div></div>`:"";
+  const det=(k,i,v)=>v?`<div class="idt"><span>${ic(i)} ${k}</span><b>${esc(v)}</b></div>`:"";
+  const infoP=`${me&&x.played?`<div class="ich"><span class="tag2${isIn?" on":""}">${isIn?ic("check")+" C’eri":"Non c’eri"}</span><span class="mu">${cnt} present${cnt===1?"e":"i"}</span></div>`:""}
+  ${me&&!x.played?`<div class="card"><b>Presenza</b><p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button></div>`:""}
+  <div class="card"><div class="idg">${det("Data","cal",dt(x.date).f)}${det("Ora","clock",md.time)}${det("Campo","field",md.field)}</div>${md.location||matchPlace(x)?`<div class="ipl">${ic("pin")}<b>${esc(md.location||matchPlace(x))}</b><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Maps</button></div>`:""}</div>
+  ${marc}${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
+  ${x.played?"":`<p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`}`;
   const info=mgr?infoM:infoP;
   const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>`;
-  const rowsP=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{},chips=["g","a","og","y","r"].concat(gkK(m,s)).filter(k=>+s[k]>0).map(k=>`<span class="tag" style="display:inline-flex;align-items:center;gap:5px">${LBL[k][1]} ${LBL[k][0]} <b>${s[k]}</b></span>`).join("");
-    return chips?`<div class="card sp"><b>${esc(m.nick)}</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${chips}</div></div>`:""}).join("");
+  // statistiche in sola lettura: totali della partita, tabella compatta, portiere a parte, gli altri presenti in una riga
+  const PS=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore"),SV=m=>(x.stats||{})[m.id]||{},num=(m,k)=>+SV(m)[k]||0;
+  const tots=[["g","ball","GOL"],["a","assist","ASSIST"],["c","card","CARTELLINI"],["gs","glove","SUBITI"]].map(([k,i,l])=>[i,l,PS.reduce((t,m)=>t+(k==="c"?num(m,"y")+num(m,"r"):num(m,k)),0)]);
+  const gks=PS.filter(m=>m.pos==="P"||num(m,"gs")||num(m,"ps")),fld=PS.filter(m=>!gks.includes(m)&&["g","a","og","y","r"].some(k=>num(m,k))).sort((a,b)=>num(b,"g")-num(a,"g")||num(b,"a")-num(a,"a"));
+  const quiet=PS.filter(m=>!gks.includes(m)&&!fld.includes(m));
+  const cl=v=>`<span class="${v?"":"z"}">${v||"–"}</span>`,av=m=>`<span class="sav">${m.photo?`<img src="${safeSrc(m.photo)}" alt="">`:esc(String(m.nick||"?").slice(0,2).toUpperCase())}</span>`;
+  const rowsP=PS.length?`<div class="card stt">${tots.map(([i,l,v])=>`<div>${ic(i,i==="card"?"y":undefined)}<b>${v}</b><span>${l}</span></div>`).join("")}</div>
+  ${fld.length?`<div class="card stb"><div class="sth"><span>Giocatore</span>${ic("ball")}${ic("assist")}${ic("card","y")}</div>${fld.map(m=>`<div class="str">${av(m)}<b>${esc(m.nick)}${num(m,"og")?` <small class="mu">(${num(m,"og")} autogol)</small>`:""}</b>${cl(num(m,"g"))}${cl(num(m,"a"))}${cl(num(m,"y")+num(m,"r")?`${num(m,"y")?num(m,"y")+"G":""}${num(m,"r")?" "+num(m,"r")+"R":""}`.trim():0)}</div>`).join("")}</div>`:""}
+  ${gks.map(m=>`<div class="card sgk"><span class="sav k">${ic("glove")}</span><span class="n"><b>${esc(m.nick)}</b><span class="mu">Portiere</span></span><span class="v"><b>${num(m,"gs")}</b><span>SUBITI</span></span><span class="v"><b class="${num(m,"ps")?"":"z"}">${num(m,"ps")||"–"}</b><span>RIG. PARATI</span></span></div>`).join("")}
+  ${quiet.length?`<p class="mu" style="white-space:normal;margin:4px 4px 0"><b style="color:var(--tx)">Presenti anche:</b> ${quiet.map(m=>esc(m.nick)).join(", ")}</p>`:""}`:"";
   const st=mgr?(rows?rows:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
-  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc([dt(x.date).f,md.time,matchPlace(x)].filter(Boolean).join(" · "))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
-  <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="mmid"><div class="sc2${lvNow()-(LIVE.popAt||0)<900?" pop":""}">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div>${liveClockHead(x,mgr)}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
+  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc(matchComp(x))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
+  <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="mmid"><div class="sc2${lvNow()-(LIVE.popAt||0)<900?" pop":""}">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div>${x.played?(r=>`<span class="mres ${r}">${r==="v"?"VITTORIA":r==="p"?"SCONFITTA":"PAREGGIO"}</span>`)(+x.gf>+x.ga?"v":+x.gf<+x.ga?"p":"n"):liveClockHead(x,mgr)}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
   <div class="mtabs">${[["info","Info"],["live","In diretta"],["stats","Statistiche"]].map(([k,n])=>`<button class="${tab===k?"on":""}" data-k="${k}" onclick="mTab('${k}')">${n}</button>`).join("")}</div></header>`;
   const foot=(mgr?liveDockHtml(x,tab):"")+(mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"");
   return {head,body:panel("info",info)+panel("live",live)+panel("stats",st),foot}}
