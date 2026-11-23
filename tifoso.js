@@ -28,6 +28,12 @@ st.textContent=`.favon{color:var(--ac)}.favon svg{fill:currentColor}
 .ftb .crest{width:28px;height:28px;min-width:28px;flex:none;border-radius:8px;font-size:14px}.ftb .crest .ic{width:16px;height:16px}.ftb{table-layout:fixed;min-width:0}.ftb td,.ftb th{border-bottom:0}.ftb .n{width:29px}.ftb .k{width:20px}.ftb .pt{width:34px}.ftb th,.ftb td{padding:9px 2px}.ftb td:first-child{padding-left:2px}
 .ftb tbody tr{cursor:pointer}.ftb .t{display:flex;align-items:center;gap:8px;min-width:0}.ftb .t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frs{display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.frs+.frs{border-top:1px solid var(--bd)}.frs .sc{font-weight:800;min-width:48px;text-align:center}.frs .mid{flex:1;min-width:0}
+.ofav{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px}.ofav button{flex:0 0 66px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;min-height:0;background:none;border:0;box-shadow:none;color:var(--tx);font-size:11px;font-weight:700}
+.ofav .crest{width:52px;height:52px;border-radius:50%;border:2px solid var(--acf)}.ofav span.n{max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ofav .add .crest{border:2px dashed var(--bd);background:none}
+.olv{display:block;width:100%;text-align:left;font:inherit;border:0;cursor:pointer;background:#0f172a;color:#fff;border-radius:22px;padding:14px 16px;margin-bottom:10px}
+.olv .t{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.85}.olv .sc{display:flex;align-items:center;gap:10px;margin:12px 0 4px}.olv .sc>span{flex:1;min-width:0;text-align:center;font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.olv .sc b{font:600 42px/1 var(--num);white-space:nowrap}.olv .min{display:block;text-align:center;font-size:12px;font-weight:700;color:#8fd6ae}
+.orow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:12px 14px;margin-bottom:8px}.orow .tm{flex:0 0 54px;text-align:center;font:600 17px var(--num)}.orow .mid{flex:1;min-width:0;display:flex;flex-direction:column}.orow .mid b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.orow .rs{font:600 20px var(--num);white-space:nowrap}
 .sbx{position:relative}.sbx>.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mu);pointer-events:none}.sbx input{padding-left:40px;margin:0}.shint{margin:8px 2px 0;white-space:normal}.bar .tn.fn{overflow-wrap:normal;word-break:normal;hyphens:none}`;
 document.head.appendChild(st);
 
@@ -146,12 +152,41 @@ function bodyHtml(){
   if(!r.teams.length&&!r.tours.length)return emptyState("trophy","Nessun risultato","Prova con un altro nome di squadra o di torneo.","");
   return (r.teams.length?`<h2>Squadre</h2>${r.teams.map(t=>tcard(t,false)).join("")}`:"")
     +(r.tours.length?`<h2>Tornei</h2>${r.tours.map((t,i)=>`<div class="card tcard" onclick="fanTour(${i})"><div class="crest">${ic("trophy")}</div><div class="mid"><b class="hd" style="font-size:20px">${esc(t.name)}</b><div class="mu">${t.n} squadr${t.n===1?"a":"e"}</div></div>${ic("chev")}</div>`).join("")}`:"")}
-function homeHtml(){
+// Tifoso: tre schede in basso. "Oggi" raccoglie le partite di oggi delle squadre preferite (in diretta, più tardi, finite),
+// "Cerca" è la ricerca di squadre e tornei, "Io" le impostazioni e l'account.
+const fanView=()=>S.browse?"cerca":(F.fv||(favs().length?"oggi":"cerca"));
+window.fanGo=function(v){F.fv=v;render();if(v==="cerca")focusQ();toTop()};
+function oggiHtml(){
+  const fa=favs(),n=new Date(),today=ymd(n),yest=ymd(new Date(n.getTime()-864e5));
+  const teams=fa.map(f=>S.teams.find(t=>t.id===f.id)||f);
+  const strip=`<div class="ofav">${teams.map(t=>`<button data-fid="${esc(t.id)}" onclick="fanOpen(this.dataset.fid)">${crest(t.logo,ic("ball"))}<span class="n">${esc(t.name||"")}</span></button>`).join("")}<button class="add" onclick="fanGo('cerca')"><span class="crest">${ic("plus")}</span><span class="n">Segui</span></button></div>`;
+  if(!fa.length)return `<h1 style="margin:0 0 4px">Oggi</h1>${strip}<div class="card mu" style="white-space:normal">Segui una squadra (tocca la stella ${ic("star")} quando la trovi in Cerca): qui vedrai le sue partite del giorno, la diretta e i risultati.</div>`;
+  const ids=new Set(fa.map(f=>f.id)),ms=S.matches.filter(x=>ids.has(x.tid));
+  const tn=x=>(S.teams.find(t=>t.id===x.tid)||{}).name||"";
+  const isLive=x=>!x.played&&(x.date===today||x.date===yest)&&((x.clock&&x.clock.since)||(x.events||[]).length);
+  const live=ms.filter(isLive),later=ms.filter(x=>!x.played&&x.date===today&&!isLive(x)).sort((a,b)=>(matchDetail(a).time||"")<(matchDetail(b).time||"")?-1:1),done=ms.filter(x=>x.played&&x.date===today);
+  const open=x=>`data-fid="${esc(x.tid)}" data-mid="${esc(x.id)}" onclick="fanOpen(this.dataset.fid,this.dataset.mid)"`;
+  const lv=x=>`<button class="olv" ${open(x)}><span class="t"><span>${esc([x.tourn,matchPhase(x)].filter(Boolean).join(" · ")||"Partita")}</span><span class="lvb">LIVE</span></span>
+    <span class="sc"><span>${esc(tn(x))}</span><b>${esc(x.gf)} – ${esc(x.ga)}</b><span>${esc(x.opp)}</span></span>${x.clock&&(x.clock.since||+x.clock.base)&&typeof lvFmt==="function"?`<span class="min">${esc(lvFmt(lvElapsed(x)))}</span>`:""}</button>`;
+  const row=(x,right)=>`<button class="card orow" ${open(x)}><span class="tm">${esc(matchDetail(x).time||"–")}</span><span class="mid"><b>${esc(tn(x))} – ${esc(x.opp)}</b><span class="mu">${esc([x.tourn,matchPhase(x)].filter(Boolean).join(" · ")||"Amichevole")}</span></span>${right}</button>`;
+  let body=(live.length?`<h2>In diretta</h2>${live.map(lv).join("")}`:"")
+    +(later.length?`<h2>Più tardi</h2>${later.map(x=>row(x,"")).join("")}`:"")
+    +(done.length?`<h2>Finite oggi</h2>${done.map(x=>row(x,`<span class="rs">${esc(x.gf)}–${esc(x.ga)}</span>`)).join("")}`:"");
+  if(!body){const nx=ms.filter(x=>!x.played&&x.date>today).sort((a,b)=>a.date<b.date?-1:1).slice(0,5);
+    body=`<p class="mu" style="white-space:normal">Oggi nessuna partita per le tue squadre.</p>`+(nx.length?`<h2>Prossime</h2>${nx.map(x=>row(x,`<span class="mu" style="white-space:nowrap">${esc(dt(x.date).f.slice(0,6))}</span>`)).join("")}`:"")}
+  return `<h1 style="margin:0">Oggi</h1><p class="mu" style="margin:2px 0 12px">${esc(n.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"}))}</p>${strip}${body}`}
+function cercaHtml(){
   const top=S.browse?`<button class="s" onclick="fanLeave()">${XI} Chiudi</button>`:F.uid?"":'<button class="s" onclick="fanExit()">Accedi</button>';
-  return `<div class="row"><h1 style="flex:1">${ic(S.browse?"search":"ball")} ${S.browse?"Cerca":"Tifoso"}</h1>${top}</div>
+  return `<div class="row"><h1 style="flex:1">${ic("search")} Cerca</h1>${top}</div>
   <div class="sbx">${SRCH}<input id="fq" type="search" enterkeyhint="search" placeholder="Nome di una squadra o di un torneo" aria-label="Cerca squadre e tornei" autocomplete="off" value="${esc(F.q)}" oninput="fanSearch(this.value)"></div>
   <p class="mu shint">Trova una squadra o un torneo per seguire partite, risultati, dirette e classifiche.</p>
-  ${F.busy?'<p class="mu">Carico…</p>':""}<div id="fres" style="margin-top:10px">${bodyHtml()}</div>${S.browse?"":settingsHtml()}`}
+  ${F.busy?'<p class="mu">Carico…</p>':""}<div id="fres" style="margin-top:10px">${bodyHtml()}</div>`}
+function homeHtml(){
+  const v=fanView();
+  if(S.browse)return plain(cercaHtml());
+  const nav=[["oggi",ic("home"),"Oggi"],["cerca",ic("search"),"Cerca"],["io",ic("user"),"Io"]];
+  const body=v==="oggi"?oggiHtml():v==="io"?`<h1 style="margin:0">${ic("user")} Io</h1>${settingsHtml()}`:cercaHtml();
+  return `<div class="view"><div class="pg">${body}</div></div><nav class="bn">${nav.map(([k,i,n])=>`<button class="${v===k?"on":""}" onclick="fanGo('${k}')"><span>${i}</span>${n}</button>`).join("")}</nav>`}
 function settingsHtml(){
   const seg=`<div class="seg">${[["team","Squadra"],["auto","Auto"],["light","Chiaro"],["dark","Scuro"]].map(([k,n])=>`<button class="${getMode()===k?"on":""}" onclick="setMode('${k}')">${n}</button>`).join("")}</div>`;
   const acc=F.uid?`<div class="card"><b>Account</b><p class="mu" style="white-space:normal">Profilo tifoso: le squadre preferite sono salvate sul tuo account e le ritrovi su ogni telefono.${F.pf&&F.pf.role?" Il tuo profilo da giocatore o dirigente resta salvato.":""}</p><div class="pbtns"><button onclick="fanSignOut()">Esci dall’account</button><button onclick="fanToPlayer()">Passa a giocatore o dirigente</button></div></div>`
@@ -226,7 +261,7 @@ window.fanRender=function(){
   let html,key;
   if(t){html=teamHtml(t);key=["f",S.tid,S.tab,S.mid||"",S.cs||"",S.rk||"",S.ps||""].join("|")}
   else if(F.tour){html=plain(tourHtml());key="ft|"+F.tour.name+"|"+(F.ts||"")+"|"+(S.tr&&S.tr.v||"")+(S.tr&&S.tr.g||"")+(S.tr&&S.tr.c||"")}
-  else{html=plain(homeHtml());key="fh"}
+  else{html=homeHtml();key="fh|"+fanView()}
   morphInto(a,html);keepScroll(key,oldTop);if(t)fxAfter(fx);
   if(S.err){toast(S.err);S.err=""}};
 })();

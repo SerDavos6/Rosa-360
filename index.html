@@ -174,6 +174,14 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .lvbar{margin-top:12px;padding:12px;border-radius:14px;background:var(--ac2)}.lvbar>b{display:block;margin-bottom:8px}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
+/* --- interruttore Modifica e scheda Io --- */
+.ib.edt.on{background:#ffd54a;border-color:#e0a400;color:#3d2a00}
+.edband{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;margin:0 0 12px;border-radius:12px;background:#fff4d6;color:#5a3c00;font-size:13px;font-weight:600;white-space:normal}
+.edband .ic{flex:none;width:18px;height:18px}.edband span{flex:1}.edband .s{min-height:36px;padding:0 12px;background:#fff;color:#5a3c00;border-color:#e0a400}
+.iotop{display:flex;align-items:center;gap:10px}.iotop h1{flex:1;margin:0}
+.iohd{display:flex;gap:14px;align-items:center;margin:12px 0}.iohd>.fw{flex:0 0 168px}.iohd>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;white-space:normal}
+.iopr{border:2px solid var(--acf)}.iopr .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.iopr .row2 button{min-height:46px;font-weight:800}.iopr .row2 button.on{background:var(--acf);color:var(--on);border-color:var(--acf)}
 /* --- home: ultime partite in righe compatte --- */
 .hlist{padding:2px 0;overflow:hidden}
 .hrow{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 16px;background:none;border:0;border-radius:0;box-shadow:none;text-align:left;font:inherit;color:inherit}
@@ -287,7 +295,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=15"></script><script src="match-report.js?v=25"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=18"></script><script src="tifoso.js?v=15"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=16"></script><script src="match-report.js?v=26"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=25"></script>
 
 <script>
@@ -318,6 +326,9 @@ const IC={
  share:'<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>',
  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
  chev:'<path d="M9 5l7 7-7 7"/>',
+ pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+ bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -450,6 +461,12 @@ function fut(m,ctl){
 // ---- ruoli ----
 const myMember=()=>S.members.find(m=>m.tid===S.tid&&m.uid===S.uid);
 const canManage=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||m.captain||m.admin)};
+// Interruttore "Modifica": chi ha i poteri vede l'app come gli altri finché non lo accende (ricordato su questo telefono)
+S.edit=(()=>{try{return localStorage.getItem("edit")==="1"}catch(e){return false}})();
+const editOn=()=>canManage()&&!!S.edit;
+function setEdit(on){S.edit=!!on;try{localStorage.setItem("edit",on?"1":"0")}catch(e){}}
+function toggleEdit(){setEdit(!S.edit);if(!S.edit){S.nm=false;S.mid=S.mid}render();toast(S.edit?"Modifica attiva: ora vedi i comandi per inserire e correggere.":"Modifica spenta: vedi l’app come i giocatori.")}
+function liveStart(id){setEdit(true);S.mid=id;render()}
 const isDir=()=>{const m=myMember();return !!m&&(m.role==="dirigente"||!!m.captain||!!m.admin)};
 
 const plain=h=>`<div class="view plain"><div class="pg">${h}</div></div>`;
@@ -533,20 +550,20 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
 function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
-  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${profBtn(t)}</header>`}
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit()">${ic("pen")}</button>`:""}</header>`}
 // Profilo: tasto in alto a destra (con il pallino rosso se ci sono richieste da approvare)
 function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
   return `<button class="ib${S.tab==="imp"?" on":""}" style="position:relative" onclick="S.tab='imp';S.mid=null;S.pd=null;render()" aria-label="Profilo${n?" · "+n+" richieste":""}">${ic("user")}${n?'<i class="dot" style="top:4px;left:auto;right:4px"></i>':""}</button>`}
 function teamView(t){
-  const mgr=canManage(),pend=S.reqs.filter(r=>r.tid===t.id);
+  const can=canManage(),mgr=can&&!!S.edit,pend=S.reqs.filter(r=>r.tid===t.id),me=myMember();
   const hasTrn=typeof torneoBtn==="function"&&!!torneoBtn(t,mgr);
-  const nav=[["home",ic("home"),"Home"],...(hasTrn?[["trn",ic("trophy"),"Torneo"]]:[]),["rosa",ic("users"),"Rosa"],["cls",ic("chart"),"Classifiche"]];
+  const nav=[["home",ic("home"),"Home"],...(hasTrn?[["trn",ic("trophy"),"Torneo"]]:[]),["rosa",ic("users"),"Rosa"],["cls",ic("chart"),"Classifiche"],["io",ic("user"),"Io"]];
   const onM=S.tab==="cal"||S.tab==="home",mx=onM&&S.mid?S.matches.find(x=>x.id===S.mid):null;
   if(onM&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
   if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot}
-  else{head=teamBar(t);body=({home:homeTab,rosa:rosaView,cal:homeTab,cls:x=>clsView(x),imp:impView,trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,mgr)}
-  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k?"on":""}" onclick="${k==="trn"?"S.mid=null;S.pd=null;trOpen()":`S.tab='${k}';S.mid=null;S.pd=null;render()`}"><span>${i}</span>${n}</button>`).join("")}</nav>`}
+  else{head=teamBar(t);body=(mgr?`<div class="edband" role="status">${ic("pen")}<span>Stai modificando: i giocatori non vedono questi comandi</span><button class="s" onclick="toggleEdit()">Fine</button></div>`:"")+({home:homeTab,rosa:rosaView,cal:homeTab,cls:x=>clsView(x),io:x=>ioView(x,can),imp:x=>`<button class="s" style="margin-bottom:10px" onclick="S.tab='io';render()">${ic("back")} Io</button>`+impView(x,can),trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,mgr)}
+  return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k||(k==="io"&&S.tab==="imp")?"on":""}" onclick="${k==="trn"?"S.mid=null;S.pd=null;trOpen()":`S.tab='${k}';S.mid=null;S.pd=null;render()`}"><span>${i}</span>${n}${k==="io"&&can&&pend.length?'<i class="dot"></i>':""}</button>`).join("")}</nav>`}
 function rosaGroups(ms){
   const pl=ms.filter(m=>m.role==="giocatore"),srt=(a,b)=>(b.captain?1:0)-(a.captain?1:0)||(parseInt(a.num)||999)-(parseInt(b.num)||999)||(a.nick||"").localeCompare(b.nick||"");
   return [["P","Portieri"],["D","Difensori"],["C","Centrocampisti"],["A","Attaccanti"]].map(([k,n])=>[k,n,pl.filter(m=>m.pos===k).sort(srt)])
@@ -562,7 +579,7 @@ function rosaBody(ms,ctl){
   return `<div class="tool"><h2>Rosa · ${ms.length}</h2>${sw}</div>${srch}`+bar+(gs.filter(g=>!f||g[0]===f).map(([k,n,l0])=>{const l=vis(l0);return l.length?`<h2 class="rh">${n} · ${l.length}</h2>${lv?`<div class="card" style="padding:4px 10px">${l.map(row).join("")}</div>`:`<div class="grid">${l.map(m=>`<div data-q="${esc(rosaQ(m))}">${fut(m,ctl(m))}</div>`).join("")}</div>`}`:""}).join("")||(q?`<p class="mu">Nessun risultato.</p>`:emptyState("users","Rosa vuota","Condividi il codice invito dal Profilo oppure aggiungi i membri a mano.","")))+`<p class="mu" id="rnone2" style="display:none">Nessun risultato.</p>`}
 function getRv(){if(!S.rv){let r=null;try{r=localStorage.getItem("rv")}catch(e){}S.rv=r==="list"?"list":"cards"}return S.rv}
 function setRv(v){S.rv=v;try{localStorage.setItem("rv",v)}catch(e){}render()}
-function rosaCtl(m){const mgr=canManage();return rosaCtl0(m,mgr)}
+function rosaCtl(m){const mgr=editOn();return rosaCtl0(m,mgr)}
 // In alto alla Rosa: la rosa (carte o lista) e le classifiche, che prima avevano una scheda a parte.
 const RK=[["","Rosa"],["ov","Overall"],["g","Marcatori"],["a","Assist"],["p","Presenze"],["sq","Squadra"]];
 function rosaTabs(){const k=S.tab==="cls"?(S.cs||"sq"):(S.rk||"");return `<div class="csl" style="margin-bottom:6px">${RK.map(([c,n])=>`<button class="chip${k===c?" on":""}" onclick="S.tab='rosa';S.rk='${c}';if('${c}')S.cs='${c}';render()">${n}</button>`).join("")}</div>`}
@@ -723,17 +740,33 @@ function nextMatch(ms){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMon
   const x=ms.filter(m=>!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0];if(!x)return"";
   const dd=Math.round((new Date(x.date+"T12:00")-new Date(ds+"T12:00"))/864e5),when=dd===0?"Oggi":dd===1?"Domani":"Tra "+dd+" giorni",d=matchDetail(x);
   return `<div class="card nxt" onclick="S.mid='${x.id}';render()"><div class="eb">Prossima partita · ${when}</div><div class="hd" style="font-size:26px;margin:4px 0">vs ${esc(x.opp)}</div><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${matchPlace(x)?" · "+esc(matchPlace(x)):""}</div></div>`}
-function playerModal(id){
+function playerModal(id,inline){
   const m=S.members.find(x=>x.id===id);if(!m){S.pd=null;return""}
   const t=stats(m),pl=m.role==="giocatore",gm=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)).sort((a,b)=>a.date<b.date?1:-1);
   const tile=(n,l)=>`<div class="tl"><b>${n}</b>${l}</div>`;
   const rows=gm.map(x=>{const s=(x.stats||{})[m.id]||{},bits=[s.g?ic("ball")+s.g:"",s.a?ic("assist")+s.a:"",s.og?ic("og")+s.og:"",s.y?ic("card","y")+s.y:"",s.r?ic("card","r")+s.r:"",m.pos==="P"&&s.gs?ic("glove")+s.gs:"",m.pos==="P"&&s.ps?"rig. parati "+s.ps:""].filter(Boolean).join(" ");
     return `<div class="lr"><span class="mu" style="width:64px">${esc(dt(x.date).f.slice(0,6))}</span><b style="flex:1">vs ${esc(x.opp)} <span class="mu">${esc(x.gf)}–${esc(x.ga)}</span></b><span>${bits||"–"}</span></div>`}).join("");
+  const info=`${m.desc?`<div class="pdesc">${esc(m.desc)}</div>`:""}
+  <div class="pgrid">${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
+  ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}`;
+  if(inline)return info;
   return `<div class="pmw" onclick="if(event.target===this){S.pd=null;render()}"><div class="pm"><button class="s" style="float:right" onclick="S.pd=null;render()">✕ Chiudi</button>
   <h2 style="margin-top:0">${esc(m.nick)}${m.captain?" ©":""}</h2><div class="mu">${esc([m.name,m.role==="dirigente"?"Dirigente":POS[m.pos],pl&&m.num?"#"+m.num:""].filter(Boolean).join(" · "))}</div>
-  ${m.desc?`<div class="pdesc">${esc(m.desc)}</div>`:""}
-  <div class="pgrid">${pl?tile(ovr(m),"OVERALL"):""}${tile(t.p,"PRESENZE")}${pl?tile(t.g,"GOL")+tile(t.a,"ASSIST")+tile(t.p?(t.g/t.p).toFixed(2):"0.00","GOL/PART.")+tile(t.y,ic("card","y"))+tile(t.r,ic("card","r"))+tile(t.og,"AUTOGOL")+(m.pos==="P"?tile(t.gs,"SUBITI")+tile(t.ps,"RIG. PARATI"):""):""}</div>
-  ${pl?radarChart(m)+badgePanel(m)+ovrChart(m)+shareBtns(m):""}${S.tab==="rosa"?rosaCtl(m):""}<h2>Partite</h2>${rows||emptyState("ball","Nessuna partita giocata","Qui vedrai gol, assist e cartellini partita per partita.","")}</div></div>`}
+  ${info}</div></div>`}
+// Scheda "Io": la propria carta, la presenza alla prossima partita e le proprie statistiche; impostazioni e profilo dall'ingranaggio
+function ioView(t,can){
+  const me=myMember(),top=`<div class="iotop"><h1>Io</h1><button class="ib" onclick="S.tab='imp';render()" aria-label="Profilo e impostazioni">${ic("gear")}</button></div>`;
+  if(!me)return top+impView(t,can);
+  const pl=me.role==="giocatore",n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
+  const x=S.matches.filter(m=>m.tid===t.id&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0];
+  let pres="";
+  if(x&&pl){const isIn=(x.present||[]).includes(me.id),d=matchDetail(x);
+    pres=`<div class="card iopr"><b>vs ${esc(x.opp)}${matchPhase(x)?" · "+esc(matchPhase(x)):""}</b><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${matchPlace(x)?" · "+esc(matchPlace(x)):""}</div>
+    <div class="row2"><button class="${isIn?"on":""}" onclick="myPresence('${x.id}','${me.id}',true)">${isIn?"✓ ":""}Ci sono</button><button onclick="myPresence('${x.id}','${me.id}',false)">Non ci sono</button></div></div>`}
+  const hd=pl?`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><span class="eb">La tua stagione</span><span class="mu">Overall, gol e presenze si aggiornano dopo ogni partita.</span><button onclick="shareCard('${me.id}')">${ic("share")} Condividi la carta</button></div></div>`
+    :`<div class="card pcard">${crest(me.photo,ic("user"),"xl")}<div class="nm2">${esc(me.nick)}</div><div class="mu">Dirigente</div></div>`;
+  return top+hd+pres+playerModal(me.id,true)}
+
 function homeTab(t,mgr){return calView(t,mgr,true)}
 function calView(t,mgr,home){
   const all=S.matches.filter(x=>x.tid===t.id),ms=all.filter(inSeason),tor=[...new Set(ms.map(x=>x.tourn||"Amichevoli"))];
@@ -794,14 +827,14 @@ function formationSlotChanged(id){
   const x=S.matches.find(m=>m.id===id); if(!x)return;
   x.formation=collectFormation(x); markDirty();
   const holder=document.getElementById('formation-holder');
-  if(holder) holder.innerHTML=formationCard(x,canManage());
+  if(holder) holder.innerHTML=formationCard(x,editOn());
 }
 function formationRender(id,scheme){
   const x=S.matches.find(m=>m.id===id);if(!x)return;
   if(scheme&&FORMATIONS[scheme]){
     const old=formationData(x);x.formation={scheme,players:old.players.slice(0,5)};
   }
-  const holder=document.getElementById('formation-holder');if(holder)holder.innerHTML=formationCard(x,canManage());
+  const holder=document.getElementById('formation-holder');if(holder)holder.innerHTML=formationCard(x,editOn());
   markDirty();
 }
 function formationClear(){document.querySelectorAll('.fi').forEach(e=>e.value='');markDirty()}

@@ -29,7 +29,7 @@ const installa=()=>{window.nextMatch=function(ms){
   const ph=[matchPhase(x)||x.tourn,when].filter(Boolean).join(" · ");
   const play='<svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l12 8-12 8z"/></svg>';
   // dirigente: avvia la diretta · giocatore: conferma la presenza · tifoso: apre la partita
-  const live=`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">${play} Avvia la diretta</button>`,
+  const live=`<button class="rn-go" onclick="event.stopPropagation();liveStart('${x.id}')">${play} Avvia la diretta</button>`,
     pres=me&&me.role==="giocatore"?`<button class="rn-go${isIn?" on":""}" onclick="event.stopPropagation();myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono":"Ci sei?"}</button>`:"";
   const btn=mgr?(pres?`<div class="rn-two">${pres}${live}</div>`:live)
     :pres||`<button class="rn-go" onclick="event.stopPropagation();S.mid='${x.id}';render()">Vai alla partita</button>`;

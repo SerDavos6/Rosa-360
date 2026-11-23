@@ -541,7 +541,7 @@ async function previewMatch(id){
   document.body.append(dialog);const q=s=>dialog.querySelector(s);q('#report-close').onclick=()=>dialog.close();dialog.showModal();
   let url,file,version=0;dialog.addEventListener('close',()=>{version++;if(url)URL.revokeObjectURL(url);dialog.remove()},{once:true});
   try{
-    const saved=S.matches.find(m=>m.id===id),x=canManage()?{id,...collectMatch(id),location:v('el'),time:v('eh'),field:v('ec')}:{...saved,...matchDetail(saved)};
+    const saved=S.matches.find(m=>m.id===id),x=editOn()?{id,...collectMatch(id),location:v('el'),time:v('eh'),field:v('ec')}:{...saved,...matchDetail(saved)};
     const team=S.teams.find(t=>t.id===x.tid)||{},defaults=formationDefaults(team,await reportPalette(team));if(!dialog.open)return;
     const pref=teamShareStyle(team,'result');
     let layout=RESULT_LAYOUTS.some(([k])=>k===pref.layout)?pref.layout:'campo';
