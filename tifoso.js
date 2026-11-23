@@ -242,7 +242,7 @@ function tourHtml(){
   ${done.length?`<h2>Ultimi risultati</h2><div class="card" style="padding:4px 12px">${done.map(line).join("")}</div>`:""}`}
 function teamBar(t){
   // nome grande per intero (si rimpicciolisce se serve, mai spezzato a metà parola); il tasto tema qui non serve: sta già in Aspetto
-  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tn fn" style="font-size:${nameFs(t.name,17,12)}px">${esc(t.name)}</div>${seasonSelect(t.id)}${typeof teamIgBtn==="function"?teamIgBtn(t):""}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
+  return `<header class="bar"><button class="ib" style="border:0" onclick="${F.tour?"fanBack()":"fanHome()"}" aria-label="Indietro">${ic("back")}</button>${crest(t.logo,ic("ball"),"sm")}<div class="tnw"><div class="tn fn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${typeof teamIgBtn==="function"?teamIgBtn(t):""}<button class="ib${isFav(t.id)?" favon":""}" onclick="fanFav('${t.id}')" aria-label="Preferiti">${ic("star")}</button></header>`}
 function teamHtml(t){
   const nav=[["home",ic("home"),"Home"],["rosa",ic("users"),"Rosa"],["cls",ic("trophy"),"Classifiche"]];
   if(!S.browse)nav.push(["imp",ic("user"),"Profilo"]);

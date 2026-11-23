@@ -175,6 +175,8 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
 /* --- link Instagram nella scheda giocatore --- */
+.tnw{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}.tnw .tn{flex:none;width:100%}
+.tnw .ssn{min-height:28px;padding:2px 8px;font-size:12px;border-radius:8px;max-width:100%}
 .ib.igb{color:#d6249f;text-decoration:none;display:grid;place-items:center}
 .iglink{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;margin:10px 0 4px;border-radius:999px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-weight:700;text-decoration:none}.iglink .ic{width:20px;height:20px;color:#d6249f}
 /* --- scelta dello stile delle immagini da condividere --- */
@@ -302,7 +304,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=27"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=17"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=27"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=26"></script>
 
 <script>
@@ -409,6 +411,17 @@ function setColor(c){S.db.doc("teams/"+S.tid).update({color:c})}
 // Instagram della squadra: tasto nell'intestazione, visibile a tutti (anche ai tifosi)
 function setTeamIg(){const raw=v("tig"),u=igUser(raw);if(raw&&!u)return toast("Nome Instagram non valido: scrivi solo il nome utente, per esempio @thewolves");
   S.db.doc("teams/"+S.tid).update({ig:u}).then(()=>toast(u?"Instagram della squadra salvato.":"Instagram della squadra tolto.",true)).catch(e=>toast("Salvataggio non riuscito ("+(e&&e.code||"errore")+")."))}
+// Nome della squadra nell'intestazione sempre per intero: si rimpicciolisce finché sta in due righe senza spezzare le parole.
+// Lo spazio libero cambia con i tasti presenti (matita, Instagram, stagione), quindi si misura sul telefono dopo ogni disegno.
+function fitBarNames(){document.querySelectorAll(".bar .tn").forEach(el=>{const key=el.textContent+"|"+el.clientWidth;if(el.dataset.fit===key)return;
+  el.style.fontSize="";el.style.webkitLineClamp="";el.style.overflowWrap="normal";el.style.wordBreak="keep-all";let f=parseFloat(getComputedStyle(el).fontSize)||17,lh=f*1.15,rows=2;
+  const over=()=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>Math.ceil(lh*rows)+2;
+  while(over()&&f>11){f-=.5;lh=f*1.15;el.style.fontSize=f+"px"}
+  // nomi lunghissimi: si passa a tre righe (sempre per intero), solo in ultimo si spezza una parola
+  if(over()){rows=3;el.style.webkitLineClamp="3";f=Math.max(f,11);while(over()&&f>9){f-=.5;lh=f*1.15;el.style.fontSize=f+"px"}}
+  if(over()){el.style.overflowWrap="anywhere";el.style.wordBreak=""}el.dataset.fit=el.textContent+"|"+el.clientWidth})}
+(()=>{let q=0;const go=()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;fitBarNames()})};
+  new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true,characterData:true});addEventListener("resize",go);if(document.fonts)document.fonts.ready.then(go)})();
 function teamIgBtn(t){const u=igUser(t&&t.ig);return u?`<a class="ib igb" href="https://www.instagram.com/${encodeURIComponent(u)}/" target="_blank" rel="noopener noreferrer" aria-label="Instagram della squadra: @${esc(u)}">${ic("ig")}</a>`:""}
 function oppLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{logoTmp=d;const e0=$("lg");if(e0)e0.textContent="Caricamento…";const u=await sbUpload(d,"avversari");if(logoTmp===d)logoTmp=u;const e1=$("lg");if(e1)e1.textContent="Logo caricato ✓"})}
 function matchLogo(inp,id){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{const u=await sbUpload(d,"avversari");S.db.doc("matches/"+id).update({oppLogo:u})})}
@@ -584,7 +597,7 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
 function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
-  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tnw"><div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
 // Profilo: tasto in alto a destra (con il pallino rosso se ci sono richieste da approvare)
 function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
   return `<button class="ib${S.tab==="imp"?" on":""}" style="position:relative" onclick="S.tab='imp';S.mid=null;S.pd=null;render()" aria-label="Profilo${n?" · "+n+" richieste":""}">${ic("user")}${n?'<i class="dot" style="top:4px;left:auto;right:4px"></i>':""}</button>`}
