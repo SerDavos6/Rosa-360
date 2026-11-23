@@ -181,7 +181,7 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .iotop{display:flex;align-items:center;gap:10px}.iotop h1{flex:1;margin:0}.iotop .s .ic{width:18px;height:18px}
 .iose{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:14px 16px;margin:12px 0}.iose>span{flex:1;min-width:0;display:flex;flex-direction:column;white-space:normal}.iose .ic{flex:none;width:22px;height:22px;color:var(--mu)}
 .iohd{display:flex;gap:14px;align-items:center;margin:12px 0}.iohd>.fw{flex:0 0 168px}.iohd>div:last-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;white-space:normal}
-.fut.staff{background:linear-gradient(160deg,#3a4458,#121823);color:#f4f6f9;border-color:#c0c7d1}.fut.staff .ov .ic{width:30px;height:30px}.fut.staff .ps{letter-spacing:.1em}.fut.staff .ph{background:rgba(255,255,255,.12)}
+.fut.staff{background:linear-gradient(160deg,color-mix(in srgb,var(--acf) 62%,#000),color-mix(in srgb,var(--acf) 30%,#000));color:#fff;border-color:#c0c7d1}.fut.staff .ps{letter-spacing:.1em}.fut.staff .ph{background:rgba(255,255,255,.12)}
 .iopr{border:2px solid var(--acf)}.iopr .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .iopr .row2 button{min-height:46px;font-weight:800}.iopr .row2 button.on{background:var(--acf);color:var(--on);border-color:var(--acf)}
 /* --- home: ultime partite in righe compatte --- */
@@ -297,7 +297,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=17"></script><script src="match-report.js?v=26"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=20"></script><script src="match-report.js?v=26"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=26"></script>
 
 <script>
@@ -450,18 +450,19 @@ function ovr(m,f){
   let o=55+t.g*w[0]+t.a*w[1]+t.p*.6-t.og*3-t.y*.5-t.r*2;
   if(m.pos==="P")o+=t.p*1-t.gs*.7+t.ps*2;
   return Math.max(40,Math.min(99,Math.round(o)))}
-// Bilancio della squadra nella stagione: è la "statistica" dei dirigenti, che non giocano
-function staffStats(tid){const ms=S.matches.filter(x=>x.tid===tid&&x.played&&inSeason(x)),p=ms.length,v=ms.filter(x=>x.gf>x.ga).length,n=ms.filter(x=>x.gf===x.ga).length,gf=ms.reduce((a,x)=>a+(+x.gf||0),0),gs=ms.reduce((a,x)=>a+(+x.ga||0),0);
+// Bilancio dei dirigenti, che non giocano: le partite giocate della stagione in cui sono segnati tra i presenti
+// (scheda Info della partita → Presenti → Dirigenti), con i risultati della squadra in quelle partite.
+function staffStats(m){const ms=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)&&(x.present||[]).includes(m.id)),p=ms.length,v=ms.filter(x=>x.gf>x.ga).length,n=ms.filter(x=>x.gf===x.ga).length,gf=ms.reduce((a,x)=>a+(+x.gf||0),0),gs=ms.reduce((a,x)=>a+(+x.ga||0),0);
   return {p,v,n,s:p-v-n,gf,gs,pct:p?Math.round(v/p*100):0,gfp:p?(gf/p).toFixed(1):"0.0",gsp:p?(gs/p).toFixed(1):"0.0"}}
 const isStaff=m=>m&&m.role==="dirigente";
 function fut(m,ctl){
   const t=stats(m),player=m.role==="giocatore",ini=esc((m.nick||"?").slice(0,1).toUpperCase());
   const ph=m.photo?`<img class="ph" src="${safeSrc(m.photo)}" alt="">`:`<div class="ph">${ini}</div>`;
   const ps=m.role==="dirigente"?"DIR":m.pos,o=player?ovr(m):0,tier=!player?"":o>=88?"t-x":o>=75?"t-g":o>=65?"t-s":"t-b";
-  if(isStaff(m)){const s=staffStats(m.tid),l=S.teams.find(t=>t.id===m.tid)?.logo;
+  if(isStaff(m)){const s=staffStats(m),l=S.teams.find(t=>t.id===m.tid)?.logo;
     return `<div class="card" style="padding:0;border:0;background:none"><div class="fut staff ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
-  <div class="ov">${ic("shield")}</div><div class="ps">DIR</div>${l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""}
-  ${ph}<div class="nk">${esc(m.nick)}</div><div class="st"><div><b>${s.p}</b>PART</div><div><b>${s.v}</b>VITT</div><div><b>${s.pct}%</b>VITT.</div></div></div>
+  <div class="ps" style="top:14px">DIR</div>${l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""}
+  ${ph}<div class="nk">${esc(m.nick)}</div><div class="st"><div><b>${s.p}</b>PRES</div><div><b>${s.v}</b>VITT</div><div><b>${s.pct}%</b>VITT.</div></div></div>
   <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${ctl?(m.uid?"":" · senza account"):""}</div>${ctl||""}</div>`}
   return `<div class="card" style="padding:0;border:0;background:none"><div class="fut ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
   ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img class="cr" src="${safeSrc(l)}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
@@ -779,8 +780,8 @@ function ioView(t,can){
     :`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><span class="eb">La tua squadra</span><span class="mu">Il bilancio della stagione e i tornei conclusi.</span>${can?`<button onclick="setEdit(true);S.tab='home';S.mid=null;openNm()">${ic("plus")} Nuova partita</button>${x?`<button class="p" onclick="liveStart('${x.id}')">Avvia la diretta</button>`:""}`:""}</div></div>`;
   return top+hd+pres+playerModal(me.id,true)}
 
-function staffInfo(m,tile){const s=staffStats(m.tid),pal=typeof trPalmares==="function"?trPalmares(m.tid):[];
-  return `<h2>Bilancio della squadra</h2><div class="pgrid">${tile(s.p,"PARTITE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
+function staffInfo(m,tile){const s=staffStats(m),pal=typeof trPalmares==="function"?trPalmares(m.tid):[];
+  return `<h2>Bilancio nelle partite con te presente</h2><div class="pgrid">${tile(s.p,"PRESENZE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
   ${pal.length?`<h2>Palmarès</h2><div class="card" style="padding:4px 14px">${pal.map(p=>`<div class="lr">${ic("trophy")}<b style="flex:1">${esc(p.name)}</b><span>${esc(p.txt)}</span></div>`).join("")}</div>`:""}
   <div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
 function homeTab(t,mgr){return calView(t,mgr,true)}
