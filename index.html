@@ -175,6 +175,7 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 .live button{min-height:44px}.lvlog{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--bd)}.lvlog li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lvt,.lve{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:start;gap:6px}.lvt{margin-top:12px;padding-bottom:8px;font-weight:800;font-size:13px}.lvt .lvc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvt+.lvlog{margin-top:0}.lvc.l{text-align:right}.lvc.r{text-align:left}.lvm{text-align:center;font-weight:800;font-size:13px;color:var(--mu);padding-top:2px}.lvc .ic{width:16px;height:16px;vertical-align:-3px}.lvc{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lvc .mu{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lve .lvc{white-space:normal;overflow:visible;text-overflow:clip}.lvn{display:flex;gap:5px;align-items:flex-start;min-width:0;line-height:1.25}.lvc.l .lvn{justify-content:flex-end}.lvn span{min-width:0;overflow-wrap:anywhere}.lvn .ic{flex:none;margin-top:1px}.lvn.as{color:var(--mu);font-size:13px;margin-top:1px}.lvn.as .ic{width:13px;height:13px;margin-top:2px;color:var(--ac)}
 
 /* --- link Instagram nella scheda giocatore --- */
+.ib.igb{color:#d6249f;text-decoration:none;display:grid;place-items:center}
 .iglink{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;margin:10px 0 4px;border-radius:999px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-weight:700;text-decoration:none}.iglink .ic{width:20px;height:20px;color:#d6249f}
 /* --- scelta dello stile delle immagini da condividere --- */
 #report-layouts,#formation-layouts,.seg-wrap{flex-wrap:wrap}#report-layouts>button,#formation-layouts>button,.seg-wrap>button{flex:1 1 auto}
@@ -301,7 +302,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=27"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=16"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
+<script src="ui-extra.js?v=21"></script><script src="match-report.js?v=27"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=17"></script><script src="push.js?v=5"></script><script src="collega.js?v=2"></script>
 <script src="torneo.js?v=26"></script>
 
 <script>
@@ -405,6 +406,10 @@ async function migraImmagini(){
 function readLogo(f,cb){const img=new Image();img.onload=()=>{const s=Math.min(1,128/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);cb(c.toDataURL("image/png"),img)};img.src=URL.createObjectURL(f)}
 function teamLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async(d,img)=>{const col=dominant(img),u=await sbUpload(d,"squadre");S.db.doc("teams/"+S.tid).update(col?{logo:u,color:col}:{logo:u})})}
 function setColor(c){S.db.doc("teams/"+S.tid).update({color:c})}
+// Instagram della squadra: tasto nell'intestazione, visibile a tutti (anche ai tifosi)
+function setTeamIg(){const raw=v("tig"),u=igUser(raw);if(raw&&!u)return toast("Nome Instagram non valido: scrivi solo il nome utente, per esempio @thewolves");
+  S.db.doc("teams/"+S.tid).update({ig:u}).then(()=>toast(u?"Instagram della squadra salvato.":"Instagram della squadra tolto.",true)).catch(e=>toast("Salvataggio non riuscito ("+(e&&e.code||"errore")+")."))}
+function teamIgBtn(t){const u=igUser(t&&t.ig);return u?`<a class="ib igb" href="https://www.instagram.com/${encodeURIComponent(u)}/" target="_blank" rel="noopener noreferrer" aria-label="Instagram della squadra: @${esc(u)}">${ic("ig")}</a>`:""}
 function oppLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{logoTmp=d;const e0=$("lg");if(e0)e0.textContent="Caricamento…";const u=await sbUpload(d,"avversari");if(logoTmp===d)logoTmp=u;const e1=$("lg");if(e1)e1.textContent="Logo caricato ✓"})}
 function matchLogo(inp,id){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{const u=await sbUpload(d,"avversari");S.db.doc("matches/"+id).update({oppLogo:u})})}
 // All'avvio non si riapre più l'ultima squadra: se ne hai una sola entra direttamente (vedi render), se ne hai più di una vedi l'elenco.
@@ -539,6 +544,7 @@ function regView(){const b=S.profBak,pv=k=>esc((b&&b[k])||""),pl=!b||b.role!=="d
  <label>Soprannome (sulla carta)</label><input id="nk" value="${pv("nick")}"><label>Nome e cognome</label><input id="nm" value="${pv("name")}">
  <label>Ruolo nella squadra</label><select id="rl" onchange="$('rpf').style.display=this.value==='giocatore'?'block':'none'"><option value="giocatore">Giocatore</option><option value="dirigente"${pl?"":" selected"}>Dirigente</option></select>
  <div id="rpf"${pl?"":' style="display:none"'}>${posFields("r",b)}</div>
+ <label for="pig">Instagram (facoltativo)</label><input id="pig" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" maxlength="60" placeholder="@nomeutente" value="${(()=>{const u=igUser((b&&b.ig)||(S.members.find(m=>m.uid===S.uid&&m.ig)||{}).ig);return u?"@"+esc(u):""})()}"><p class="mu" style="margin:4px 0 0;white-space:normal">Va in automatico sulla tua carta in tutte le tue squadre: chi la apre, anche un tifoso, vede il link al profilo.</p>
  <label>${b&&b.photo?"Nuova foto (facoltativa)":"Foto"}</label><input type="file" accept="image/*" onchange="pickPhoto(this)">
  <div class="err">${esc(S.err)}</div><div class="row" style="margin-top:12px"><button class="p" onclick="saveProfile()">Salva profilo</button>${b?`<button onclick="cancelProfile()">Annulla</button>`:""}</div></div>`}
 function pickPhoto(inp){const f=inp.files[0];if(!f)return;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);photoData=c.toDataURL("image/jpeg",.8);const mine=photoData;sbUpload(mine,"foto").then(u=>{if(photoData===mine)photoData=u})};img.src=URL.createObjectURL(f)}
@@ -547,9 +553,13 @@ function saveFanProfile(){S.err="";S.db.doc("profiles/"+S.uid).set({fan:true,nic
 function saveProfile(){
   const rl=v("rl");if(!v("em")||!v("nk"))return S.err="Email e soprannome sono obbligatori.",render();
   if(rl==="giocatore"&&!v("rnum"))return S.err="Indica il numero di maglia.",render();
+  if(v("pig")&&!igUser(v("pig")))return S.err="Nome Instagram non valido: scrivi solo il nome utente, per esempio @mario.rossi",render();
   // in modifica si tengono i dati che il modulo non mostra (e la foto, se non se ne sceglie una nuova)
-  const b=S.profBak||{},d={...b,email:v("em"),nick:v("nk"),name:v("nm"),role:rl,pos:rl==="giocatore"?v("rpos"):"",num:rl==="giocatore"?v("rnum"):"",photo:photoData||b.photo||"",favs:typeof fanFavsRaw==="function"?fanFavsRaw():(b.favs||[])};S.err="";
-  S.db.doc("profiles/"+S.uid).set(d).then(()=>{S.profBak=null;photoData=null;S.profile=d;render();if(b.role)toast("Profilo aggiornato.")}).catch(e=>{S.err="Salvataggio non riuscito ("+(e&&e.code||"errore")+").";render()})}
+  const b=S.profBak||{},d={...b,email:v("em"),nick:v("nk"),name:v("nm"),role:rl,pos:rl==="giocatore"?v("rpos"):"",num:rl==="giocatore"?v("rnum"):"",photo:photoData||b.photo||"",ig:igUser(v("pig")),favs:typeof fanFavsRaw==="function"?fanFavsRaw():(b.favs||[])};S.err="";
+  S.db.doc("profiles/"+S.uid).set(d).then(()=>{
+    // Instagram del profilo copiato sulle proprie carte in tutte le squadre
+    S.members.filter(m=>m.uid===S.uid&&(m.ig||"")!==d.ig).forEach(m=>S.db.doc("members/"+m.id).update({ig:d.ig}).catch(()=>{}));
+    S.profBak=null;photoData=null;S.profile=d;render();if(b.role)toast("Profilo aggiornato.")}).catch(e=>{S.err="Salvataggio non riuscito ("+(e&&e.code||"errore")+").";render()})}
 
 function homeView(mine){
   const myTeams=mine.map(m=>S.teams.find(t=>t.id===m.tid)).filter(Boolean);
@@ -568,17 +578,20 @@ function upNext(tid){const n=new Date(),ds=n.getFullYear()+"-"+String(n.getMonth
 function openTeam(id){S.tid=id;S.tab="home";S.mid=null;try{localStorage.setItem("tid",id)}catch(e){}render()}
 async function createTeam(){const n=v("tn");if(!n)return;const id=rid()+rid(),code=rid();
   await S.db.doc("teams/"+id).set({name:n,code,owner:S.uid}).catch(()=>{});
-  set("members/"+rid()+rid(),{tid:id,uid:S.uid,nick:S.profile.nick,name:S.profile.name,role:S.profile.role,pos:S.profile.pos||"",num:S.profile.num||"",photo:S.profile.photo||"",captain:false,admin:true});openTeam(id)}
+  set("members/"+rid()+rid(),{tid:id,uid:S.uid,ig:igUser(S.profile.ig),nick:S.profile.nick,name:S.profile.name,role:S.profile.role,pos:S.profile.pos||"",num:S.profile.num||"",photo:S.profile.photo||"",captain:false,admin:true});openTeam(id)}
 async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   const r=await sb.rpc("request_join",{c,p:S.profile});
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
 function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
-  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
 // Profilo: tasto in alto a destra (con il pallino rosso se ci sono richieste da approvare)
 function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
   return `<button class="ib${S.tab==="imp"?" on":""}" style="position:relative" onclick="S.tab='imp';S.mid=null;S.pd=null;render()" aria-label="Profilo${n?" · "+n+" richieste":""}">${ic("user")}${n?'<i class="dot" style="top:4px;left:auto;right:4px"></i>':""}</button>`}
-function teamView(t){
+// Se il profilo ha l'Instagram e una delle proprie carte no (squadra entrata prima, richiesta accettata…), lo si copia una volta
+function syncIg(){const u=S.profile&&igUser(S.profile.ig);if(!u||S._igSync===u)return;S._igSync=u;
+  S.members.filter(m=>m.uid===S.uid&&!m.ig).forEach(m=>S.db.doc("members/"+m.id).update({ig:u}).catch(()=>{}))}
+function teamView(t){syncIg();
   const can=canManage(),mgr=can&&!!S.edit,pend=S.reqs.filter(r=>r.tid===t.id),me=myMember();
   const hasTrn=typeof torneoBtn==="function"&&!!torneoBtn(t,mgr);
   const nav=[["home",ic("home"),"Home"],...(hasTrn?[["trn",ic("trophy"),"Torneo"]]:[]),["rosa",ic("users"),"Rosa"],["cls",ic("chart"),"Classifiche"],["io",ic("user"),"Io"]];
@@ -730,9 +743,9 @@ function reqView(t){
   <div class="row" style="margin-top:8px"><button class="p" onclick="accept('${r.id}')">Accetta come nuovo</button><button class="d" onclick="del('requests/${r.id}')">Rifiuta</button></div>
   ${free.length?`<label>…oppure collega a un membro già inserito</label><div class="row"><select id="lk${r.id}">${free.map(m=>`<option value="${m.id}">${esc(m.nick)}</option>`).join("")}</select><button onclick="linkReq('${r.id}')">Collega</button></div>`:""}</div>`).join("")}
 function accept(id){const r=S.reqs.find(x=>x.id===id);
-  set("members/"+rid()+rid(),{tid:r.tid,uid:r.uid,nick:r.nick,name:r.name,role:r.role==="dirigente"?"dirigente":"giocatore",pos:r.pos,num:r.num,photo:r.photo||"",captain:false});del("requests/"+id)}
+  set("members/"+rid()+rid(),{tid:r.tid,uid:r.uid,ig:igUser(r.ig),nick:r.nick,name:r.name,role:r.role==="dirigente"?"dirigente":"giocatore",pos:r.pos,num:r.num,photo:r.photo||"",captain:false});del("requests/"+id)}
 function linkReq(id){const r=S.reqs.find(x=>x.id===id),m=v("lk"+id);
-  S.db.doc("members/"+m).update({uid:r.uid,photo:r.photo||S.members.find(x=>x.id===m).photo||""});del("requests/"+id)}
+  S.db.doc("members/"+m).update({uid:r.uid,photo:r.photo||S.members.find(x=>x.id===m).photo||"",...(igUser(r.ig)?{ig:igUser(r.ig)}:{})});del("requests/"+id)}
 
 function impView(t,mgr){
   const pend=S.reqs.filter(r=>r.tid===t.id),ps=mgr&&S.ps==="sq"?"sq":"io";
@@ -746,7 +759,8 @@ function impView(t,mgr){
   <div class="pbtns"><button class="p" onclick="shareFanLink()">${ic("share")} Condividi</button><button onclick="copyFanLink()">${ic("copy")} Copia link</button></div></div>`:""}
   <div class="card mu">Capitano: ${esc(S.members.find(m=>m.tid===t.id&&m.captain)?.nick||"non ancora scelto")}. Il capitano lo nominano i dirigenti dalla scheda Rosa.</div>
   <p class="mu">Overall = base 55 + gol e assist (pesati per ruolo) + presenze − autogol e cartellini; i portieri perdono punti per i gol subiti.</p>`;
-  const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}${migCard(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>${shareStyleCard(t)}`:"";
+  const sq=mgr?`<h2>Richieste${pend.length?" · "+pend.length:""}</h2>${reqView(t)}${migCard(t)}<div class="card"><b>Logo e colore della squadra</b><div class="row" style="margin-top:8px">${crest(t.logo,ic("ball"))}<input type="file" accept="image/*" onchange="teamLogo(this)"><input type="color" value="${t.color||"#0b7a43"}" onchange="setColor(this.value)" style="max-width:64px;padding:2px;height:42px"></div><div class="row" style="margin-top:10px"><div><b>Colore dello sfondo</b></div><input type="color" value="${t.bg||"#f5f5f5"}" onchange="setBack(this.value)" style="max-width:64px;padding:2px;height:42px"><button class="s" onclick="setBack('')">Ripristina</button></div><p class="mu">Il colore principale viene preso dal logo (puoi cambiarlo col primo selettore); lo sfondo lo scegli tu.</p></div>
+  <div class="card"><b>${ic("ig")} Instagram della squadra</b><p class="mu" style="margin:4px 0 8px;white-space:normal">Compare come tasto in alto, accanto al nome della squadra: lo vedono giocatori e tifosi.</p><div class="row"><input id="tig" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" maxlength="60" placeholder="@nomesquadra" value="${igUser(t.ig)?"@"+esc(igUser(t.ig)):""}" style="flex:1"><button class="p" onclick="setTeamIg()">Salva</button></div></div>${shareStyleCard(t)}`:"";
   const seg=mgr?`<div class="seg"><button class="${ps==="io"?"on":""}" onclick="S.ps='io';render()">Il mio profilo</button><button class="${ps==="sq"?"on":""}" onclick="S.ps='sq';render()">Squadra${pend.length?' <i class="dot" style="position:static;display:inline-block;margin-left:6px"></i>':""}</button></div>`:"";
   return seg+(ps==="sq"?sq:io)}
 function inviteText(){const t=S.teams.find(x=>x.id===S.tid);return "Unisciti a "+(t?.name||"la squadra")+" su Rosa 360! Codice invito: "+(t?.code||"")+"\n"+location.origin+location.pathname}
