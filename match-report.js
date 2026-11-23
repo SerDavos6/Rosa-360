@@ -34,6 +34,43 @@ function guestDel(id,gid){
   ask({title:'Togliere '+esc(g.nick)+'?',msg:'Spariscono anche le sue statistiche in questa partita.',ok:'Togli',danger:1,fn:()=>{
     const st={...(x.stats||{})};delete st[gid];const f=formationData(x);
     guestPut(x,{guests:(x.guests||[]).filter(q=>q.id!==gid),present:(x.present||[]).filter(i=>i!==gid),stats:st,formation:{scheme:f.scheme,players:f.players.map(i=>i===gid?'':i)}},{guests:x.guests||[],present:x.present||[],stats:x.stats||{},formation:x.formation})}})}
+// Correggere un ospite (nome, ruolo, numero) e, quando entra in squadra, collegarlo a un giocatore della rosa:
+// presenze, statistiche, eventi della diretta e formazione passano dall'ospite al giocatore, in questa partita
+// e, se si vuole, in tutte le partite dove c'è un ospite con lo stesso nome.
+const gNorm=s=>String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ');
+const guestTwins=(x,g)=>S.matches.filter(m=>m.tid===x.tid&&(m.guests||[]).some(q=>gNorm(q.nick)===gNorm(g.nick)));
+function guestEdit(id,gid){const x=S.matches.find(m=>m.id===id),g=x&&(x.guests||[]).find(q=>q.id===gid);if(!g)return;
+  const pl=S.members.filter(m=>m.tid===x.tid&&m.role==='giocatore').sort((a,b)=>String(a.nick).localeCompare(String(b.nick),'it')),tw=guestTwins(x,g).length;
+  sheet(`<h2 style="margin-top:0">Ospite: ${esc(g.nick)}</h2>
+  <label for="gse-n">Nome</label><input id="gse-n" maxlength="30" autocomplete="off" value="${esc(g.nick)}">
+  <label for="gse-pos">Ruolo</label><select id="gse-pos">${Object.entries(POS).map(([k,n])=>`<option value="${k}" ${k===(g.pos||'C')?'selected':''}>${n}</option>`).join('')}</select>
+  <label for="gse-num">Numero di maglia</label><input id="gse-num" type="number" inputmode="numeric" min="0" max="99" value="${esc(g.num||'')}">
+  <div class="err" id="sheet-err"></div><div class="row" style="margin-top:12px"><button class="p" onclick="guestEditSave('${id}','${gid}')">Salva</button><button onclick="closeSheet()">Annulla</button></div>
+  <div class="card" style="margin-top:16px"><b>È entrato in squadra?</b><p class="mu" style="white-space:normal;margin:4px 0 8px">Collegalo al suo giocatore della rosa: presenze, gol, assist, cartellini e cronaca passano a lui e contano per carta, overall e classifiche.</p>
+  ${pl.length?`<label for="gse-m">Giocatore della rosa</label><select id="gse-m"><option value="">Scegli…</option>${pl.map(m=>`<option value="${m.id}" ${gNorm(m.nick)===gNorm(g.nick)||gNorm(m.name)===gNorm(g.nick)?'selected':''}>${esc(m.nick)}${m.num?' · #'+esc(m.num):''}</option>`).join('')}</select>
+  ${tw>1?`<label class="chk" style="margin-top:8px"><input type="checkbox" id="gse-all" checked> Anche nelle altre partite con un ospite chiamato «${esc(g.nick)}» (${tw} partite in tutto)</label>`:''}
+  <button class="p" style="margin-top:10px" onclick="guestLink('${id}','${gid}')">Collega al giocatore</button>`:`<p class="mu">Prima aggiungilo alla rosa (scheda Rosa → Aggiungi giocatore), poi torna qui.</p>`}</div>`);
+  setTimeout(()=>document.getElementById('gse-n')?.focus(),0)}
+async function guestEditSave(id,gid){const x=S.matches.find(m=>m.id===id);if(!x)return closeSheet();
+  const nick=(document.getElementById('gse-n')?.value||'').trim(),num=(document.getElementById('gse-num')?.value||'').trim(),pos=document.getElementById('gse-pos')?.value||'C';
+  if(!nick)return sheetErr('Scrivi il nome.');if(num&&!(/^\d{1,2}$/.test(num)))return sheetErr('Il numero di maglia va da 0 a 99.');
+  closeSheet();if(await guestPut(x,{guests:(x.guests||[]).map(q=>q.id===gid?{...q,nick,num,pos}:q)},{guests:x.guests||[]}))toast('Ospite aggiornato',true)}
+// sostituisce l'ospite con il giocatore in tutto ciò che la partita salva per giocatore
+function guestSwap(x,gid,mid){const r=v=>v===gid?mid:v,st={...(x.stats||{})},f=formationData(x);
+  if(st[gid]){const a=st[gid],b=st[mid]||{},m={...b};for(const k in a)m[k]=typeof a[k]==='number'||typeof b[k]==='number'?(+a[k]||0)+(+b[k]||0):a[k];st[mid]=m;delete st[gid]}
+  return {guests:(x.guests||[]).filter(q=>q.id!==gid),present:[...new Set((x.present||[]).map(r))],stats:st,
+    events:(x.events||[]).map(e=>({...e,...(e.p===gid?{p:mid}:{}),...(e.a===gid?{a:mid}:{}),...(e.gk===gid?{gk:mid}:{})})),
+    formation:{scheme:f.scheme,players:f.players.map(r)}}}
+async function guestLink(id,gid){const x=S.matches.find(m=>m.id===id),g=x&&(x.guests||[]).find(q=>q.id===gid),mid=document.getElementById('gse-m')?.value;
+  if(!g)return closeSheet();if(!mid)return sheetErr('Scegli il giocatore della rosa.');const m=S.members.find(q=>q.id===mid);if(!m)return sheetErr('Giocatore non trovato.');
+  const all=document.getElementById('gse-all')?.checked,list=all?guestTwins(x,g):[x];
+  if(list.some(y=>typeof lvPending==='function'&&lvPending(y.id)))return sheetErr('C’è una diretta con eventi ancora da inviare: aspetta che partano e riprova.');
+  ask({title:'Collegare '+esc(g.nick)+' a '+esc(m.nick)+'?',msg:(list.length>1?list.length+' partite: ':'')+'presenze, statistiche e cronaca dell’ospite passano al giocatore. Non si può annullare in automatico.',ok:'Collega',fn:async()=>{
+    closeSheet();let ok=0,ko=0;
+    for(const y of list){const q=y.id===x.id?g:(y.guests||[]).find(z=>gNorm(z.nick)===gNorm(g.nick));if(!q)continue;
+      const patch=guestSwap(y,q.id,mid),back={guests:y.guests,present:y.present,stats:y.stats,events:y.events,formation:y.formation};Object.assign(y,patch);
+      try{await S.db.doc('matches/'+y.id).update(patch);ok++}catch(e){Object.assign(y,back);ko++}}
+    render();toast(ko?`Collegato in ${ok} partite, ${ko} non salvate: riprova.`:`${g.nick} ora è ${m.nick}: statistiche spostate${ok>1?' in '+ok+' partite':''}.`,!ko)}})}
 function reportLines(x){
   const team=S.teams.find(t=>t.id===x.tid)||{};
   const present=(x.present||[]).map(id=>mbr(x,id)).filter(Boolean);
