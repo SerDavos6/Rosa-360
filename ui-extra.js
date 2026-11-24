@@ -61,7 +61,7 @@ function confetti(){if(confetti.on||matchMedia('(prefers-reduced-motion: reduce)
 function h2hCard(tid,opp,exId,quiet){const k=String(opp||'').trim().toLowerCase();if(!k)return '';
   const l=S.matches.filter(x=>x.tid===tid&&x.played&&x.id!==exId&&String(x.opp||'').trim().toLowerCase()===k).sort((a,b)=>a.date<b.date?1:-1);
   const lg=(S.matches.find(x=>x.id===exId)||{}).oppLogo||(S.matches.find(x=>x.tid===tid&&x.oppLogo&&String(x.opp||'').trim().toLowerCase()===k)||{}).oppLogo,lsrc=lg&&safeSrc(lg);
-  if(!l.length)return quiet?'':`<div class="card h2n">${lsrc?`<img class="crest sm" src="${lsrc}" alt="">`:''}<div><b>${esc(opp)}</b><span class="mu">Nessun precedente tra voi</span></div><span class="tag2 on">Prima sfida</span></div>`;
+  if(!l.length)return quiet?'':`<div class="card h2n">${lsrc?`<img loading="lazy" decoding="async" class="crest sm" src="${lsrc}" alt="">`:''}<div><b>${esc(opp)}</b><span class="mu">Nessun precedente tra voi</span></div><span class="tag2 on">Prima sfida</span></div>`;
   const r=teamRec(l);return `<div class="card"><b>Storico contro ${esc(opp)}</b><p class="mu" style="margin:6px 0 8px">${r.g} ${r.g===1?'partita':'partite'} · ${r.v}V ${r.n}N ${r.p}P · gol ${r.gf}-${r.ga}</p>${l.slice(0,5).map(x=>`<div class="lr"><span class="mu" style="width:78px">${esc(dt(x.date).f)}</span><span class="mu" style="flex:1">${esc(x.tourn||'Amichevoli')}</span><b>${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?'v':x.gf<x.ga?'p':'n'}" style="margin:0 0 0 8px">${x.gf>x.ga?'V':x.gf<x.ga?'P':'N'}</i></div>`).join('')}</div>`}
 function h2hLive(v){const e=document.getElementById('h2h-live');if(e)e.innerHTML=h2hCard(S.tid,v,null,true)}
 
@@ -245,3 +245,45 @@ function trendChart(l){
       +'<text x="'+cx.toFixed(1)+'" y="'+(base+b*k+11).toFixed(1)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">'+b+'</text>'
       +'<circle cx="'+cx.toFixed(1)+'" cy="'+(h-8)+'" r="4" fill="'+res+'"/>'}).join('');
   return '<h2>Andamento</h2><div class="card" style="padding:10px"><svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Gol fatti e subiti nelle ultime '+s.length+' partite"><line x1="'+p+'" x2="'+(w-p)+'" y1="'+base+'" y2="'+base+'" stroke="var(--bd)"/>'+bars+'</svg><div class="row" style="justify-content:center;gap:14px;font-size:12px"><span class="mu"><b style="color:var(--acf)">■</b> Gol fatti</span><span class="mu"><b style="color:var(--dg)">■</b> Gol subiti</span><span class="mu">Ultime '+s.length+' partite, dalla più vecchia</span></div></div>'}
+
+// ---- statistiche stagione più visive ----
+// barra a percentuale con etichetta
+function vizBar(lab,val,tot,col,extra){const pc=tot?Math.round(val/tot*100):0;
+  return `<div class="vzb"><div class="vzt"><span>${lab}</span><b>${extra||val+' su '+tot} · ${pc}%</b></div><div class="vzr"><i style="width:${pc}%;background:${col||'var(--acf)'}"></i></div></div>`}
+// squadra: vittorie/pareggi/sconfitte in una barra, medie gol, punti partita dopo partita
+function teamViz(l){if(!l.length)return '';
+  const r=teamRec(l),pc=n=>r.g?n/r.g*100:0,f=n=>(r.g?n/r.g:0).toFixed(1).replace('.',',');
+  const seg=(n,c,t)=>n?`<i style="width:${pc(n)}%;background:${c}" title="${t} ${n}"><b>${n}</b></i>`:'';
+  let acc=0;const pts=l.map(x=>{const a=+x.gf||0,b=+x.ga||0;acc+=a>b?3:a===b?1:0;return acc});
+  const w=300,h=90,p=10,mx=Math.max(3,pts[pts.length-1]),sx=i=>p+(pts.length<2?(w-2*p)/2:i*(w-2*p)/(pts.length-1)),sy=v=>h-p-v/mx*(h-p-20);
+  const line=pts.length>1?`<h2>Punti partita dopo partita</h2><div class="card" style="padding:12px 10px 6px"><svg viewBox="0 0 ${w} ${h+14}" width="100%" role="img" aria-label="Punti accumulati: ${pts.join(', ')}">
+    <path d="M${sx(0)},${sy(0)} ${pts.map((v,i)=>'L'+sx(i).toFixed(1)+','+sy(v).toFixed(1)).join(' ')} L${sx(pts.length-1).toFixed(1)},${h-p} L${sx(0)},${h-p}Z" fill="var(--acf)" fill-opacity=".14"/>
+    <polyline points="${pts.map((v,i)=>sx(i).toFixed(1)+','+sy(v).toFixed(1)).join(' ')}" fill="none" stroke="var(--acf)" stroke-width="2.5" stroke-linejoin="round"/>
+    ${pts.map((v,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(v).toFixed(1)}" r="3" fill="var(--acf)"/>`).join('')}
+    <text x="${sx(pts.length-1).toFixed(1)}" y="${(sy(pts[pts.length-1])-7).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="var(--tx)">${pts[pts.length-1]} pt</text>
+    <text x="${p}" y="${h+11}" font-size="9" fill="var(--mu)">1ª partita</text><text x="${w-p}" y="${h+11}" text-anchor="end" font-size="9" fill="var(--mu)">${pts.length}ª</text></svg></div>`:'';
+  return `<h2>Bilancio</h2><div class="card"><div class="vzs">${seg(r.v,'#34d399','Vittorie')}${seg(r.n,'#fbbf24','Pareggi')}${seg(r.p,'#f87171','Sconfitte')}</div>
+  <div class="vzl"><span><i style="background:#34d399"></i>Vittorie ${Math.round(pc(r.v))}%</span><span><i style="background:#fbbf24"></i>Pareggi ${Math.round(pc(r.n))}%</span><span><i style="background:#f87171"></i>Sconfitte ${Math.round(pc(r.p))}%</span></div>
+  <div class="vzm"><div><b>${f(r.gf)}</b><span>gol fatti a partita</span></div><div><b>${f(r.ga)}</b><span>gol subiti a partita</span></div></div>
+  ${vizBar('Gol fatti sul totale',r.gf,r.gf+r.ga,'var(--acf)')}</div>${line}`}
+// giocatore: gol e assist partita per partita, presenze e peso sui gol della squadra
+function playerViz(m){if(!m||m.role!=='giocatore')return '';
+  const l=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)).sort((a,b)=>a.date<b.date?-1:1);if(!l.length)return '';
+  const s=l.slice(-12),num=(x,k)=>+(((x.stats||{})[m.id]||{})[k])||0;
+  const pres=l.filter(x=>(x.present||[]).includes(m.id)),g=pres.reduce((t,x)=>t+num(x,'g'),0),a=pres.reduce((t,x)=>t+num(x,'a'),0),tg=l.reduce((t,x)=>t+(+x.gf||0),0);
+  const w=300,h=96,base=74,p=8,mx=Math.max(3,...s.map(x=>num(x,'g')+num(x,'a'))),k=(base-16)/mx,sl=(w-2*p)/s.length,bw=Math.min(16,sl*.62);
+  const bars=s.map((x,i)=>{const cx=p+sl*i+sl/2,in_=(x.present||[]).includes(m.id),gg=num(x,'g'),aa=num(x,'a');
+    if(!in_)return `<circle cx="${cx.toFixed(1)}" cy="${base-3}" r="2.5" fill="var(--mu)" fill-opacity=".5"/><text x="${cx.toFixed(1)}" y="${base+14}" text-anchor="middle" font-size="8" fill="var(--mu)">ass.</text>`;
+    const hg=gg*k,ha=aa*k;
+    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg).toFixed(1)}" width="${bw.toFixed(1)}" height="${hg.toFixed(1)}" rx="2" fill="var(--acf)"/>
+      <rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg-ha).toFixed(1)}" width="${bw.toFixed(1)}" height="${ha.toFixed(1)}" rx="2" fill="var(--acf)" fill-opacity=".4"/>
+      ${gg+aa?`<text x="${cx.toFixed(1)}" y="${(base-hg-ha-4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">${gg+aa}</text>`:`<rect x="${(cx-bw/2).toFixed(1)}" y="${base-2}" width="${bw.toFixed(1)}" height="2" rx="1" fill="var(--mu)" fill-opacity=".5"/>`}
+      <text x="${cx.toFixed(1)}" y="${base+14}" text-anchor="middle" font-size="8" fill="var(--mu)">${esc(String(x.opp||'').slice(0,4))}</text>`}).join('');
+  return `<h2>Andamento</h2><div class="card"><svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Gol e assist nelle ultime ${s.length} partite"><line x1="${p}" y1="${base}" x2="${w-p}" y2="${base}" stroke="var(--bd)"/>${bars}</svg>
+  <div class="vzl"><span><i style="background:var(--acf)"></i>Gol</span><span><i style="background:var(--acf);opacity:.4"></i>Assist</span><span class="mu">ass. = assente</span></div>
+  ${vizBar('Presenze',pres.length,l.length,'var(--acf)')}${tg?vizBar('Coinvolto nei gol della squadra',Math.min(g+a,tg),tg,'#fbbf24',(g+a)+' su '+tg):''}</div>`}
+(function(){const st=document.createElement('style');st.textContent=`
+.vzs{display:flex;height:34px;border-radius:12px;overflow:hidden;gap:2px}.vzs i{display:grid;place-items:center;min-width:26px;font-style:normal}.vzs b{font:700 14px var(--num);color:#111}
+.vzl{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 4px;font-size:12px;color:var(--mu)}.vzl span{display:inline-flex;align-items:center;gap:6px}.vzl i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.vzm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.vzm>div{background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column}.vzm b{font:600 24px var(--num)}.vzm span{font-size:12px;color:var(--mu)}
+.vzb{margin-top:12px}.vzt{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:6px}.vzt span{color:var(--mu)}.vzr{height:8px;border-radius:99px;background:var(--bd);overflow:hidden}.vzr i{display:block;height:100%;border-radius:99px}`;document.head.append(st)})();

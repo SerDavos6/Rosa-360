@@ -773,7 +773,7 @@ function liveUndo(id){lvApply(id,d=>{const e=d.events.pop();if(!e)return;
   else if(e.k==='og'){lvDec(d.stats[e.p],'og');d.ga=Math.max(0,d.ga-1);if(e.gk)lvDec(d.stats[e.gk],'gs')}
   else if(e.k==='ps'){if(e.gk)lvDec(d.stats[e.gk],'ps')}
   else lvDec(d.stats[e.p],e.k)});LIVE.p=null;LIVE.assist=false;rq()}
-function liveEnd(id){ask({title:'Fine partita?',msg:'La partita viene segnata come giocata con il risultato attuale.',ok:'Fine partita',fn:()=>{lvApply(id,d=>{d.played=true});liveClockStop(id)}})}
+function liveEnd(id){ask({title:'Fine partita?',msg:'La partita viene segnata come giocata con il risultato attuale.',ok:'Fine partita',fn:()=>{lvApply(id,d=>{d.played=true});liveClockStop(id);S.fp=id;S.fpSel=null;setTimeout(render,0)}})}
 function liveLog(x){
   const nm=id=>esc(mbr(x,id)?.nick||'?'),ev=x.events||[];
   if(!ev.length)return '';
@@ -802,7 +802,7 @@ const livePlayers=x=>(x.present||[]).map(i=>mbr(x,i)).filter(m=>m&&m.role==='gio
 // Pannello delle azioni: sta fisso sopra la barra e ha sempre la stessa altezza, così nessun pulsante si sposta mentre si tocca.
 function liveDockHtml(x,tab){
   const ps=livePlayers(x),id=x.id;if(!ps.length)return '';
-  const av=m=>`<span class="av">${m.photo?`<img src="${safeSrc(m.photo)}" alt="">`:esc((m.nick||'?').slice(0,2).toUpperCase())}</span>`;
+  const av=m=>`<span class="av">${m.photo?`<img loading="lazy" decoding="async" src="${safeSrc(m.photo)}" alt="">`:esc((m.nick||'?').slice(0,2).toUpperCase())}</span>`;
   const grid=(list,fn,extra)=>`<div class="lvg">${list.map(m=>`<button onclick="${fn(m)}">${av(m)}<span class="n">${esc(m.nick)}</span></button>`).join('')}${extra||''}</div>`;
   const sel=LIVE.p&&ps.find(m=>m.id===LIVE.p);let title,row,cancel=false;
   if(LIVE.pick==='gol'){title='Chi ha segnato?';cancel=true;
@@ -902,3 +902,84 @@ async function wakeSync(){
     else if(!want&&_wl){const w=_wl;_wl=null;await w.release()}}catch(e){_wl=null}
   _wlBusy=false}
 setInterval(wakeSync,2500);document.addEventListener('visibilitychange',wakeSync);
+
+
+// ===== Scheda "Fine partita" =====
+// Chi ha i poteri: si apre da sola dopo "Fine partita" nella diretta (MVP da scegliere, salva e condividi).
+// Giocatori e tifosi: compare una volta aprendo una partita appena finita (oggi o ieri); la X la chiude per sempre su quel telefono.
+(function(){
+const st=document.createElement('style');st.textContent=`
+#fpw{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;animation:fpin .22s ease-out}
+@keyframes fpin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#fpw[hidden]{display:none}
+.fph{padding:calc(14px + env(safe-area-inset-top)) 16px 22px;background:linear-gradient(180deg,color-mix(in srgb,var(--acf) 62%,#000) 0%,color-mix(in srgb,var(--acf) 26%,#000) 72%,var(--bg) 100%);color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px;flex:none}
+.fpt{width:100%;display:flex;align-items:center;justify-content:space-between}.fpt>span{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.85;text-align:center;flex:1}
+.fpx{width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:24px;line-height:1}
+.fpv{display:flex;align-items:center;gap:10px;width:100%}.fpv>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.fpv>div b{font-size:14px;text-align:center;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fpl{width:58px;height:58px;border-radius:16px;background:#fff;object-fit:contain;display:grid;place-items:center;font:700 19px var(--num);color:#333}
+.fps{font:600 64px/1 var(--num);white-space:nowrap}
+.fpe{font-size:13px;font-weight:800;letter-spacing:.14em;padding:6px 16px;border-radius:999px;color:#10220f;background:#7be08f}.fpe.p{background:#ff9b8a;color:#2b0d08}.fpe.n{background:#fcd34d;color:#2b2105}
+.fpb{flex:1;overflow:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.fpb .card{margin:0}
+.fpk{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
+.fpr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--bd)}.fpk+.fpr,.card>div:first-child+.fpr{border-top:0}
+.fpr .mn{width:32px;font:600 15px var(--num);color:var(--mu)}.fpr>.ic{color:var(--acf);flex:none}.fpr b{flex:1;min-width:0}.fpr b small{font-weight:500;color:var(--mu)}.fpr .rs{font-size:12px;font-weight:700;color:var(--mu)}
+.fpm{display:flex;gap:8px}.fpm button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);min-height:0}
+.fpm button.on{border-color:var(--acf);background:color-mix(in srgb,var(--acf) 14%,transparent)}.fpm b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpm small{font-size:11px;color:var(--mu);font-weight:600}
+.fpa{width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--acf) 18%,transparent);color:var(--acf);font:700 15px var(--num);flex:none}.fpa img{width:100%;height:100%;object-fit:cover}
+.fpy{display:flex;align-items:center;gap:12px}.fpy>div{flex:1;min-width:0}.fpy b{font-size:17px}
+.fpf{flex:none;padding:12px 16px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px;background:var(--bg)}.fpf .two{display:flex;gap:8px}.fpf .two button{flex:1}
+.fpf .p{min-height:52px;font-size:16px}`;document.head.append(st);
+
+const seen=()=>{try{return JSON.parse(localStorage.getItem('fps')||'[]')}catch(e){return[]}};
+const markSeen=id=>{try{const a=seen().filter(x=>x!==id);a.push(id);localStorage.setItem('fps',JSON.stringify(a.slice(-60)))}catch(e){}};
+const day=o=>o.getFullYear()+'-'+String(o.getMonth()+1).padStart(2,'0')+'-'+String(o.getDate()).padStart(2,'0');
+const ini=n=>esc(String(n||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
+const avt=m=>`<span class="fpa">${m&&safeSrc(m.photo)?`<img src="${safeSrc(m.photo)}" alt="">`:ini(m&&m.nick)}</span>`;
+const N=(s,k)=>+((s||{})[k])||0;
+const line=s=>[N(s,'g')&&N(s,'g')+' gol',N(s,'a')&&N(s,'a')+' assist',N(s,'ps')&&N(s,'ps')+' rig. parati',N(s,'gs')&&N(s,'gs')+' subiti'].filter(Boolean).join(' · ')||'presente';
+function cands(x){const out=[];(x.present||[]).forEach(id=>{const m=mbr(x,id),s=(x.stats||{})[id];if(!m||m.role==='dirigente')return;let r=rate(s||{});if(m.pos==='P'&&!N(s,'gs'))r+=1;out.push({m,s:s||{},r})});return out.sort((a,b)=>b.r-a.r).slice(0,3)}
+function goals(x){const ev=x.events||[];let a=0,b=0;const rows=[];
+  ev.forEach(e=>{if(e.k==='g'){a++;rows.push({m:e.m,p:e.p,as:e.a,sc:a+'–'+b})}else if(e.k==='opp'||e.k==='og')b++});
+  if(!rows.length)Object.entries(x.stats||{}).filter(([,s])=>N(s,'g')>0).sort((p,q)=>N(q[1],'g')-N(p[1],'g')).forEach(([id,s])=>rows.push({p:id,n:N(s,'g')}));
+  return rows}
+function html(x,mgr){const T=S.teams.find(t=>t.id===x.tid)||{},a=+x.gf||0,b=+x.ga||0,es=a>b?['','VITTORIA']:a<b?['p','SCONFITTA']:['n','PAREGGIO'];
+  const lg=(src,name)=>safeSrc(src)?`<img class="fpl" src="${safeSrc(src)}" alt="">`:`<span class="fpl">${ini(name)}</span>`;
+  const nk=id=>esc((mbr(x,id)||{}).nick||'?');
+  const gr=goals(x),cards=Object.entries(x.stats||{}).filter(([,s])=>N(s,'y')||N(s,'r')).map(([id,s])=>nk(id)+(N(s,'r')?' (rosso)':' (giallo)'));
+  const marc=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="fpk">Marcatori</span><span class="mu" style="font-size:12px">${(x.present||[]).length} presenti</span></div>
+    ${gr.length?gr.map(r=>`<div class="fpr">${r.n?'':`<span class="mn">${r.m?r.m+"'":''}</span>`}${ic('ball')}<b>${r.p?nk(r.p):'Gol'}${r.n>1?' ×'+r.n:''}${r.as?` <small>· assist ${nk(r.as)}</small>`:''}</b>${r.sc?`<span class="rs">${r.sc}</span>`:''}</div>`).join(''):'<p class="mu" style="margin:6px 0">Nessun gol registrato.</p>'}
+    ${cards.length?`<p class="mu" style="margin:8px 0 2px;font-size:12px">Cartellini: ${cards.join(', ')}</p>`:''}</div>`;
+  let mid,foot;
+  if(mgr){const cs=cands(x),sel=S.fpSel||x.mvp||(cs[0]&&cs[0].m.id);
+    mid=cs.length?`<div class="card"><div class="fpk" style="margin-bottom:10px">Migliore in campo</div><div class="fpm">${cs.map(c=>`<button class="${c.m.id===sel?'on':''}" onclick="S.fpSel='${c.m.id}';render()">${avt(c.m)}<b>${esc(c.m.nick)}</b><small>${line(c.s)}</small></button>`).join('')}</div><p class="mu" style="margin:10px 0 0;font-size:12px;white-space:normal">Proposti dall'app in base alle statistiche. Tocca per scegliere.</p></div>`:'';
+    foot=`<button class="p" onclick="fpSave('${x.id}',true)">${ic('share')} Salva e condividi il risultato</button><div class="two"><button onclick="fpFix('${x.id}')">${ic('pen')} Correggi</button><button onclick="fpSave('${x.id}',false)">Solo salva</button></div>`;
+    return [mid+marc,foot,es,T,lg,a,b]}
+  const mv=typeof mvp==='function'?mvp(x):null,me=typeof myMember==='function'?myMember():null,ms=me&&(x.present||[]).includes(me.id)?(x.stats||{})[me.id]||{}:null;
+  const tot=me&&me.role==='giocatore'&&typeof stats==='function'?stats(me):null;
+  mid=(mv&&mv.m?`<div class="card fpy">${avt(mv.m)}<div><div class="fpk">MVP</div><b>${esc(mv.m.nick)}</b><div class="mu" style="font-size:12px">${line((x.stats||{})[mv.m.id])}</div></div><span style="font-size:26px">🏆</span></div>`:'')
+    +(ms&&me.role==='giocatore'?`<div class="card"><div class="fpk">La tua partita</div><b style="font-size:16px">${line(ms)}</b>${tot?`<div class="mu" style="font-size:12px">Stagione: ${tot.g} gol e ${tot.a} assist in ${tot.p} ${tot.p===1?'presenza':'presenze'}</div>`:''}</div>`:'');
+  foot=`<div class="two"><button class="p" onclick="fpShare('${x.id}')">${ic('share')} Condividi</button><button onclick="fpClose()">Vai alla partita</button></div>`;
+  return [mid+marc,foot,es,T,lg,a,b]}
+function which(){if(S.fp)return{id:S.fp,mgr:true};
+  if(!S.mid||S.pd||(typeof editOn==='function'&&editOn()))return null;
+  const x=S.matches.find(m=>m.id===S.mid);if(!x||!x.played||!x.date)return null;
+  const n=new Date(),y=new Date(n.getTime()-864e5);if(x.date!==day(n)&&x.date!==day(y))return null;
+  if(seen().includes(x.id))return null;return{id:x.id,mgr:false}}
+function sync(){let w=document.getElementById('fpw');const q=which(),x=q&&S.matches.find(m=>m.id===q.id);
+  if(!x){if(w){w.hidden=true;w.innerHTML='';w.dataset.h=''}return}
+  const [body,foot,es,T,lg,a,b]=html(x,q.mgr);const ph=[x.tourn,typeof matchPhase==='function'?matchPhase(x):''].filter(Boolean).join(' · ');
+  const h=`<div class="fph"><div class="fpt"><span style="flex:none;width:44px"></span><span>Fine partita${ph?' · '+esc(ph):''}</span><button class="fpx" onclick="fpClose()" aria-label="Chiudi">×</button></div>
+  <div class="fpv"><div>${lg(T.logo,T.name)}<b>${esc(T.name||'Noi')}</b></div><span class="fps">${a} – ${b}</span><div>${lg(x.oppLogo,x.opp)}<b>${esc(x.opp||'')}</b></div></div><span class="fpe ${es[0]}">${es[1]}</span></div>
+  <div class="fpb">${body}</div><div class="fpf">${foot}</div>`;
+  if(!w){w=document.createElement('div');w.id='fpw';w.setAttribute('role','dialog');w.setAttribute('aria-label','Fine partita');document.body.append(w)}
+  if(w.dataset.h!==h){const sc=(w.querySelector('.fpb')||{}).scrollTop||0;w.innerHTML=h;w.dataset.h=h;const nb=w.querySelector('.fpb');if(nb)nb.scrollTop=sc}w.hidden=false}
+window.fpClose=function(){const q=which();if(q)markSeen(q.id);S.fp=null;S.fpSel=null;setTimeout(render,0)};
+window.fpShare=function(id){markSeen(id);S.fp=null;const e=S.edit;S.edit=false;render();try{previewMatch(id)}finally{S.edit=e}};
+window.fpSave=async function(id,share){const x=S.matches.find(m=>m.id===id);if(!x)return;const c=cands(x),sel=S.fpSel||x.mvp||(c[0]&&c[0].m.id);
+  if(sel&&sel!==x.mvp){try{await S.db.doc('matches/'+id).update({mvp:sel});x.mvp=sel}catch(e){toast('MVP non salvato: riprova.');return}}
+  toast('Partita salvata',true);if(share)fpShare(id);else{markSeen(id);S.fp=null;S.fpSel=null;render()}};
+window.fpFix=function(id){markSeen(id);S.fp=null;S.fpSel=null;if(typeof setEdit==='function')setEdit(true);S.mid=id;S.mt='stats';render()};
+const inst=()=>{const r=window.render;if(typeof r!=='function'||r.fp)return;const w=function(){const o=r.apply(this,arguments);try{sync()}catch(e){}return o};w.fp=1;window.render=w;try{render=w}catch(e){}};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inst);else inst();
+})();
