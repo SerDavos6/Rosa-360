@@ -180,6 +180,12 @@ body:has(.lvsheet:not([hidden])) .a2hs{display:none}
 /* --- partita: intestazione con esito, Info e Statistiche compatte --- */
 .mres{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.1em}
 .mres.v{background:rgba(34,197,94,.16);color:#4ade80}.mres.p{background:rgba(255,155,107,.16);color:#ff9b6b}.mres.n{background:rgba(148,163,184,.18);color:var(--mu)}
+.erg{display:flex;align-items:center;gap:8px}.ers{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}.ers>span{font-size:12px;font-weight:700;color:var(--mu);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ern{display:flex;align-items:center;gap:4px;width:100%}.ern button{flex:0 0 40px;width:40px;min-height:48px;padding:0;font-size:22px;line-height:1}.ern input{flex:1;min-width:0;width:100%;text-align:center;font:600 28px var(--num);padding:6px 0;min-height:48px}.erd{font:600 24px var(--num);color:var(--mu);align-self:flex-end;line-height:48px}
+.tgl{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--bd);cursor:pointer}.tgl>span{flex:1;display:flex;flex-direction:column}.tgl small{font-size:12px}.tgl input{position:absolute;opacity:0;pointer-events:none}.tgl i{flex:none;width:46px;height:28px;border-radius:999px;background:var(--bd);position:relative;transition:background .15s}.tgl i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}.tgl input:checked+i{background:var(--acf)}.tgl input:checked+i::after{transform:translateX(18px)}
+.pch-h{display:flex;align-items:center;gap:6px;margin-bottom:12px}.pc-sub{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:14px 2px 8px}
+.pchs{display:flex;flex-wrap:wrap;gap:8px}.pch{margin:0;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;border:1px solid var(--bd);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;opacity:.55;transition:opacity .12s,background .12s,border-color .12s;max-width:100%}.pch input{position:absolute;opacity:0;pointer-events:none}.pch .sav{width:30px;height:30px;font-size:11px}.pch>span:not(.sav){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pch:has(input:checked){opacity:1;background:color-mix(in srgb,var(--acf) 14%,transparent);border-color:var(--acf)}.pch.osp{padding-right:2px}.pch.osp small{display:block;font-size:11px;font-weight:600;color:var(--mu)}.pch .osp-e,.pch .osp-x{width:30px;min-width:30px;height:30px;min-height:30px;margin:0}
+.edb{margin-top:12px;width:100%}.edb.on{border-color:var(--acf);color:var(--acf)}#edet{margin-top:4px}.ebt{display:flex;gap:8px;flex-wrap:wrap}
+.sed{padding:0 14px}.sre+.sre{border-top:1px solid var(--bd)}.sre summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:56px;cursor:pointer}.sre summary::-webkit-details-marker{display:none}.sre summary>b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sre .spc{flex:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.sre .z{color:var(--mu);opacity:.5}.sre summary>.ic{flex:none;width:18px;height:18px;color:var(--mu);transition:transform .15s}.sre[open] summary>.ic{transform:rotate(90deg)}.sre .sg{padding-bottom:14px;margin-top:0}.sre .gkav .sav,.sre .sav{width:34px;height:34px}.sbq{display:inline-flex;align-items:center;gap:3px;font:600 15px var(--num)}.sbq>.ic{flex:0 0 15px;display:block;width:15px;min-width:15px;height:15px;color:var(--mu)}
 .ich{display:flex;align-items:center;gap:10px;margin:0 0 12px}.tag2{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:var(--bg);border:1px solid var(--bd);font-size:13px;font-weight:800}
 .tag2.on{background:color-mix(in srgb,var(--acf) 16%,transparent);border-color:transparent;color:var(--acf)}.tag2 .ic{width:15px;height:15px}
 .idg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.idt{display:flex;flex-direction:column;gap:4px;min-width:0}.idt>span{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}.idt .ic{width:14px;height:14px}.idt b{font-size:15px;overflow-wrap:anywhere}
@@ -324,7 +330,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=23"></script><script src="match-report.js?v=29"></script><script src="fluido.js?v=11"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
+<script src="ui-extra.js?v=23"></script><script src="match-report.js?v=29"></script><script src="fluido.js?v=12"></script><script src="restyle.js?v=10"></script><script src="rinnova.js?v=19"></script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
 <script src="torneo.js?v=26"></script>
 
 <script>
@@ -851,7 +857,13 @@ function staffInfo(m,tile){const s=staffStats(m),pal=typeof trPalmares==="functi
   ${pal.length?`<h2>Palmarès</h2><div class="card" style="padding:4px 14px">${pal.map(p=>`<div class="lr">${ic("trophy")}<b style="flex:1">${esc(p.name)}</b><span>${esc(p.txt)}</span></div>`).join("")}</div>`:""}
   <div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
 // dalla scheda di un giocatore si apre la partita (scheda Statistiche, dove si vede cosa ha fatto)
-function openMatchFromPlayer(id){S.pd=null;if(S.tab!=="home"&&S.tab!=="cal")S.tab="home";S.mid=id;LIVE.mid=null;render();S.mt="stats";setTimeout(render,0)}
+// dalla scheda del giocatore si apre la partita; "indietro" riporta alla scheda del giocatore, nello stesso punto
+function openMatchFromPlayer(id){const el=S.pd?document.querySelector(".pm"):document.querySelector(".view");
+  S.ret={mid:id,pd:S.pd,tab:S.tab,sc:el?el.scrollTop:0};
+  S.pd=null;if(S.tab!=="home"&&S.tab!=="cal")S.tab="home";S.mid=id;LIVE.mid=null;render();S.mt="stats";setTimeout(render,0)}
+function matchBack(){const r=S.ret,cur=S.mid;S.ret=null;S.mid=null;S.mt=null;
+  if(r&&r.mid===cur){S.tab=r.tab;S.pd=r.pd;render();setTimeout(()=>{const el=r.pd?document.querySelector(".pm"):document.querySelector(".view");if(el)el.scrollTop=r.sc||0},30);return}
+  render()}
 function homeTab(t,mgr){return calView(t,mgr,true)}
 function calView(t,mgr,home){
   const all=S.matches.filter(x=>x.tid===t.id),ms=all.filter(inSeason),tor=[...new Set(ms.map(x=>x.tourn||"Amichevoli"))];
@@ -932,28 +944,11 @@ function matchParts(x,mgr){
   // Gol subiti e rigori parati: per i portieri, per chi ne ha già e per tutti se tra i presenti non c'è un portiere.
   const noGk=!rs.some(m=>pr.includes(m.id)&&m.role==="giocatore"&&m.pos==="P"),gkK=(m,s)=>m.pos==="P"||noGk||s.gs>0||s.ps>0?["gs","ps"]:[];
   const LBL={g:["Gol",ic("ball")],a:["Assist",ic("assist")],og:["Autogol",ic("og")],y:["Giallo",ic("card","y")],r:["Rosso",ic("card","r")],gs:["Subiti",ic("glove")],ps:["Rig. parati",ic("glove")]};
-  const rows=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore").map(m=>{const s=(x.stats||{})[m.id]||{};
-    const cell=k=>{const id="s_"+m.id+"_"+k;return `<div class="stp"><span class="mu">${LBL[k][1]} ${LBL[k][0]}</span><div><button type="button" onclick="stp('${id}',-1)" aria-label="Meno ${LBL[k][0]}" ${mgr?"":"disabled"}>−</button><input type="number" inputmode="numeric" min="0" id="${id}" value="${s[k]||0}" ${mgr?"":"disabled"}><button type="button" onclick="stp('${id}',1)" aria-label="Più ${LBL[k][0]}" ${mgr?"":"disabled"}>+</button></div></div>`};
-    const ks=["g","a","og","y","r"].concat(gkK(m,s)),sum=ks.filter(k=>+s[k]>0).map(k=>`<span class="tag">${LBL[k][1]} ${LBL[k][0]} <b>${s[k]}</b></span>`).join("")||'<span class="mu">Nessun evento</span>';
-    return `<details class="card sp spd"${(S.spo||{})[m.id]?" open":""} ontoggle="(S.spo=S.spo||{})['${m.id}']=this.open"><summary><b>${esc(m.nick)}</b><span class="spc">${sum}</span>${ic("chev")}</summary><div class="sg">${ks.map(cell).join("")}</div></details>`}).join("");
+  const cellE=(m,s,k)=>{const id="s_"+m.id+"_"+k;return `<div class="stp"><span class="mu">${LBL[k][1]} ${LBL[k][0]}</span><div><button type="button" onclick="stp('${id}',-1)" aria-label="Meno ${LBL[k][0]}">−</button><input type="number" inputmode="numeric" min="0" id="${id}" value="${s[k]||0}"><button type="button" onclick="stp('${id}',1)" aria-label="Più ${LBL[k][0]}">+</button></div></div>`};
+  const rows=rs.some(m=>pr.includes(m.id)&&m.role==="giocatore");
   const T=S.teams.find(t=>t.id===x.tid)||{},md=matchDetail(x),tab=S.mt||(mgr&&!x.played?"live":"info");
   const showScore=x.played||(+x.gf||0)+(+x.ga||0)>0||(x.events||[]).length>0;
   const panel=(k,h)=>`<div class="mp" data-k="${k}" style="display:${tab===k?"block":"none"}">${h}</div>`;
-  const infoM=`<div class="card"><b>Risultato</b><div class="row"><div><label>Gol nostri</label><input id="gf" type="number" inputmode="numeric" min="0" value="${x.gf}" ${mgr?"":"disabled"}></div><div><label>Gol avversari</label><input id="ga" type="number" inputmode="numeric" min="0" value="${x.ga}" ${mgr?"":"disabled"}></div></div>
-  <label class="chk"><input type="checkbox" id="pl" ${x.played?"checked":""} ${mgr?"":"disabled"}> Partita giocata</label></div>
-  <div class="card"><div class="row" style="align-items:center"><b style="flex:1">Presenti</b>${mgr?`<button class="s" onclick="allPresent(true)">Tutti</button><button class="s" onclick="allPresent(false)">Nessuno</button>`:""}</div>
-  ${(()=>{const players=ms.filter(m=>m.role==="giocatore").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const dirs=ms.filter(m=>m.role==="dirigente").sort((a,b)=>String(a.nick||"").localeCompare(String(b.nick||"")));const grid=list=>`<div class="pcg">${list.map(m=>`<label>${(()=>{const own=!mgr&&!!m.uid&&m.uid===S.uid&&!x.played;return `<input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""} ${mgr||own?"":"disabled"} ${own?`onchange="myPresence('${x.id}','${m.id}',this.checked)"`:""}>`})()} <span>${esc(m.nick)}${!mgr&&m.uid===S.uid&&!x.played?" (tu)":""}</span></label>`).join("")}</div>`;return `${players.length?`<div class="pc-section"><div class="pc-title">Giocatori <span>${players.length}</span></div>${grid(players)}</div>`:""}${dirs.length?`<div class="pc-section"><div class="pc-title">Dirigenti <span>${dirs.length}</span></div>${grid(dirs)}</div>`:""}`})()}
-  ${mgr?`<div class="pc-section"><div class="pc-title">Ospiti${guests.length?` <span>${guests.length}</span>`:""}</div>${guests.length?`<div class="pcg">${guests.map(g=>`<label class="pcg-osp"><input type="checkbox" class="pc" value="${g.id}" ${pr.includes(g.id)?"checked":""}> <span>${g.num?`#${esc(g.num)} `:""}${esc(g.nick)}<small class="mu" style="display:block;font-weight:500">${POS[g.pos]}</small></span><button type="button" class="osp-e" aria-label="Modifica ${esc(g.nick)}" onclick="event.preventDefault();event.stopPropagation();guestEdit('${x.id}','${g.id}')">${ic("pen")}</button><button type="button" class="osp-x" aria-label="Togli ${esc(g.nick)}" onclick="event.preventDefault();event.stopPropagation();guestDel('${x.id}','${g.id}')">×</button></label>`).join("")}</div>`:""}<button class="s" style="margin-top:8px" onclick="guestAdd('${x.id}')">${ic("plus")} Aggiungi ospite</button></div>`:""}
-  </div>
-  <div class="card"><b>Dettagli</b><div class="row match-detail-row"><div><label for="emd">Data</label><input id="emd" type="date" value="${esc(x.date||"")}" ${mgr?"":"disabled"}></div><div><label for="eop">Avversario</label><input id="eop" maxlength="80" value="${esc(x.opp||"")}" ${mgr?"":"disabled"}></div></div>
-  <label for="etr">Torneo / campionato</label><input id="etr" list="etl" maxlength="80" placeholder="Vuoto = amichevole" value="${esc(x.tourn||"")}" ${mgr?"":"disabled"}><datalist id="etl">${tourNames([...new Set(S.matches.filter(m=>m.tid===x.tid).map(m=>m.tourn).filter(Boolean))]).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
-  ${phaseFields("e",x,!mgr)}
-  <div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}" ${mgr?"":"disabled"}></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}" ${mgr?"":"disabled"}></div></div><div class="row"><div><label for="ec">Campo (facoltativo)</label><input id="ec" maxlength="20" placeholder="es. 3" value="${esc(md.field)}" ${mgr?"":"disabled"}></div></div><p style="margin:10px 0 0"><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Apri in Maps</button></p>${mgr?`<label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')">`:""}</div>
-  ${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
-  <div id="formation-holder">${formationCard(x,mgr)}</div>
-  <p><button class="p" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button></p>
-  <p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>
-  ${mgr?`<p style="margin-top:22px"><button class="d" style="width:100%" onclick="ask({title:'Eliminare la partita?',msg:'Spariscono anche gol, presenze e statistiche. Non si può annullare.',ok:'Elimina',danger:1,fn:()=>{del('matches/${x.id}');S.mid=null;S.mt=null}})">Elimina partita</button></p>`:""}`;
 
   // vista del giocatore (sola lettura): presenza in un'etichetta, dettagli su una riga, marcatori, storico
   const me=myMember(),isIn=!!me&&pr.includes(me.id),cnt=rs.filter(m=>m.role==="giocatore"&&pr.includes(m.id)).length;
@@ -967,6 +962,31 @@ function matchParts(x,mgr){
   <div class="card"><div class="idg">${det("Data","cal",dt(x.date).f)}${det("Ora","clock",md.time)}${det("Campo","field",md.field)}</div>${md.location||matchPlace(x)?`<div class="ipl">${ic("pin")}<b>${esc(md.location||matchPlace(x))}</b><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Maps</button></div>`:""}</div>
   ${marc}${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
   ${x.played?"":`<p><button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Aggiungi al calendario</button></p>`}`;
+  // vista di chi ha i poteri: stessa grafica del giocatore, con i comandi per modificare
+  const avm=m=>`<span class="sav">${safeSrc(m.photo)?`<img src="${safeSrc(m.photo)}" alt="">`:esc(String(m.nick||"?").slice(0,2).toUpperCase())}</span>`;
+  const chip=m=>`<label class="pch"><input type="checkbox" class="pc" value="${m.id}" ${pr.includes(m.id)?"checked":""}>${avm(m)}<span>${esc(m.nick)}</span></label>`;
+  const byNick=(a,b)=>String(a.nick||"").localeCompare(String(b.nick||""));
+  const pls=ms.filter(m=>m.role==="giocatore").sort(byNick),drs=ms.filter(m=>m.role==="dirigente").sort(byNick);
+  const nOn=pls.filter(m=>pr.includes(m.id)).length+guests.filter(g=>pr.includes(g.id)).length;
+  const scoreBox=(id,name,val)=>`<div class="ers"><span>${esc(name)}</span><div class="ern"><button type="button" onclick="stp('${id}',-1)" aria-label="Meno">−</button><input id="${id}" type="number" inputmode="numeric" min="0" value="${esc(val)}"><button type="button" onclick="stp('${id}',1)" aria-label="Più">+</button></div></div>`;
+  const risC=`<div class="card erz"><span class="ik">Risultato</span><div class="erg">${scoreBox("gf",T.name||"Noi",x.gf)}<b class="erd">–</b>${scoreBox("ga",x.opp||"Loro",x.ga)}</div>
+  <label class="tgl"><span><b>Partita giocata</b><small class="mu">Spegni se la partita deve ancora giocarsi</small></span><input type="checkbox" id="pl" ${x.played?"checked":""}><i></i></label></div>`;
+  const presC=`<div class="card"><div class="pch-h"><span class="ik" style="margin:0;flex:1">Presenti · <span id="pcn">${nOn}</span></span><button class="s" onclick="allPresent(true);pcCount()">Tutti</button><button class="s" onclick="allPresent(false);pcCount()">Nessuno</button></div>
+  ${pls.length?`<div class="pchs">${pls.map(chip).join("")}</div>`:""}
+  ${drs.length?`<div class="pc-sub">Dirigenti</div><div class="pchs">${drs.map(chip).join("")}</div>`:""}
+  <div class="pc-sub">Ospiti</div>${guests.length?`<div class="pchs">${guests.map(g=>`<label class="pch osp"><input type="checkbox" class="pc" value="${g.id}" ${pr.includes(g.id)?"checked":""}>${avm(g)}<span>${g.num?`#${esc(g.num)} `:""}${esc(g.nick)}<small>${esc(POS[g.pos]||"Ospite")}</small></span><button type="button" class="osp-e" aria-label="Modifica ${esc(g.nick)}" onclick="event.preventDefault();event.stopPropagation();guestEdit('${x.id}','${g.id}')">${ic("pen")}</button><button type="button" class="osp-x" aria-label="Togli ${esc(g.nick)}" onclick="event.preventDefault();event.stopPropagation();guestDel('${x.id}','${g.id}')">×</button></label>`).join("")}</div>`:""}
+  <button class="s" style="margin-top:8px" onclick="guestAdd('${x.id}')">${ic("plus")} Aggiungi ospite</button></div>`;
+  const infoM=`${x.played?risC+presC:presC+risC}<div class="card"><div class="idg">${det("Data","cal",x.date?dt(x.date).f:"")}${det("Ora","clock",md.time)}${det("Campo","field",md.field)}</div>${md.location||matchPlace(x)?`<div class="ipl">${ic("pin")}<b>${esc(md.location||matchPlace(x))}</b><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Maps</button></div>`:""}
+  <button class="s edb${S.edet?" on":""}" onclick="S.edet=!S.edet;$('edet').hidden=!S.edet;this.classList.toggle('on',S.edet)">${ic("pen")} Modifica dettagli</button>
+  <div id="edet"${S.edet?"":" hidden"}><div class="row match-detail-row"><div><label for="emd">Data</label><input id="emd" type="date" value="${esc(x.date||"")}"></div><div><label for="eop">Avversario</label><input id="eop" maxlength="80" value="${esc(x.opp||"")}"></div></div>
+  <label for="etr">Torneo / campionato</label><input id="etr" list="etl" maxlength="80" placeholder="Vuoto = amichevole" value="${esc(x.tourn||"")}"><datalist id="etl">${tourNames([...new Set(S.matches.filter(m=>m.tid===x.tid).map(m=>m.tourn).filter(Boolean))]).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
+  ${phaseFields("e",x,false)}
+  <div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}"></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}"></div></div><div class="row"><div><label for="ec">Campo (facoltativo)</label><input id="ec" maxlength="20" placeholder="es. 3" value="${esc(md.field)}"></div></div>
+  <label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')"></div></div>
+  ${marc}${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
+  <div id="formation-holder">${formationCard(x,mgr)}</div>
+  <p class="ebt"><button class="s" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button>${x.played?"":`<button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Calendario</button>`}</p>
+  <p style="margin-top:22px"><button class="d" style="width:100%" onclick="ask({title:'Eliminare la partita?',msg:'Spariscono anche gol, presenze e statistiche. Non si può annullare.',ok:'Elimina',danger:1,fn:()=>{del('matches/${x.id}');S.mid=null;S.mt=null}})">Elimina partita</button></p>`;
   const info=mgr?infoM:infoP;
   const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>`;
   // statistiche in sola lettura: totali della partita, tabella compatta, portiere a parte, gli altri presenti in una riga
@@ -979,8 +999,15 @@ function matchParts(x,mgr){
   ${fld.length?`<div class="card stb"><div class="sth"><span>Giocatore</span>${ic("ball")}${ic("assist")}${ic("card","y")}</div>${fld.map(m=>`<div class="str">${av(m)}<b>${esc(m.nick)}${num(m,"og")?` <small class="mu">(${num(m,"og")} autogol)</small>`:""}</b>${cl(num(m,"g"))}${cl(num(m,"a"))}${cl(num(m,"y")+num(m,"r")?`${num(m,"y")?num(m,"y")+"G":""}${num(m,"r")?" "+num(m,"r")+"R":""}`.trim():0)}</div>`).join("")}</div>`:""}
   ${gks.map(m=>`<div class="card sgk"><span class="gkav">${av(m)}<i>${ic("glove")}</i></span><span class="n"><b>${esc(m.nick)}</b><span class="mu">Portiere</span></span><span class="v"><b>${num(m,"gs")}</b><span>SUBITI</span></span><span class="v"><b class="${num(m,"ps")?"":"z"}">${num(m,"ps")||"–"}</b><span>RIG. PARATI</span></span></div>`).join("")}
   ${quiet.length?`<p class="mu" style="white-space:normal;margin:4px 4px 0"><b style="color:var(--tx)">Presenti anche:</b> ${quiet.map(m=>esc(m.nick)).join(", ")}</p>`:""}`:"";
-  const st=mgr?(rows?rows:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
-  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="S.mid=null;S.mt=null;render()" aria-label="Torna alle partite">${ic("back")}</button><div class="mmeta">${esc(matchComp(x))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
+  // statistiche di chi ha i poteri: stessa tabella, ogni riga si apre per modificare i numeri
+  const PE=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore").sort((a,b)=>num(b,"g")-num(a,"g")||num(b,"a")-num(a,"a")||byNick(a,b));
+  const sumE=(m,s,ks)=>ks.filter(k=>+s[k]>0).map(k=>`<span class="sbq">${LBL[k][1]}<b>${s[k]}</b></span>`).join("");
+  const rowsM=`<div class="card stt">${tots.map(([i,l,v])=>`<div>${ic(i,i==="card"?"y":undefined)}<b>${v}</b><span>${l}</span></div>`).join("")}</div>
+  <p class="mu" style="margin:0 4px 8px;white-space:normal">Tocca un giocatore per segnare gol, assist, cartellini${PE.some(m=>gkK(m,SV(m)).length)?" e parate":""}.</p>
+  <div class="card sed">${PE.map(m=>{const s=SV(m),ks=["g","a","og","y","r"].concat(gkK(m,s)),gk=m.pos==="P"||num(m,"gs")||num(m,"ps");
+    return `<details class="sre"${(S.spo||{})[m.id]?" open":""} ontoggle="(S.spo=S.spo||{})['${m.id}']=this.open"><summary>${gk?`<span class="gkav">${avm(m)}<i>${ic("glove")}</i></span>`:avm(m)}<b>${esc(m.nick)}</b><span class="spc">${sumE(m,s,ks)||'<span class="z">–</span>'}</span>${ic("chev")}</summary><div class="sg">${ks.map(k=>cellE(m,s,k)).join("")}</div></details>`}).join("")}</div>`;
+  const st=mgr?(rows?rowsM:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
+  const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="matchBack()" aria-label="Indietro">${ic("back")}</button><div class="mmeta">${esc(matchComp(x))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
   <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="mmid"><div class="sc2${lvNow()-(LIVE.popAt||0)<900?" pop":""}">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div>${x.played?(r=>`<span class="mres ${r}">${r==="v"?"VITTORIA":r==="p"?"SCONFITTA":"PAREGGIO"}</span>`)(+x.gf>+x.ga?"v":+x.gf<+x.ga?"p":"n"):liveClockHead(x,mgr)}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
   <div class="mtabs">${[["info","Info"],["live","In diretta"],["stats","Statistiche"]].map(([k,n])=>`<button class="${tab===k?"on":""}" data-k="${k}" onclick="mTab('${k}')">${n}</button>`).join("")}</div></header>`;
   const foot=(mgr?liveDockHtml(x,tab):"")+(mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"");
@@ -1009,9 +1036,10 @@ async function myPresence(mid,memId,on){
   }catch(e){err=e}
   if(err){x.present=prev;render();toast("Presenza non salvata: "+(err.message||err.code||"errore")+".")}
   else toast(on?"Presenza segnata":"Presenza tolta",true)}
+function pcCount(){const e=$("pcn");if(e)e.textContent=[...document.querySelectorAll(".pc:checked")].filter(i=>!S.members.some(m=>m.id===i.value&&m.role==="dirigente")).length}
 function markDirty(){const b=$("sbar");if(b)b.hidden=false}
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest(".mp")){scoreSync(e.target);markDirty()}});
-document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp"))markDirty()});
+document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest(".mp")){markDirty();if(e.target.classList.contains("pc"))pcCount()}});
 function mTab(k){const K=["info","live","stats"],d=K.indexOf(k)-K.indexOf(document.querySelector(".mtabs .on")?.dataset.k);S.mt=k;toTop();document.querySelectorAll(".mp").forEach(e=>{e.classList.remove("fx-l","fx-r");e.style.display=e.dataset.k===k?"block":"none";if(e.dataset.k===k&&d)fxSlide([e],d)});document.querySelectorAll(".mtabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===k));const dk=$("lvdock");if(dk)dk.hidden=k!=="live"}
 function collectMatch(id){
   const x=S.matches.find(m=>m.id===id),present=[...document.querySelectorAll(".pc:checked")].map(e=>e.value),stats={};

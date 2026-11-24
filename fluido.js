@@ -86,7 +86,7 @@ function fluidoStart(){
   const goBack=()=>{ // un livello indietro: pannello, poi carta giocatore, poi partita
     if(document.getElementById('sheet')){closeSheet();return true}
     if(S.pd){S.pd=null;render();return true}
-    if(S.mid){S.mid=null;S.mt=null;render();return true}
+    if(S.mid){if(typeof matchBack==='function')matchBack();else{S.mid=null;S.mt=null;render()}return true}
     return false};
   window.addEventListener('popstate',()=>{if(!pushed)return;pushed=false;goBack();sync()});
 
