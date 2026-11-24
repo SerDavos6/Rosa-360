@@ -786,8 +786,10 @@ function liveLog(x){
     :e.k==='og'?ln(ic('og'),'<b>Autogol</b>')+ln('',nm(e.p),'as')
     :e.k==='ps'?ln(ic('glove'),'<b>Rigore parato</b>')+(e.gk?ln('',nm(e.gk),'as'):'')
     :ln(e.k==='y'?ic('card','y'):ic('card','r'),'<b>'+nm(e.p)+'</b>');
-  const row=e=>'<li class="lve"><div class="lvc l">'+(mine(e)?txt(e):'')+'</div><span class="lvm">'+(e.m?e.m+"'":'•')+'</span><div class="lvc r">'+(mine(e)?'':txt(e))+'</div></li>';
-  return '<div class="lvt"><div class="lvc l">'+esc(T.name||'Noi')+'</div><span class="lvm"></span><div class="lvc r">'+esc(x.opp||'Avversari')+'</div></div><ol class="lvlog">'+ev.map(row).reverse().join('')+'</ol>'}
+  // chi ha i poteri (matita accesa) può toccare un evento per correggerlo, anche a partita finita
+  const ed=typeof editOn==='function'&&editOn();
+  const row=(e,i)=>'<li class="lve'+(ed?' lved" role="button" tabindex="0" aria-label="Correggi evento" onclick="evEdit(\''+x.id+'\','+i+')':'')+'"><div class="lvc l">'+(mine(e)?txt(e):'')+'</div><span class="lvm">'+(e.m?e.m+"'":'•')+'</span><div class="lvc r">'+(mine(e)?'':txt(e))+'</div>'+(ed?'<span class="lvpen">'+ic('pen')+'</span>':'')+'</li>';
+  return (ed?'<p class="mu lvhint">Tocca un evento per correggerlo o eliminarlo.</p>':'')+'<div class="lvt"><div class="lvc l">'+esc(T.name||'Noi')+'</div><span class="lvm"></span><div class="lvc r">'+esc(x.opp||'Avversari')+'</div></div><ol class="lvlog">'+ev.map(row).reverse().join('')+'</ol>'}
 function liveCardHtml(x){
   const ps=livePlayers(x),id=x.id;
   if(!ps.length)return '<div class="card"><b class="hd">Gol in diretta</b><p class="mu">Segna prima le presenze (scheda Info) e premi Salva: poi potrai registrare i gol con un tocco.</p></div>';
@@ -983,3 +985,36 @@ window.fpFix=function(id){markSeen(id);S.fp=null;S.fpSel=null;if(typeof setEdit=
 const inst=()=>{const r=window.render;if(typeof r!=='function'||r.fp)return;const w=function(){const o=r.apply(this,arguments);try{sync()}catch(e){}return o};w.fp=1;window.render=w;try{render=w}catch(e){}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inst);else inst();
 })();
+
+// ===== Correggere la cronaca =====
+// Toglie (sg=-1) o rimette (sg=+1) gli effetti di un evento su risultato e statistiche.
+const lvFx=(d,e,sg)=>{const up=(p,k)=>{if(!p)return;if(sg>0){const s=lvStat(d,p);s[k]=(+s[k]||0)+1}else lvDec(d.stats[p],k)};
+  if(e.k==='g'){up(e.p,'g');up(e.a,'a');d.gf=Math.max(0,d.gf+sg)}
+  else if(e.k==='opp'){d.ga=Math.max(0,d.ga+sg);up(e.gk,'gs')}
+  else if(e.k==='og'){up(e.p,'og');d.ga=Math.max(0,d.ga+sg);up(e.gk,'gs')}
+  else if(e.k==='ps')up(e.gk,'ps');
+  else if(e.k==='y'||e.k==='r')up(e.p,e.k)};
+function evEdit(id,i){
+  const b=S.matches.find(m=>m.id===id);if(!b)return;const x=lvEff(b),e=(x.events||[])[i];if(!e)return;
+  const ps=livePlayers(x).sort((a,c)=>String(a.nick||'').localeCompare(String(c.nick||'')));
+  const sel=(fid,lab,cur,none)=>`<label for="${fid}">${lab}</label><select id="${fid}">${none?`<option value="">${none}</option>`:''}${ps.map(m=>`<option value="${m.id}"${m.id===cur?' selected':''}>${esc(m.nick)}${m.pos==='P'?' (portiere)':''}</option>`).join('')}</select>`;
+  const T={g:'Gol nostro',opp:'Gol '+(x.opp||'avversario'),og:'Autogol',ps:'Rigore parato',y:'Cartellino',r:'Cartellino'}[e.k]||'Evento';
+  let f='';
+  if(e.k==='g')f=sel('ev-p','Marcatore',e.p,'Non indicato')+sel('ev-a','Assist',e.a,'Nessun assist');
+  else if(e.k==='og')f=sel('ev-p','Autogol di',e.p)+sel('ev-gk','Portiere in porta',e.gk,'Non indicato');
+  else if(e.k==='opp'||e.k==='ps')f=sel('ev-gk','Portiere in porta',e.gk,'Non indicato');
+  else if(e.k==='y'||e.k==='r')f=sel('ev-p','Giocatore',e.p)+`<label for="ev-k">Colore</label><select id="ev-k"><option value="y"${e.k==='y'?' selected':''}>Giallo</option><option value="r"${e.k==='r'?' selected':''}>Rosso</option></select>`;
+  sheet(`<h2 style="margin-top:0">Correggi: ${esc(T)}</h2>${f}<label for="ev-m">Minuto</label><input id="ev-m" type="number" inputmode="numeric" min="1" max="200" placeholder="Non indicato" value="${e.m?esc(e.m):''}">
+  <p class="mu" style="white-space:normal;font-size:13px">Risultato e statistiche si aggiornano da soli.</p>
+  <div class="row" style="margin-top:14px"><button class="p" onclick="evSave('${id}',${i})">Salva</button><button onclick="closeSheet()">Annulla</button></div>
+  <button class="d" style="width:100%;margin-top:10px" onclick="evDel('${id}',${i})">Elimina evento</button>`)}
+function evSave(id,i){const g=k=>{const el=document.getElementById(k);return el?el.value:undefined};
+  const p=g('ev-p'),a=g('ev-a'),gk=g('ev-gk'),k=g('ev-k'),m=parseInt(g('ev-m'),10);
+  lvApply(id,d=>{const old=d.events[i];if(!old)return;lvFx(d,old,-1);const ne={...old};
+    if(p!==undefined)ne.p=p||null;if(a!==undefined){if(a&&a!==ne.p)ne.a=a;else delete ne.a}if(gk!==undefined)ne.gk=gk||null;if(k)ne.k=k;
+    if(m>0)ne.m=m;else delete ne.m;
+    d.events[i]=ne;lvFx(d,ne,1)});
+  closeSheet();toast('Evento corretto',true)}
+function evDel(id,i){closeSheet();ask({title:'Eliminare questo evento?',msg:'Si tolgono anche il gol o il cartellino dal risultato e dalle statistiche.',ok:'Elimina',danger:1,fn:()=>{
+  lvApply(id,d=>{const old=d.events[i];if(!old)return;lvFx(d,old,-1);d.events.splice(i,1)});toast('Evento eliminato',true)}})}
+(function(){const st=document.createElement('style');st.textContent=`.lve.lved{cursor:pointer;position:relative;padding-right:26px;border-radius:10px}.lve.lved:active{background:color-mix(in srgb,var(--acf) 10%,transparent)}.lvpen{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--mu)}.lvpen .ic{width:14px;height:14px}.lvhint{margin:4px 0 8px;font-size:13px;white-space:normal}`;document.head.append(st)})();
