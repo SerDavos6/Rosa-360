@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Rosa 360 – gestione calcio e calcetto</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0c1210">
 <script>try{var c=localStorage.getItem("bar");if(c&&/^#[0-9a-f]{6}$/i.test(c))document.querySelector("meta[name=theme-color]").setAttribute("content",c)}catch(e){}</script>
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -17,13 +17,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=Barlow+Condensed:wght@600;700;800&family=Oswald:wght@500;700&display=swap" media="print" onload="this.media='all'">
 <style>
-html{background-color:var(--bg,#f3f1ec)}
+html{background-color:var(--bg,#0c1210)}
 /* ===== Squadra · nuova interfaccia =====
    Struttura: intestazione fissa in alto, contenuto che scorre al centro, barra di navigazione fissa in basso.
    Barre piene (niente trasparenze né elementi fluttuanti): il contenuto scorre sempre e solo nella zona centrale. */
 :root{--ui:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--num:Oswald,"Arial Narrow",sans-serif;--navh:60px;--r:16px;
  --bg:#f3f1ec;--sf:#ffffff;--tx:#14171f;--mu:#5b6170;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#ffffff;--dg:#c62828;color-scheme:light}
-:root:root:root{--bg:#f3f1ec;--sf:#ffffff;--tx:#14171f;--mu:#5b6170;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#ffffff;--dg:#c62828;color-scheme:light}
+:root:root:root{--bg:#0c1210;--sf:#151c19;--tx:#f3f1ec;--mu:#a9b3ae;--bd:#26302b;--ac:#2fbf71;--acf:#2fbf71;--ac2:#14281d;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
@@ -333,7 +333,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 <script src="ui-extra.js?v=25"></script><script src="match-report.js?v=31"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f1ec;--sf:#fff;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#fff}
-:root:root:root{--bg:#f3f1ec;--sf:#fff;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#fff}
+:root:root:root{--bg:#0c1210;--sf:#151c19;--bd:#26302b;--ac:#2fbf71;--acf:#2fbf71;--ac2:#14281d;--on:#04210f}
 .card{border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 6px 18px -10px rgba(15,23,42,.18)}
 :root:root:root .card{box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 8px 20px -12px rgba(0,0,0,.6)}
 .bar{border-bottom-color:transparent;box-shadow:0 1px 0 var(--bd)}
@@ -412,15 +412,14 @@ function ic(n,c=""){return `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none"
 let toastT;
 function toast(msg,ok){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.setAttribute("role",ok?"status":"alert");d.textContent=msg;document.body.append(d);{const n=document.querySelector(".bn"),sb=$("sbar");if(n){let h=innerHeight-n.getBoundingClientRect().top;if(sb&&!sb.hidden)h+=sb.offsetHeight;d.style.bottom=(h+12)+"px"}}clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),ok?2200:4500)}
 // ---- tema: Squadra / Chiaro / Scuro ----
-function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}try{if(localStorage.getItem("look")!=="md"){localStorage.setItem("look","md");if(m==="dark"){m="light";localStorage.setItem("mode","light")}}}catch(e){}
-  S.mode=m==="light"||m==="dark"||m==="auto"||m==="team"?m:"light"}return S.mode}
+function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}S.mode=m==="light"||m==="dark"||m==="auto"||m==="team"?m:"dark"}return S.mode}
 function setMode(m){S.mode=m;try{localStorage.setItem("mode",m)}catch(e){}render()}
 function isDarkNow(){const b=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();return /^#[0-9a-f]{6}$/i.test(b)?lum(b)<.25:true}
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(getMode()==="auto")render()})}catch(e){}
 function toggleMode(){setMode(isDarkNow()?"light":"dark")}
 function applyMode(){let m=getMode();if(m==="team")return;if(m==="auto")m=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";const s=document.documentElement.style,cs=getComputedStyle(document.documentElement);
   let f=cs.getPropertyValue("--acf").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f=cs.getPropertyValue("--ac").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f="#f5c518";
-  if(m==="dark"&&f.toLowerCase()==="#0f5132")f="#2fbf71";   // verde più chiaro come colore di base nel tema scuro   // verde campo scuro come colore di base nel tema chiaro
+  if(m==="light"&&f.toLowerCase()==="#2fbf71")f="#0f5132";   // verde campo scuro come colore di base nel tema chiaro   // verde campo scuro come colore di base nel tema chiaro
   let o;
   if(m==="light"){const L=lum(f),ink=L>.4?mix(f,"#000000",42):f,on=L>.4?"#111111":"#ffffff";
     o={"--bg":"#f3f1ec","--sf":"#ffffff","--tx":"#14171f","--mu":"#5b6170","--bd":"#e4e0d6","--dg":"#c62828","--ac":ink,"--acf":f,"--ac2":mix(f,"#ffffff",16),"--on":on,"--hero":heroGrad(f),"--hx":on,"--hi":on,"--hc":f,"color-scheme":"light"}}
@@ -1202,4 +1201,4 @@ async function boot(){
   if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
-</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+</script><script src="rendering.js?v=1"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
