@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=29"></script><script src="matchday.js?v=6"></script>
+<script src="torneo.js?v=29"></script><script src="matchday.js?v=7"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -517,7 +517,7 @@ function squadBlock(t){
   const lab=a==="all"?"tutte le stagioni":a;
   if(!l.length)return `<h2>Squadra · ${lab}</h2>${emptyState("trophy","Ancora nessuna statistica","Appena una partita viene segnata come giocata, qui compaiono record e forma della squadra.","")}`;
   const r=teamRec(l),tile=(n,k)=>`<div class="tl"><b>${n}</b>${k}</div>`,
-    form=l.slice(-8).map((x,i)=>`<div class="fmx ${x.gf>x.ga?"v":x.gf===x.ga?"n":"p"}" style="animation-delay:${i*45}ms" role="button" tabindex="0" data-tv="${x.gf>x.ga?"Vittoria":x.gf===x.ga?"Pareggio":"Sconfitta"} ${esc(x.gf)}–${esc(x.ga)}" data-ts="vs ${esc(x.opp)}${x.date?" · "+esc(dt(x.date).f):""}${x.tourn?" · "+esc(x.tourn):""}"><b>${esc(x.gf)}-${esc(x.ga)}</b><span>${esc(x.opp||"")}</span></div>`).join(""),
+    form=l.slice(-8).map((x,i)=>`<button class="fmx ${x.gf>x.ga?"v":x.gf===x.ga?"n":"p"}" style="animation-delay:${i*45}ms" onclick="S.mid='${x.id}';S.mt=null;render()" aria-label="Apri la partita contro ${esc(x.opp||"")}" data-tv="${x.gf>x.ga?"Vittoria":x.gf===x.ga?"Pareggio":"Sconfitta"} ${esc(x.gf)}–${esc(x.ga)}" data-ts="vs ${esc(x.opp)}${x.date?" · "+esc(dt(x.date).f):""}${x.tourn?" · "+esc(x.tourn):""}"><b>${esc(x.gf)}-${esc(x.ga)}</b>${safeSrc(x.oppLogo)?`<img class="fml" src="${safeSrc(x.oppLogo)}" alt="" loading="lazy" decoding="async">`:`<i class="fml">${esc(String(x.opp||"?").replace(/[^A-Za-z0-9À-ÿ ]/g,"").split(/\s+/).filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase()||"?")}</i>`}</button>`).join(""),
     tors=[...new Set(l.map(x=>x.tourn||"Amichevoli"))].map(n=>[n,teamRec(l.filter(x=>(x.tourn||"Amichevoli")===n))]);
   const row=(n,s)=>`<tr><td>${esc(n)}</td><td>${s.g}</td><td>${s.v}</td><td>${s.n}</td><td>${s.p}</td><td>${s.gf}</td><td>${s.ga}</td><td>${s.dr>0?"+":""}${s.dr}</td><td><b>${s.pt}</b></td></tr>`;
   return `<h2>Squadra · ${lab}</h2><div class="card tipw"><div class="pgrid">${tile(r.g,"GIOCATE")}${tile(r.v,"VITTORIE")}${tile(r.n,"PAREGGI")}${tile(r.p,"SCONFITTE")}${tile(r.gf,"GOL FATTI")}${tile(r.ga,"GOL SUBITI")}${tile((r.dr>0?"+":"")+r.dr,"DIFF. RETI")}${tile(r.pt,"PUNTI")}</div><div style="margin-top:12px"><span class="mu">Forma (ultime ${Math.min(8,l.length)})</span><div class="fmrow">${form}</div></div></div>
