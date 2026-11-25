@@ -265,7 +265,7 @@ function teamViz(l){if(!l.length)return '';
   return `<h2>Bilancio</h2><div class="card"><div class="vzs">${seg(r.v,'var(--win)','Vittorie')}${seg(r.n,'var(--draw)','Pareggi')}${seg(r.p,'var(--loss)','Sconfitte')}</div>
   <div class="vzl"><span><i style="background:var(--win)"></i>Vittorie ${Math.round(pc(r.v))}%</span><span><i style="background:var(--draw)"></i>Pareggi ${Math.round(pc(r.n))}%</span><span><i style="background:var(--loss)"></i>Sconfitte ${Math.round(pc(r.p))}%</span></div>
   <div class="vzm"><div><b>${f(r.gf)}</b><span>gol fatti a partita</span></div><div><b>${f(r.ga)}</b><span>gol subiti a partita</span></div></div>
-  ${vizBar('Gol fatti sul totale',r.gf,r.gf+r.ga,'var(--acf)')}</div>${line}`}
+  ${vizBar('Gol fatti sul totale',r.gf,r.gf+r.ga,'var(--acf)')}</div>`}
 // giocatore: gol e assist partita per partita, presenze e peso sui gol della squadra
 // logo dell'avversario sotto la barra (o le sue iniziali in un cerchio): i nomi non ci stavano
 function vzLogo(x,cx,base,op){const src=safeSrc(x.oppLogo),c=cx.toFixed(1),ini=esc(String(x.opp||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
