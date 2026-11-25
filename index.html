@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=26"></script><script src="matchday.js?v=4"></script>
+<script src="torneo.js?v=26"></script><script src="matchday.js?v=6"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -546,11 +546,10 @@ function fut(m,ctl){
   <div class="ps" style="top:14px">DIR</div>${l?`<img loading="lazy" decoding="async" class="cr" src="${safeSrc(l)}" alt="">`:""}
   ${ph}<div class="nk">${esc(m.nick)}</div><div class="st"><div><b>${s.p}</b>PRES</div><div><b>${s.v}</b>VITT</div><div><b>${s.pct}%</b>VITT.</div></div></div>
   <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${ctl?(m.uid?"":" · senza account"):""}</div>${ctl||""}</div>`}
-  const RL={P:"POR",D:"DIF",C:"CEN",A:"ATT"};
-  return `<div class="card" style="padding:0;border:0;background:none"><div class="fut f2 ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
-  <div class="f2t"><div>${player?`<div class="ov">${o}</div>`:""}<div class="ps">${RL[ps]||ps||""}</div></div>${ph}</div>
-  <div class="nk">${m.role==="giocatore"&&m.num?`<span>#${esc(m.num)}</span>`:""}${esc(m.nick)}${m.captain?" ©":""}</div>
-  ${player?`<div class="st"><div><b>${t.g}</b>GOL</div><div><b>${t.a}</b>ASSIST</div><div><b>${t.p}</b>PRES.</div></div>${badgeIcons(m)}`:""}</div>
+  return `<div class="card" style="padding:0;border:0;background:none"><div class="fut ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
+  ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img loading="lazy" decoding="async" class="cr" src="${safeSrc(l)}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
+  ${ph}<div class="nk">${esc(m.nick)}${m.captain?" ©":""}</div>
+  ${player?`<div class="st"><div><b>${t.g}</b>GOL</div><div><b>${t.a}</b>ASS</div><div><b>${t.p}</b>PRES</div></div>${badgeIcons(m)}`:""}</div>
   <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${ctl?(m.uid?"":" · senza account"):""}</div>${ctl||""}</div>`}
 
 // ---- ruoli ----
@@ -657,7 +656,7 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
 function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
-  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tnw"><div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="edpill${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" onclick="toggleEdit(event)">Modifica<i aria-hidden="true"></i></button>`:""}</header>`}
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tnw"><div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
 // Profilo: tasto in alto a destra (con il pallino rosso se ci sono richieste da approvare)
 function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
   return `<button class="ib${S.tab==="imp"?" on":""}" style="position:relative" onclick="S.tab='imp';S.mid=null;S.pd=null;render()" aria-label="Profilo${n?" · "+n+" richieste":""}">${ic("user")}${n?'<i class="dot" style="top:4px;left:auto;right:4px"></i>':""}</button>`}
@@ -1194,4 +1193,4 @@ async function boot(){
   if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
-</script><script src="rendering.js?v=4"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+</script><script src="rendering.js?v=5"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>

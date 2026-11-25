@@ -13,7 +13,6 @@ h1{font:800 34px/1 var(--num);text-transform:uppercase;letter-spacing:.01em;marg
 h2{font:700 19px/1.1 var(--num);letter-spacing:.03em;text-transform:uppercase;color:var(--tx);margin:22px 2px 10px}
 .tool h2{margin:0}
 .eb{font:700 12px/1.2 var(--ui);letter-spacing:.08em}
-.bar .tn{font:700 22px/1.05 var(--num);text-transform:uppercase;letter-spacing:.02em}
 .logo0 h1{font-size:40px}
 
 /* schede: piatte, bordo sottile, angoli morbidi */
@@ -74,11 +73,9 @@ button.p{font-weight:800}
 
 /* ---- rosa: carte giocatore ---- */
 .grid{gap:10px}
-.fut{border-radius:20px;border-width:1px;padding:12px 10px 14px}
 .fut .ov{font:800 40px/1 var(--num)}
 .fut .nk{font:700 17px/1.1 var(--num);letter-spacing:.03em}
 .fut .st b{font:800 18px var(--num)}
-.fut.t-g,.fut.t-x{border-color:var(--hl)}
 .pl .o{font:800 26px var(--num)}
 .pl .n{font:700 19px var(--num)}
 
@@ -150,22 +147,6 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .sp.n{background:color-mix(in srgb,var(--tx) 8%,var(--sf));color:var(--tx)}
 .sp.p{background:color-mix(in srgb,var(--loss) 15%,var(--sf));color:var(--loss)}
 
-/* carta giocatore chiara */
-.fut.f2{text-align:left;background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:18px;padding:12px}
-.f2 .f2t{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
-.f2 .ov{position:static;font:800 40px/.9 var(--num);color:var(--tx)}
-.f2 .ps{position:static;margin-top:2px;font-size:11px;font-weight:800;letter-spacing:.08em;opacity:1;color:var(--mu)}
-.f2 .ph{width:50px;height:50px;margin:0;border:0;font:800 18px var(--ui);background:color-mix(in srgb,var(--acf) 18%,var(--sf));color:var(--ac)}
-.f2.t-g .ph,.f2.t-x .ph{box-shadow:0 0 0 3px var(--hl)}
-.f2 .nk{margin-top:12px;border:0;padding:0;text-transform:none;font:700 16px/1.15 var(--ui);letter-spacing:0;display:flex;align-items:baseline;gap:6px}
-.f2 .nk span{font:700 16px var(--num);color:var(--mu)}
-.f2 .st{margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);text-align:center;font-size:10px;font-weight:700;color:var(--mu)}
-.f2 .st b{color:var(--tx);font:800 19px/1 var(--num)}
-.f2.t-g,.f2.t-x{border-color:var(--bd)}
-.f2.t-x{background:var(--acf);color:var(--on);border-color:var(--acf)}
-.f2.t-x .ov,.f2.t-x .st b{color:var(--on)}.f2.t-x .ps,.f2.t-x .nk span,.f2.t-x .st{color:color-mix(in srgb,var(--on) 75%,transparent)}
-.f2.t-x .st{border-top-color:color-mix(in srgb,var(--on) 22%,transparent)}
-.f2.t-x .ph{background:var(--hl);color:var(--hlx)}
 .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 

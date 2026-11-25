@@ -34,8 +34,7 @@ W0.rosaBody=function(ms,ctl){
   const SH={P:'Portieri',D:'Difensori',C:'Centrocampisti',A:'Attaccanti','?':'Senza ruolo',dir:'Dirigenti'};
   const chips=`<div class="rs-chips"><button class="${f?'':'on'}" onclick="setRf('')">Tutti</button>${gs.map(([k])=>`<button class="${f===k?'on':''}" onclick="setRf('${k}')">${SH[k]||k}</button>`).join('')}</div>`;
   const o=m=>m.role==='giocatore'?ovr(m):-1,srt=l=>l.slice().sort((a,b)=>o(b)-o(a)||(a.nick||'').localeCompare(b.nick||''));
-  const best=srt(ms.filter(m=>m.role==='giocatore'))[0];
-  const card=m=>{let h=fut(m,ctl(m));if(best&&m.id===best.id)h=h.replace('class="fut f2','class="fut f2 lead');return `<div data-q="${esc(rosaQ(m))}">${h}</div>`};
+  const card=m=>{let h=fut(m,ctl(m));return `<div data-q="${esc(rosaQ(m))}">${h}</div>`};
   const sel=f?gs.filter(g=>g[0]===f):gs,list=sel.flatMap(g=>g[2]);
   const cards=sel.map(([k,n,l])=>`${f?'':`<h2 class="rs-h">${esc(n)} · ${l.length}</h2>`}<div class="grid rs-grid">${srt(l).map(card).join('')}</div>`).join('');
   return `<div class="pg-hd"><div><span class="pg-k">${esc(t.name||'')}${seasonTxt()?' · '+esc(seasonTxt().replace('Stagione ','')):''}</span><h1>La rosa</h1></div><span class="pg-n"><b>${nPl}</b> giocatori</span></div>
@@ -54,10 +53,10 @@ W0.clsView=function(t,embed){
   if(cs==='sq')body=(typeof torneoClassifica==='function'?torneoClassifica():'')+squadBlock(t);
   else{const l=pls.map(m=>({m,v:val(m)})).filter(a=>cs==='ov'||a.v>0).sort((a,b)=>b.v-a.v||(a.m.nick||'').localeCompare(b.m.nick||''));
     if(!l.length)body=emptyState('trophy','Ancora nessun dato','La classifica si riempie con le partite giocate.','');
-    else{const top=l.slice(0,3),rest=l.slice(3),mx=l[0].v||1;
+    else{const pod=cs==='ov',top=pod?l.slice(0,3):[],rest=pod?l.slice(3):l,off=pod?4:1;
       const st=i=>`<div class="cl-p cl-p${i+1}">${avOf(top[i].m,'cl-av')}<b class="cl-pn">${esc(top[i].m.nick)}</b><div class="cl-st"><b>${top[i].v}</b><span>${i+1}°</span></div></div>`;
-      body=`<div class="cl-pod">${[1,0,2].filter(i=>top[i]).map(st).join('')}</div>
-      ${rest.length?`<div class="card cl-list">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+4}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b><i><i style="width:${Math.max(4,Math.round(a.v/mx*100))}%"></i></i></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
+      body=`${pod?`<div class="cl-pod">${[1,0,2].filter(i=>top[i]).map(st).join('')}</div>`:''}
+      ${rest.length?`<div class="card cl-list${pod?'':' solo'}">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+off}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
   return `${hd}${seg}${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic('share')} Condividi classifica</button></p>`};
 
 // ---------- stile ----------
@@ -89,11 +88,6 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .rs-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:600px){.rs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .rs-grid .card{margin:0}.rs-h{margin:16px 2px 8px}.rs-chips+.rs-h{margin-top:4px}.rs-grid .fut+.mu{display:none}
-.f2.t-x{background:var(--sf);color:var(--tx);border-color:var(--bd)}.f2.t-x .ov,.f2.t-x .st b{color:var(--tx)}.f2.t-x .ps,.f2.t-x .nk span,.f2.t-x .st{color:var(--mu)}.f2.t-x .st{border-top-color:var(--bd)}.f2.t-x .ph{background:color-mix(in srgb,var(--acf) 18%,var(--sf));color:var(--ac);box-shadow:0 0 0 3px var(--hl)}
-.f2.lead{background:var(--acf);color:var(--on);border-color:var(--acf)}
-.f2.lead .ov,.f2.lead .st b{color:var(--on)}.f2.lead .ps,.f2.lead .nk span,.f2.lead .st{color:color-mix(in srgb,var(--on) 75%,transparent)}
-.f2.lead .st{border-top-color:color-mix(in srgb,var(--on) 22%,transparent)}
-.f2.lead .ph{background:var(--hl);color:var(--hlx);box-shadow:none}
 .cl-seg{display:flex;gap:2px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--tx) 8%,var(--bg));overflow-x:auto;scrollbar-width:none;margin:0 0 8px}.cl-seg::-webkit-scrollbar{display:none}
 .cl-seg button{flex:1 0 auto;min-height:38px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--mu);font-size:13px;font-weight:700}
 .cl-seg button.on{background:var(--sf);color:var(--ac);box-shadow:0 1px 3px rgba(20,23,31,.15)}
@@ -106,7 +100,7 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .cl-st{width:100%;margin-top:8px;border-radius:14px 14px 0 0;display:flex;flex-direction:column;align-items:center;padding-top:8px;background:color-mix(in srgb,var(--tx) 7%,var(--sf));color:var(--tx)}
 .cl-st b{font:800 30px/1 var(--num)}.cl-st span{font-size:11px;font-weight:700;opacity:.75}
 .cl-p1 .cl-st{height:96px;background:var(--acf);color:var(--on)}.cl-p2 .cl-st{height:72px;background:color-mix(in srgb,var(--acf) 16%,var(--sf));color:var(--ac)}.cl-p3 .cl-st{height:56px}
-.cl-list{padding:0;border-radius:0 0 18px 18px;overflow:hidden}
+.cl-list{padding:0;border-radius:0 0 18px 18px;overflow:hidden}.cl-list.solo{border-radius:18px;margin-top:6px}
 .cl-r{display:flex;align-items:center;gap:12px;width:100%;margin:0;padding:11px 14px;border:0;border-radius:0;background:none;text-align:left;font:inherit;color:inherit}
 .cl-r+.cl-r{border-top:1px solid var(--bd)}
 .cl-k{width:20px;font:700 17px var(--num);color:var(--mu)}
@@ -130,16 +124,6 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .io-tg>div{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;padding:10px 6px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);color:var(--mu)}
 .io-tg .ic{width:22px;height:22px}.io-tg b{font-size:12px;color:var(--tx);line-height:1.15}.io-tg span{font-size:10.5px;line-height:1.2}
 .io-tg>div.on{background:var(--acf);border-color:var(--acf);color:color-mix(in srgb,var(--on) 80%,transparent)}.io-tg>div.on b{color:var(--on)}.io-tg>div.on .ic{color:var(--hl)}
-/* carte giocatore nel colore della squadra (come prima); il migliore ha il bordo giallo */
-.fut.f2,.f2.t-x{background:var(--acf);color:var(--on);border:2px solid transparent}
-.fut.f2 .ov,.fut.f2 .st b,.f2.t-x .ov,.f2.t-x .st b{color:var(--on)}
-.fut.f2 .ps,.fut.f2 .nk span,.fut.f2 .st,.f2.t-x .ps,.f2.t-x .nk span,.f2.t-x .st{color:color-mix(in srgb,var(--on) 75%,transparent)}
-.fut.f2 .st,.f2.t-x .st{border-top-color:color-mix(in srgb,var(--on) 22%,transparent)}
-.fut.f2 .ph,.f2.t-x .ph{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on);box-shadow:none}
-.f2.t-g .ph,.f2.t-x .ph{box-shadow:0 0 0 3px var(--hl)}
-.fut.f2.lead{border-color:var(--hl);box-shadow:0 6px 18px -8px color-mix(in srgb,var(--hl) 70%,transparent)}
-.fut.f2.lead .ph{background:var(--hl);color:var(--hlx)}
-.fut.f2.staff{background:color-mix(in srgb,var(--acf) 55%,#000)}
 `;document.head.append(st);
 // se l'app ha già disegnato la prima schermata prima di questo file, la ridisegna
 try{if(S.db)render()}catch(e){}
