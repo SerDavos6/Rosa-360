@@ -262,8 +262,8 @@ function teamViz(l){if(!l.length)return '';
     ${pts.map((v,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(v).toFixed(1)}" r="3" fill="var(--acf)"/>`).join('')}
     <text x="${sx(pts.length-1).toFixed(1)}" y="${(sy(pts[pts.length-1])-7).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="var(--tx)">${pts[pts.length-1]} pt</text>
     <text x="${p}" y="${h+11}" font-size="9" fill="var(--mu)">1ª partita</text><text x="${w-p}" y="${h+11}" text-anchor="end" font-size="9" fill="var(--mu)">${pts.length}ª</text></svg></div>`:'';
-  return `<h2>Bilancio</h2><div class="card"><div class="vzs">${seg(r.v,'#34d399','Vittorie')}${seg(r.n,'#fbbf24','Pareggi')}${seg(r.p,'#f87171','Sconfitte')}</div>
-  <div class="vzl"><span><i style="background:#34d399"></i>Vittorie ${Math.round(pc(r.v))}%</span><span><i style="background:#fbbf24"></i>Pareggi ${Math.round(pc(r.n))}%</span><span><i style="background:#f87171"></i>Sconfitte ${Math.round(pc(r.p))}%</span></div>
+  return `<h2>Bilancio</h2><div class="card"><div class="vzs">${seg(r.v,'var(--win)','Vittorie')}${seg(r.n,'var(--draw)','Pareggi')}${seg(r.p,'var(--loss)','Sconfitte')}</div>
+  <div class="vzl"><span><i style="background:var(--win)"></i>Vittorie ${Math.round(pc(r.v))}%</span><span><i style="background:var(--draw)"></i>Pareggi ${Math.round(pc(r.n))}%</span><span><i style="background:var(--loss)"></i>Sconfitte ${Math.round(pc(r.p))}%</span></div>
   <div class="vzm"><div><b>${f(r.gf)}</b><span>gol fatti a partita</span></div><div><b>${f(r.ga)}</b><span>gol subiti a partita</span></div></div>
   ${vizBar('Gol fatti sul totale',r.gf,r.gf+r.ga,'var(--acf)')}</div>${line}`}
 // giocatore: gol e assist partita per partita, presenze e peso sui gol della squadra
