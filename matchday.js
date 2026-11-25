@@ -202,11 +202,11 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .ioband-nx button.on{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on)}
 
 /* diretta: tutta su fondo scuro, punteggio grande */
-#app:has(#lvdark){--bg:#0c1411;--sf:#16211c;--tx:#f3f1ec;--mu:#a9b3ae;--bd:#2b3a33;--ac2:#1c2924;color-scheme:dark;background:var(--bg);color:var(--tx)}
+#app:has(#lvdark){--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#1f2937;--ac2:#1a2232;color-scheme:dark;background:var(--bg);color:var(--tx)}
 #app:has(#lvdark) .bar,#app:has(#lvdark) .bn{background:var(--sf)}
 #app:has(#lvdark) .mscore .sc2{font-size:76px;color:var(--tx)}
 #app:has(#lvdark) .mscore .tm .crest{border-radius:50%}
 #app:has(#lvdark) .lvact.lvbig>button:not(.p){background:var(--sf);color:var(--tx);border:1.5px solid var(--bd)}
-#app:has(#lvdark) .lvfine{background:transparent;color:var(--tx);border:1.5px solid #3a4a42}
+#app:has(#lvdark) .lvfine{background:transparent;color:var(--tx);border:1.5px solid var(--bd)}
 #app:has(#lvdark) .mtabs .on{color:var(--hl);box-shadow:inset 0 -3px 0 var(--hl)}
 `;document.head.append(st)})();

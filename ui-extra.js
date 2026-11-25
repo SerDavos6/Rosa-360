@@ -279,11 +279,11 @@ function playerViz(m){if(!m||m.role!=='giocatore')return '';
     if(!in_)return `<circle cx="${cx.toFixed(1)}" cy="${base-3}" r="2.5" fill="var(--mu)" fill-opacity=".5"/>${vzLogo(x,cx,base,.45)}`;
     const hg=gg*k,ha=aa*k;
     return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg).toFixed(1)}" width="${bw.toFixed(1)}" height="${hg.toFixed(1)}" rx="2" fill="var(--acf)"/>
-      <rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg-ha).toFixed(1)}" width="${bw.toFixed(1)}" height="${ha.toFixed(1)}" rx="2" fill="var(--acf)" fill-opacity=".4"/>
+      <rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg-ha).toFixed(1)}" width="${bw.toFixed(1)}" height="${ha.toFixed(1)}" rx="2" fill="var(--hl,#f5b81c)"/>
       ${gg+aa?`<text x="${cx.toFixed(1)}" y="${(base-hg-ha-4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">${gg+aa}</text>`:`<rect x="${(cx-bw/2).toFixed(1)}" y="${base-2}" width="${bw.toFixed(1)}" height="2" rx="1" fill="var(--mu)" fill-opacity=".5"/>`}
       ${vzLogo(x,cx,base,1)}`}).join('');
   return `<h2>Andamento</h2><div class="card"><svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Gol e assist nelle ultime ${s.length} partite"><line x1="${p}" y1="${base}" x2="${w-p}" y2="${base}" stroke="var(--bd)"/>${bars}</svg>
-  <div class="vzl"><span><i style="background:var(--acf)"></i>Gol</span><span><i style="background:var(--acf);opacity:.4"></i>Assist</span><span class="mu">logo sbiadito = assente</span></div>
+  <div class="vzl"><span><i style="background:var(--acf)"></i>Gol</span><span><i style="background:var(--hl,#f5b81c)"></i>Assist</span><span><i style="width:7px;height:7px;border-radius:50%;background:var(--mu);opacity:.5"></i>Assente</span></div>
   ${vizBar('Presenze',pres.length,l.length,'var(--acf)')}${tg?vizBar('Coinvolto nei gol della squadra',Math.min(g+a,tg),tg,'#fbbf24',(g+a)+' su '+tg):''}</div>`}
 (function(){const st=document.createElement('style');st.textContent=`
 .vzs{display:flex;height:34px;border-radius:12px;overflow:hidden;gap:2px}.vzs i{display:grid;place-items:center;min-width:26px;font-style:normal}.vzs b{font:700 14px var(--num);color:#111}
