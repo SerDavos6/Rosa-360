@@ -422,13 +422,26 @@
     '.thc{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:14px 14px 12px;margin-top:14px}.thc .thh{display:flex;align-items:center;gap:10px}.thc .thh>span{flex:1;min-width:0;display:flex;flex-direction:column}' +
     '.thc .thk{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}.thc b{font-size:17px;font-weight:800}.thc .thh .ic{color:var(--mu)}.thc .tstp{margin:12px 0 8px}' +
     '.thc .ths{display:block;font-size:13px;color:var(--mu);white-space:normal}' +
+    // selettore delle competizioni, linguette e zone di classifica (look Matchday)
+    '.tcps{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -14px 12px;padding:0 14px}.tcps::-webkit-scrollbar{display:none}' +
+    '.tcp{flex:0 0 auto;max-width:230px;min-height:66px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 14px;border-radius:16px;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);font:inherit}' +
+    '.tcp b{font-size:15px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tcp>span:last-child{font-size:12px;color:var(--mu)}' +
+    '.tcpk{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tcpk .ic{width:13px;height:13px}' +
+    '.tcp.on{background:var(--acf);border-color:var(--acf);color:var(--on)}.tcp.on>span:last-child,.tcp.on .tcpk{color:color-mix(in srgb,var(--on) 80%,transparent)}' +
+    '.tcp.add{justify-content:center;align-items:center;flex-direction:row;gap:6px;border-style:dashed;color:var(--ac)}' +
+    '.tseg{margin-bottom:12px}.tseg .tgear{flex:0 0 46px}.tseg .tgear .ic{width:18px;height:18px}' +
+    '.trt .tz{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;font-weight:700;font-size:12px}' +
+    '.tz.z1{background:#c9a227;color:#14171f}.tz.z2{background:#a0643c;color:#fff}' +
+    '.tzl{display:flex;flex-wrap:wrap;gap:6px 14px;margin:2px 4px 10px;font-size:12px;color:var(--mu)}.tzl span{display:flex;align-items:center;gap:6px}.tzl .tz{display:inline-block;width:10px;height:10px;border-radius:3px}' +
     '.tqui{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ac2,rgba(11,122,67,.12));margin:8px 0 4px;white-space:normal}.tqui .ic{flex:none;color:var(--acf)}';
   document.head.appendChild(css);
 
+  // zona di arrivo in classifica: Memorial 1ª–4ª Gold-Silver, 5ª–8ª Bronze-Copper; negli altri tornei le qualificate
+  const zone = (o, i) => fmtOf(o) === 'memorial' ? (i < 4 ? ' z1' : i < 8 ? ' z2' : '') : (qOf(o) && i < qOf(o) ? ' z1' : '');
   const stRows = (o, g, full) => {
     const rows = standings(o, g), cut = fmtOf(o) === 'memorial' ? 4 : qOf(o);
     return '<table class="trt"><thead><tr><th>#</th><th class="l">Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th>' + (full ? '<th class="w x">GF</th><th class="w x">GS</th>' : '') + '<th class="w">DR</th><th class="w">Pt</th></tr></thead><tbody>' +
-      rows.map((r, i) => '<tr class="' + (norm(r.n) === norm(o.mine) ? 'me' : '') + (cut && i === cut - 1 && i < rows.length - 1 ? ' cut' : '') + '"><td>' + (i + 1) + '</td><td class="l">' + E(r.n) + '</td><td>' + r.g + '</td><td>' + r.v + '</td><td>' + r.p + '</td><td>' + r.s + '</td>' +
+      rows.map((r, i) => '<tr class="' + (norm(r.n) === norm(o.mine) ? 'me' : '') + (cut && i === cut - 1 && i < rows.length - 1 ? ' cut' : '') + '"><td><span class="tz' + zone(o, i) + '">' + (i + 1) + '</span></td><td class="l">' + E(r.n) + '</td><td>' + r.g + '</td><td>' + r.v + '</td><td>' + r.p + '</td><td>' + r.s + '</td>' +
         (full ? '<td class="x">' + r.gf + '</td><td class="x">' + r.ga + '</td>' : '') + '<td>' + (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) + '</td><td><b>' + r.pt + '</b></td></tr>').join('') + '</tbody></table>';
   };
 
@@ -603,7 +616,7 @@
       body + '<p style="margin-top:12px"><button class="p" onclick="trCreate()">Crea il torneo</button>' + (canBack ? ' <button class="s" onclick="trList()">Annulla</button>' : '') + '</p></div>';
   }
 
-  function groupsView(o, mgr) {
+  function groupsView(o, mgr, part) {
     const gl = GLn(o), s = st(), g = gl.includes(s.g) ? s.g : (gl[0] || 'A'), done = gdone(o, g), multi = gl.length > 1, two = legsOf(o) === 2;
     const chips = multi ? '<div class="csl">' + gl.map(x => '<button class="chip' + (x === g ? ' on' : '') + '" onclick="trGo(null,\'' + x + '\')">Girone ' + x + '</button>').join('') + '</div>' : '';
     const cut = fmtOf(o) === 'memorial' ? 'Le prime 4 vanno agli ottavi Gold-Silver, dalla 5ª all’8ª agli ottavi Bronze-Copper. ' : (qOf(o) ? 'Le prime ' + qOf(o) + ' passano alla fase finale. ' : '');
@@ -647,7 +660,11 @@
     const lst = list.length ? '<h2>Risultati inseriti (' + list.length + ')</h2>' + dchips + '<div class="card">' + lstBody + '</div>' : '';
     const imp = mgr ? '<div class="card"><b>Importa dal sito dei risultati</b><p class="mu" style="white-space:normal">Sulla pagina delle giornate apri gli strumenti del browser (F12) → Rete → richiesta «data?widgetId…» → scheda Response, copia tutto e incollalo qui. Puoi incollarne più di seguito (una per giornata). Vengono importate solo le partite dei gironi con risultato confermato.</p><textarea id="tr-imp" rows="4" style="width:100%" placeholder="Incolla qui la risposta…"></textarea>' +
       '<p style="margin:10px 0 0"><button class="p" onclick="trImport()">Importa</button></p>' + (st().imp ? '<p style="white-space:normal;margin:10px 0 0"><b>' + E(st().imp) + '</b></p>' : '') + '</div>' : '';
-    return chips + tbl + upH + force + mine + form + imp + lst;
+    const legend = fmtOf(o) === 'memorial' ? '<div class="tzl"><span><i class="tz z1"></i>1ª–4ª: ottavi Gold-Silver</span><span><i class="tz z2"></i>5ª–8ª: ottavi Bronze-Copper</span></div>'
+      : (qOf(o) && hasKo(o) ? '<div class="tzl"><span><i class="tz z1"></i>Qualificate alla fase finale</span></div>' : '');
+    if (part === 'p') return chips + (upH || '') + (lst || (upH ? '' : '<div class="card mu">Ancora nessun risultato in questo girone.</div>')) + form + imp;
+    // legenda delle zone subito sotto la tabella, prima delle note
+    return chips + tbl.replace('</div><p class="mu"', '</div>' + legend + '<p class="mu"') + force + mine;
   }
 
   function nodeHtml(n, mgr, first, allNames) {
@@ -751,27 +768,31 @@
     return note + quiHtml(o, B.N, B.rounds.flatMap(r => r.keys)) + bracketHtml(B.rounds.map(rd => ({ t: rd.title, keys: rd.keys })), B.N, o) + detailHtml(B.N, o, mgr, allTeams(o)) + pen;
   }
 
+  // scheda di una competizione nel selettore in alto
+  const compSub = o => hasGroups(o) ? (fmtOf(o) === 'memorial' ? GLn(o).length + ' gironi · fasi finali' : GLn(o).length > 1 ? GLn(o).length + ' gironi' + (hasKo(o) ? ' · fase finale' : '') : (hasKo(o) ? 'Girone · fase finale' : 'Campionato')) : 'Eliminazione diretta';
+  const compCard = (o, on) => '<button class="tcp' + (on ? ' on' : '') + '" onclick="trPick(\'' + E(o.id) + '\')"><span class="tcpk">' + ic('trophy') + (o.mine ? E(o.mine) : 'Torneo') + '</span><b>' + E(o.name) + '</b><span>' + E(compSub(o)) + '</span></button>';
   window.torneoView = function (t, mgr) {
     const x = X(), s = st(), list = x ? [] : tourList();
-    const toList = !x && (mgr || list.length > 1);
     const toCal = S.fan ? '<p style="margin:6px 0"><button class="s" onclick="trBack()">' + ic('back') + ' Partite</button></p>' : '';
-    const back = !x && !toList ? toCal : '<p style="margin:6px 0"><button class="s" onclick="' + (x && x.back || 'trList()') + '">' + ic('back') + (x ? ' Indietro' : ' Tornei') + '</button></p>';
+    const back = x ? '<p style="margin:6px 0"><button class="s" onclick="' + (x.back || 'trList()') + '">' + ic('back') + ' Indietro</button></p>' : toCal;
+    const hd = '<div class="pg-hd"><div><span class="pg-k">' + E((team() || {}).name || '') + '</span><h1>Tornei e campionati</h1></div></div>';
     if (!x) {
-      if (s.v === 'new' && mgr) return (list.length ? '<p style="margin:6px 0"><button class="s" onclick="trList()">' + ic('back') + ' Tornei</button></p>' : toCal) + setupView(list.length > 0);
+      if (s.v === 'new' && mgr) return toCal + hd + (list.length ? '<div class="tcps">' + list.map(o => compCard(o, false)).join('') + '</div>' : '') + setupView(list.length > 0);
       if (!list.find(q => q.id === s.id)) {
-        if (!list.length) { if (mgr) { s.v = 'new'; return toCal + setupView(false); } return toCal + '<div class="card mu">Non c’è ancora nessun torneo.</div>'; }
-        if (list.length === 1 && !mgr) { s.id = list[0].id; s.v = hasGroups(list[0]) ? 'g' : 'b'; }
-        else return toCal + listView(list, mgr);
+        if (!list.length) { if (mgr) { s.v = 'new'; return toCal + hd + setupView(false); } return toCal + hd + emptyState('trophy', 'Nessun torneo', 'Qui vedrai gironi, classifiche e tabellone dei tornei della squadra.', ''); }
+        s.id = list[0].id; s.v = hasGroups(list[0]) ? 'g' : 'b';
       }
     }
+    const comps = x ? '' : '<div class="tcps">' + list.map(o => compCard(o, o.id === s.id)).join('') + (mgr ? '<button class="tcp add" onclick="trNew()">' + ic('plus') + '<b>Nuovo</b></button>' : '') + '</div>';
     const o = T();
     if (!o) return back + '<div class="card mu">Torneo non disponibile.</div>';
-    let v = s.v === 'x' ? 'x' : s.v === 'b' ? 'b' : 'g';
+    let v = s.v === 'x' ? 'x' : s.v === 'b' ? 'b' : s.v === 'p' ? 'p' : 'g';
+    if (v === 'p' && !hasGroups(o)) v = 'b';
     if (v === 'g' && !hasGroups(o)) v = 'b';
     if (v === 'b' && !hasKo(o)) v = 'g';
     if (v === 'x' && !mgr) v = hasGroups(o) ? 'g' : 'b';
-    const tab = (k, n) => '<button class="chip' + (v === k ? ' on' : '') + '" onclick="trGo(\'' + k + '\')">' + n + '</button>';
-    const tabs = '<div class="csl">' + (hasGroups(o) ? tab('g', GLn(o).length > 1 ? 'Gironi' : 'Classifica') : '') + (hasKo(o) ? tab('b', 'Tabellone') : '') + (mgr ? tab('x', 'Impostazioni') : '') + '</div>';
+    const tab = (k, n) => '<button role="tab" aria-selected="' + (v === k) + '" class="' + (v === k ? 'on' : '') + '" onclick="trGo(\'' + k + '\')">' + n + '</button>';
+    const tabs = '<div class="cl-seg tseg" role="tablist">' + (hasGroups(o) ? tab('g', 'Classifica') : '') + (hasKo(o) ? tab('b', 'Tabellone') : '') + (hasGroups(o) ? tab('p', 'Partite') : '') + (mgr ? '<button role="tab" aria-label="Impostazioni del torneo" aria-selected="' + (v === 'x') + '" class="tgear' + (v === 'x' ? ' on' : '') + '" onclick="trGo(\'x\')">' + ic('gear') + '</button>' : '') + '</div>';
     let body;
     if (v === 'b') body = bracketView(o, mgr);
     else if (v === 'x') {
@@ -785,7 +806,7 @@
           : gl.map(g => '<label for="tr-s' + g + '">' + (gl.length > 1 ? 'Girone ' + g + ' (una squadra per riga)' : 'Squadre (una per riga)') + '</label><textarea id="tr-s' + g + '" rows="6" style="width:100%">' + E(o.groups[g].join('\n')) + '</textarea>').join('')) +
         '<p class="mu" style="white-space:normal">Per correggere il nome di una squadra cambia la riga senza spostarla: i suoi risultati restano. Per aggiungere una squadra che si iscrive dopo, aggiungi una riga. Se togli righe, i risultati di quelle squadre vengono eliminati. Se cambi il nome del torneo, ricordati di usare lo stesso nome nelle partite della squadra.</p><p><button class="p" onclick="trSaveSettings()">Salva modifiche</button></p></div>' +
         mineSel + '<div class="card"><p style="margin:0"><button class="d" onclick="trDelete()">Elimina il torneo</button></p></div>';
-    } else body = groupsView(o, mgr);
-    return back + '<h2 style="margin-top:4px">' + E(o.name) + '</h2>' + tabs + body;
+    } else body = groupsView(o, mgr, v);
+    return back + (x ? '<h1 style="margin:4px 2px 12px">' + E(o.name) + '</h1>' : hd + comps) + tabs + body;
   };
 })();

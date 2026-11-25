@@ -3,7 +3,7 @@
 // "Fine partita" con il risultato in parità apre la serie dei rigori. Si segna tiro per tiro:
 // nostro tiro = chi tira + gol/sbagliato; tiro avversario = chi era in porta + gol subito/parato/fuori.
 // I rigori stanno nella partita (campo pens) e si salvano con la stessa coda della diretta (anche senza rete).
-// Non cambiano gol, assist e statistiche della stagione.
+// Gol e assist della stagione non cambiano; le parate del nostro portiere nella serie contano nei suoi "rigori parati".
 (function(){
 const W0=window;
 const KO=x=>!!(x&&x.ph&&x.ph!=='G');
@@ -27,12 +27,15 @@ const add=(id,k)=>{lvApply(id,d=>{d.pens=d.pens||{l:[]};d.pens.l.push(k)});rq()}
 W0.pkShooter=p=>{PK.p=PK.p===p?null:p;rq()};
 W0.pkKeeper=g=>{PK.gk=g;rq()};
 W0.pkUs=(id,ok)=>{try{navigator.vibrate&&navigator.vibrate(ok?45:[30,40,30])}catch(e){}add(id,{s:'n',p:PK.p||null,ok:!!ok,t:lvNow()});if(ok){try{confetti()}catch(e){}}PK.p=null};
-W0.pkThem=(id,ok,how)=>{const x=lvEff(S.matches.find(m=>m.id===id)||{}),gk=PK.gk||lvKeepers(x)[0]||null;try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}add(id,{s:'a',gk,ok:!!ok,how:how||'',t:lvNow()})};
+// parata del portiere nella serie = un rigore parato nelle sue statistiche (si toglie se si annulla il tiro o la serie)
+const psAdj=(d,k,n)=>{if(k&&k.s==='a'&&!k.ok&&k.how==='parato'&&k.gk){const s=lvStat(d,k.gk);s.ps=Math.max(0,(+s.ps||0)+n)}};
+W0.pkThem=(id,ok,how)=>{const x=lvEff(S.matches.find(m=>m.id===id)||{}),gk=PK.gk||lvKeepers(x)[0]||null,k={s:'a',gk,ok:!!ok,how:how||'',t:lvNow()};try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}
+  lvApply(id,d=>{d.pens=d.pens||{l:[]};d.pens.l.push(k);psAdj(d,k,1)});rq()};
 W0.pkSeries=(id,n)=>{lvApply(id,d=>{d.pens=d.pens||{l:[]};d.pens.n=n});rq()};
-W0.pkUndo=id=>{lvApply(id,d=>{if(d.pens&&d.pens.l)d.pens.l.pop();if(d.pens&&!d.pens.l.length)d.pens=null});PK.p=null;rq()};
+W0.pkUndo=id=>{lvApply(id,d=>{if(d.pens&&d.pens.l)psAdj(d,d.pens.l.pop(),-1);if(d.pens&&!d.pens.l.length)d.pens=null});PK.p=null;rq()};
 W0.pkStart=id=>{try{closeSheet()}catch(e){}liveClockStop(id);PK.p=null;PK.gk=null;lvApply(id,d=>{d.pens={l:[]}});rq()};
 W0.pkEnd=id=>{lvApply(id,d=>{d.played=true});S.fp=id;S.fpSel=null;setTimeout(render,0)};
-W0.pkCancel=id=>ask({title:'Annullare i rigori?',msg:'Si cancellano tutti i tiri segnati e si torna alla partita.',ok:'Annulla i rigori',danger:true,fn:()=>{lvApply(id,d=>{d.pens=null});rq()}});
+W0.pkCancel=id=>ask({title:'Annullare i rigori?',msg:'Si cancellano tutti i tiri segnati e si torna alla partita.',ok:'Annulla i rigori',danger:true,fn:()=>{lvApply(id,d=>{((d.pens&&d.pens.l)||[]).forEach(k=>psAdj(d,k,-1));d.pens=null});rq()}});
 
 // "Fine partita": in parità in una fase finale si va ai rigori
 const endOrig=W0.liveEnd;
