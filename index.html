@@ -330,7 +330,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=25"></script><script src="match-report.js?v=31"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
+<script src="ui-extra.js?v=26"></script><script src="match-report.js?v=31"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f1ec;--sf:#fff;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#fff}
 :root:root:root{--bg:#0c1210;--sf:#151c19;--bd:#26302b;--ac:#2fbf71;--acf:#2fbf71;--ac2:#14281d;--on:#04210f}
@@ -901,15 +901,11 @@ function ioView(t,can){
   if(x&&pl){const isIn=(x.present||[]).includes(me.id),d=matchDetail(x);
     pres=`<div class="card iopr"><b>vs ${esc(x.opp)}${matchPhase(x)?" · "+esc(matchPhase(x)):""}</b><div class="mu">${esc(dt(x.date).f)}${d.time?" · "+esc(d.time):""}${matchPlace(x)?" · "+esc(matchPlace(x)):""}</div>
     <div class="row2"><button class="${isIn?"on":""}" onclick="myPresence('${x.id}','${me.id}',true)">${isIn?"✓ ":""}Ci sono</button><button class="${!isIn&&saidNo(x.id)?"on no":""}" onclick="myPresence('${x.id}','${me.id}',false)">${!isIn&&saidNo(x.id)?"✗ ":""}Non ci sono</button></div></div>`}
-  if(pl){const o=ovr(me),ph=me.photo?`<img src="${safeSrc(me.photo)}" alt="">`:`<span>${esc((me.nick||"?").slice(0,2).toUpperCase())}</span>`,
-      nx=x?(()=>{const isIn=(x.present||[]).includes(me.id),dd=matchDetail(x);return `<div class="ioband-nx"><span><b>${esc(dt(x.date).f.slice(0,6))}${dd.time?" "+esc(dd.time):""}</b> vs ${esc(x.opp)}</span><button class="${isIn?"on":""}" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono":"Ci sei?"}</button></div>`})():"";
-    return `<div class="iotop"><h1>Io</h1><button class="s" onclick="shareCard('${me.id}')">${ic("share")} Carta</button><button class="s" onclick="S.tab='imp';render()" aria-label="Impostazioni">${ic("gear")}</button></div>
-    <div class="ioband"><div class="ioband-top"><span class="ioav">${ph}</span><div class="ioid"><span>${me.num?"#"+esc(me.num)+" · ":""}${esc((POS[me.pos]||"").toUpperCase())}</span><b>${esc(me.nick)}${me.captain?" ©":""}</b></div><div class="ioov"><b>${o}</b><span>OVERALL</span></div></div>${nx}</div>
-    ${x&&saidNo(x.id)&&!(x.present||[]).includes(me.id)?`<p class="mu" style="margin:-4px 4px 10px">Hai detto che non ci sei. <button class="s" onclick="myPresence('${x.id}','${me.id}',true)">Ci sono</button></p>`:x&&!(x.present||[]).includes(me.id)?`<p style="margin:-4px 4px 10px;text-align:right"><button class="s" onclick="myPresence('${x.id}','${me.id}',false)">Non ci sono</button></p>`:""}
-    ${playerModal(me.id,true)}`}
-  const hd=pl?""
+  const hd=pl?`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><button onclick="shareCard('${me.id}')">${ic("share")} Condividi la carta</button></div></div>`
     :`<div class="iohd"><div class="fw">${fut(me,"")}</div><div><span class="eb">La tua squadra</span><span class="mu">Il bilancio della stagione e i tornei conclusi.</span>${can?`<button onclick="setEdit(true);S.tab='home';S.mid=null;openNm()">${ic("plus")} Nuova partita</button>${x?`<button class="p" onclick="liveStart('${x.id}')">Avvia la diretta</button>`:""}`:""}</div></div>`;
-  return top+hd+pres+playerModal(me.id,true)}
+  // nella scheda Io niente andamento dell'overall (resta nella scheda del giocatore aperta dalla Rosa)
+  let info=playerModal(me.id,true);if(pl&&typeof ovrChart==="function"){const oc=ovrChart(me);if(oc)info=info.replace(oc,"")}
+  return top+hd+pres+info}
 
 function staffInfo(m,tile){const s=staffStats(m),pal=typeof trPalmares==="function"?trPalmares(m.tid):[];
   return `<h2>Bilancio nelle partite con te presente</h2><div class="pgrid">${tile(s.p,"PRESENZE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
@@ -1201,4 +1197,4 @@ async function boot(){
   if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
-</script><script src="rendering.js?v=2"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+</script><script src="rendering.js?v=3"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>

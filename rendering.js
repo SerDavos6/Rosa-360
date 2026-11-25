@@ -33,22 +33,21 @@ W0.rosaBody=function(ms,ctl){
   const nPl=ms.filter(m=>m.role==='giocatore').length;
   const SH={P:'Portieri',D:'Difensori',C:'Centrocampisti',A:'Attaccanti','?':'Senza ruolo',dir:'Dirigenti'};
   const chips=`<div class="rs-chips"><button class="${f?'':'on'}" onclick="setRf('')">Tutti</button>${gs.map(([k])=>`<button class="${f===k?'on':''}" onclick="setRf('${k}')">${SH[k]||k}</button>`).join('')}</div>`;
-  let list=(f?gs.filter(g=>g[0]===f):gs).flatMap(g=>g[2]);
-  const o=m=>m.role==='giocatore'?ovr(m):-1;
-  list=list.slice().sort((a,b)=>o(b)-o(a)||(a.nick||'').localeCompare(b.nick||''));
-  const best=list.find(m=>m.role==='giocatore');
-  const cards=list.map(m=>{let h=fut(m,ctl(m));if(best&&m.id===best.id)h=h.replace('class="fut f2','class="fut f2 lead');return `<div data-q="${esc(rosaQ(m))}">${h}</div>`}).join('');
+  const o=m=>m.role==='giocatore'?ovr(m):-1,srt=l=>l.slice().sort((a,b)=>o(b)-o(a)||(a.nick||'').localeCompare(b.nick||''));
+  const best=srt(ms.filter(m=>m.role==='giocatore'))[0];
+  const card=m=>{let h=fut(m,ctl(m));if(best&&m.id===best.id)h=h.replace('class="fut f2','class="fut f2 lead');return `<div data-q="${esc(rosaQ(m))}">${h}</div>`};
+  const sel=f?gs.filter(g=>g[0]===f):gs,list=sel.flatMap(g=>g[2]);
+  const cards=sel.map(([k,n,l])=>`${f?'':`<h2 class="rs-h">${esc(n)} · ${l.length}</h2>`}<div class="grid rs-grid">${srt(l).map(card).join('')}</div>`).join('');
   return `<div class="pg-hd"><div><span class="pg-k">${esc(t.name||'')}${seasonTxt()?' · '+esc(seasonTxt().replace('Stagione ','')):''}</span><h1>La rosa</h1></div><span class="pg-n"><b>${nPl}</b> giocatori</span></div>
-  ${chips}${list.length?`<div class="grid rs-grid">${cards}</div>`:emptyState('users','Rosa vuota','Condividi il codice invito dal Profilo oppure aggiungi i membri a mano.','')}`};
+  ${chips}${list.length?cards:emptyState('users','Rosa vuota','Condividi il codice invito dal Profilo oppure aggiungi i membri a mano.','')}`};
 
 // ---------- CLASSIFICHE ----------
 W0.clsView=function(t,embed){
   const pls=S.members.filter(m=>m.tid===t.id&&m.role==='giocatore');
   const played=S.matches.filter(x=>x.tid===t.id&&x.played&&inSeason(x));
-  const mvpN={};played.forEach(x=>{const r=mvp(x);if(r&&r.m)mvpN[r.m.id]=(mvpN[r.m.id]||0)+1});
-  const tabs=[['ov','Overall'],['g','Gol'],['a','Assist'],['mvp','MVP'],['p','Presenze'],['sq','Squadra']];
-  const cs=tabs.some(x=>x[0]===S.cs)?S.cs:'ov';
-  const val=m=>{const s=stats(m);return cs==='ov'?ovr(m):cs==='g'?s.g:cs==='a'?s.a:cs==='mvp'?(mvpN[m.id]||0):s.p};
+    const tabs=[['sq','Squadra'],['ov','Overall'],['g','Gol'],['a','Assist'],['p','Presenze']];
+  const cs=tabs.some(x=>x[0]===S.cs)?S.cs:'sq';
+  const val=m=>{const s=stats(m);return cs==='ov'?ovr(m):cs==='g'?s.g:cs==='a'?s.a:s.p};
   const seg=`<div class="cl-seg" role="tablist">${tabs.map(([k,n])=>`<button role="tab" aria-selected="${cs===k}" class="${cs===k?'on':''}" onclick="S.cs='${k}';render()">${n}</button>`).join('')}</div>`;
   const hd=embed?'':`<div class="pg-hd"><div><span class="pg-k">${esc(seasonTxt())} · ${played.length} partit${played.length===1?'a':'e'}</span><h1>Classifiche</h1></div></div>`;
   let body;
@@ -60,36 +59,6 @@ W0.clsView=function(t,embed){
       body=`<div class="cl-pod">${[1,0,2].filter(i=>top[i]).map(st).join('')}</div>
       ${rest.length?`<div class="card cl-list">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+4}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b><i><i style="width:${Math.max(4,Math.round(a.v/mx*100))}%"></i></i></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
   return `${hd}${seg}${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic('share')} Condividi classifica</button></p>`};
-
-// ---------- IO ----------
-const ioOrig=W0.ioView;
-W0.ioView=function(t,can){
-  const me=myMember();if(!me||me.role!=='giocatore')return ioOrig(t,can);
-  const n=new Date(),ds=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
-  const x=S.matches.filter(m=>m.tid===t.id&&!m.played&&m.date>=ds).sort((a,b)=>a.date<b.date?-1:1)[0];
-  const s=stats(me),o=ovr(me),gm=S.matches.filter(y=>y.tid===t.id&&y.played&&inSeason(y)&&(y.present||[]).includes(me.id)).sort((a,b)=>a.date<b.date?-1:1);
-  const nMvp=gm.filter(y=>{const r=mvp(y);return r&&r.m&&r.m.id===me.id}).length;
-  // banda
-  const nx=x?(()=>{const isIn=(x.present||[]).includes(me.id),dd=matchDetail(x),dd2=Math.round((new Date(x.date+'T12:00')-new Date(ds+'T12:00'))/864e5),w=dd2===0?'Oggi':dd2===1?'Domani':dt(x.date).f.slice(0,6);
-    return `<div class="ioband-nx"><span><b>${esc(w)}${dd.time?' '+esc(dd.time):''}</b> vs ${esc(x.opp)}</span><button class="${isIn?'on':''}" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?'✓ Ci sono':'Ci sei?'}</button></div>`})():'';
-  const band=`<div class="ioband"><div class="ioband-top">${avOf(me,'ioav')}<div class="ioid"><span>${me.num?'#'+esc(me.num)+' · ':''}${esc((POS[me.pos]||'').toUpperCase())}</span><b>${esc(me.nick)}${me.captain?' ©':''}</b></div><div class="ioov"><b>${o}</b><span>OVERALL</span></div></div>${nx}</div>`;
-  const tiles=`<div class="io-tl">${[[s.g,'GOL'],[s.a,'ASSIST'],[nMvp,'MVP'],[s.p,'PRESENZE']].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
-  // andamento overall
-  let chart='';const se=typeof ovrSeries==='function'?ovrSeries(me):[];
-  if(se.length>1){const w=320,h=96,lo=Math.min(...se.map(e=>e.o)),hi=Math.max(...se.map(e=>e.o)),rg=Math.max(4,hi-lo),X=i=>8+i*(w-16)/(se.length-1),Y=v=>h-8-(v-lo)/rg*(h-22);
-    const k=Math.min(5,se.length-1),dl=se[se.length-1].o-se[se.length-1-k].o;
-    chart=`<div class="card io-ch"><div class="io-chh"><h2>Andamento overall</h2><span title="Ultime ${k} partite">${dl>=0?'+':''}${dl}</span></div><svg viewBox="0 0 ${w} ${h}" width="100%" height="96" preserveAspectRatio="none" role="img" aria-label="Overall partita dopo partita, da ${se[0].o} a ${se[se.length-1].o}"><line x1="0" y1="${h/4}" x2="${w}" y2="${h/4}"/><line x1="0" y1="${h/2+4}" x2="${w}" y2="${h/2+4}"/><line x1="0" y1="${h-8}" x2="${w}" y2="${h-8}"/><polyline points="${se.map((e,i)=>X(i).toFixed(1)+','+Y(e.o).toFixed(1)).join(' ')}"/><circle cx="${X(se.length-1).toFixed(1)}" cy="${Y(se[se.length-1].o).toFixed(1)}" r="6"/></svg></div>`}
-  // con te in campo
-  const v=gm.filter(y=>y.gf>y.ga).length,d=gm.filter(y=>y.gf===y.ga).length,l=gm.length-v-d;
-  const bil=gm.length?`<div class="card io-bil"><h2>Con te in campo</h2><div class="io-bar">${v?`<i class="v" style="flex:${v}"></i>`:''}${d?`<i class="n" style="flex:${d}"></i>`:''}${l?`<i class="p" style="flex:${l}"></i>`:''}</div><div class="io-bl"><span><b class="v">${v}</b> vint${v===1?'a':'e'}</span><span><b>${d}</b> par${d===1?'i':'i'}</span><span><b class="p">${l}</b> pers${l===1?'a':'e'}</span><b class="io-pct">${Math.round(v/gm.length*100)}%</b></div></div>`:'';
-  // traguardi
-  const bl=typeof badgeList==='function'?badgeList(me):[];
-  const trg=bl.length?`<h2 class="hm-h">Traguardi</h2><div class="io-tg">${bl.map(b=>`<div class="${b.on?'on':''}">${ic(b.icon)}<b>${esc(b.label)}</b><span>${esc(b.note)}</span></div>`).join('')}</div>`:'';
-  // le tue partite
-  const rows=gm.slice().reverse().map(y=>{const q=(y.stats||{})[me.id]||{},bits=[q.g?q.g+' gol':'',q.a?q.a+' assist':''].filter(Boolean).join(' · ')||'presente';
-    return `<button class="hm-row" onclick="openMatchFromPlayer('${y.id}')"><span class="hm-d"><b>${dt(y.date).d}</b>${dt(y.date).m}</span><span class="hm-t"><b>${esc(y.opp)}</b><span>${esc(bits)}</span></span><span class="hm-s ${res(y)}">${esc(y.gf)}–${esc(y.ga)}</span></button>`}).join('');
-  return `<div class="iotop"><h1>Io</h1><button class="s" onclick="shareCard('${me.id}')">${ic('share')} Carta</button><button class="s" onclick="S.tab='imp';render()" aria-label="Impostazioni">${ic('gear')}</button></div>
-  ${band}${tiles}${chart}${bil}${trg}${rows?`<h2 class="hm-h">Le tue partite</h2><div class="card hm-list">${rows}</div>`:''}`};
 
 // ---------- DIRETTA: marcatori in griglia sotto i tasti ----------
 const lcOrig=W0.liveCardHtml;
@@ -129,7 +98,7 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .rs-chips button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .rs-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:600px){.rs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.rs-grid .card{margin:0}.rs-grid .fut+.mu{display:none}
+.rs-grid .card{margin:0}.rs-h{margin:16px 2px 8px}.rs-chips+.rs-h{margin-top:4px}.rs-grid .fut+.mu{display:none}
 .f2.t-x{background:var(--sf);color:var(--tx);border-color:var(--bd)}.f2.t-x .ov,.f2.t-x .st b{color:var(--tx)}.f2.t-x .ps,.f2.t-x .nk span,.f2.t-x .st{color:var(--mu)}.f2.t-x .st{border-top-color:var(--bd)}.f2.t-x .ph{background:color-mix(in srgb,var(--acf) 18%,var(--sf));color:var(--ac);box-shadow:0 0 0 3px var(--hl)}
 .f2.lead{background:var(--acf);color:var(--on);border-color:var(--acf)}
 .f2.lead .ov,.f2.lead .st b{color:var(--on)}.f2.lead .ps,.f2.lead .nk span,.f2.lead .st{color:color-mix(in srgb,var(--on) 75%,transparent)}
