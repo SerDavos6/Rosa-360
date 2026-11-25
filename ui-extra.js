@@ -274,13 +274,13 @@ function playerViz(m){if(!m||m.role!=='giocatore')return '';
   const l=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)).sort((a,b)=>a.date<b.date?-1:1);if(!l.length)return '';
   const s=l.slice(-12),num=(x,k)=>+(((x.stats||{})[m.id]||{})[k])||0;
   const pres=l.filter(x=>(x.present||[]).includes(m.id)),g=pres.reduce((t,x)=>t+num(x,'g'),0),a=pres.reduce((t,x)=>t+num(x,'a'),0),tg=l.reduce((t,x)=>t+(+x.gf||0),0);
-  const w=300,h=96,base=74,p=8,mx=Math.max(3,...s.map(x=>num(x,'g')+num(x,'a'))),k=(base-16)/mx,sl=(w-2*p)/s.length,bw=Math.min(16,sl*.62);
+  // gol e assist affiancati (non sommati): ognuno con la sua barra e il suo numero
+  const w=300,h=96,base=74,p=8,mx=Math.max(3,...s.map(x=>Math.max(num(x,'g'),num(x,'a')))),k=(base-16)/mx,sl=(w-2*p)/s.length,bw=Math.min(9,sl*.3),gap=1.5;
   const bars=s.map((x,i)=>{const cx=p+sl*i+sl/2,in_=(x.present||[]).includes(m.id),gg=num(x,'g'),aa=num(x,'a');
     if(!in_)return `<circle cx="${cx.toFixed(1)}" cy="${base-3}" r="2.5" fill="var(--mu)" fill-opacity=".5"/>${vzLogo(x,cx,base,.45)}`;
-    const hg=gg*k,ha=aa*k;
-    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg).toFixed(1)}" width="${bw.toFixed(1)}" height="${hg.toFixed(1)}" rx="2" fill="var(--acf)"/>
-      <rect x="${(cx-bw/2).toFixed(1)}" y="${(base-hg-ha).toFixed(1)}" width="${bw.toFixed(1)}" height="${ha.toFixed(1)}" rx="2" fill="var(--hl,#f5b81c)"/>
-      ${gg+aa?`<text x="${cx.toFixed(1)}" y="${(base-hg-ha-4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--tx)">${gg+aa}</text>`:`<rect x="${(cx-bw/2).toFixed(1)}" y="${base-2}" width="${bw.toFixed(1)}" height="2" rx="1" fill="var(--mu)" fill-opacity=".5"/>`}
+    const bar=(v,x0,col)=>{const hh=v*k,mid=(x0+bw/2).toFixed(1);return v?`<rect x="${x0.toFixed(1)}" y="${(base-hh).toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" rx="2" fill="${col}"/><text x="${mid}" y="${(base-hh-3).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--tx)">${v}</text>`
+      :`<rect x="${x0.toFixed(1)}" y="${base-2}" width="${bw.toFixed(1)}" height="2" rx="1" fill="var(--mu)" fill-opacity=".45"/>`};
+    return `${bar(gg,cx-gap/2-bw,'var(--acf)')}${bar(aa,cx+gap/2,'var(--hl,#f5b81c)')}
       ${vzLogo(x,cx,base,1)}`}).join('');
   return `<h2>Andamento</h2><div class="card"><svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Gol e assist nelle ultime ${s.length} partite"><line x1="${p}" y1="${base}" x2="${w-p}" y2="${base}" stroke="var(--bd)"/>${bars}</svg>
   <div class="vzl"><span><i style="background:var(--acf)"></i>Gol</span><span><i style="background:var(--hl,#f5b81c)"></i>Assist</span><span><i style="width:7px;height:7px;border-radius:50%;background:var(--mu);opacity:.5"></i>Assente</span></div>
