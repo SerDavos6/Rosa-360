@@ -1119,7 +1119,10 @@ function makeClaude(uid){
   const snap=r=>({id:r.id,exists:true,data:()=>r.data});
   const chk=r=>{if(r.error)throw{code:r.error.code||"errore",message:r.error.message};return r};
   let n=0,mergeOk=true;const fulls=new Set();
-  const listen=(c,fn)=>{const ch=sb.channel("ch"+c+(++n)).on("postgres_changes",{event:"*",schema:"public",table:"docs"},p=>{const o=(p.new&&p.new.collection)||(p.old&&p.old.collection);if(!o||o===c)fn(p)}).subscribe();return()=>sb.removeChannel(ch)};
+  // Tempo reale: inserimenti e modifiche arrivano già filtrati per tipo di dato (prima ogni canale riceveva tutto e scartava);
+  // le cancellazioni restano senza filtro, perché il database non sempre manda il tipo di dato di una riga cancellata.
+  const listen=(c,fn)=>{const F={schema:"public",table:"docs",filter:"collection=eq."+c},ok=p=>{const o=(p.new&&p.new.collection)||(p.old&&p.old.collection);if(!o||o===c)fn(p)};
+    const ch=sb.channel("ch"+c+(++n)).on("postgres_changes",{event:"INSERT",...F},ok).on("postgres_changes",{event:"UPDATE",...F},ok).on("postgres_changes",{event:"DELETE",schema:"public",table:"docs"},ok).subscribe();return()=>sb.removeChannel(ch)};
   const get1=(c,id)=>T().select("data").eq("collection",c).eq("id",id).maybeSingle();
   const dbo={
     doc:p=>{const{c,id}=P(p);return{

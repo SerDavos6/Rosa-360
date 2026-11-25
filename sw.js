@@ -1,7 +1,7 @@
-// Service worker v9: le pagine vanno "rete prima" (attesa massima 4 secondi, poi la copia salvata);
+// Service worker v10: la pagina si apre subito dalla copia salvata e si aggiorna dietro le quinte;
 // i file fissi (script, icone, font, libreria) escono subito dalla copia salvata e si aggiornano dietro le quinte.
 // Non tocca Supabase né le richieste non-GET, così i dati restano sempre aggiornati.
-const V = 'squadra-v122';
+const V = 'squadra-v123';
 const SUPA = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
 const SHELL = ['./', 'index.html', 'ui-extra.js?v=28', 'match-report.js?v=32', 'fluido.js?v=12', 'tifoso.js?v=18', 'push.js?v=5', 'collega.js?v=3', 'torneo.js?v=27', 'matchday.js?v=6', 'rendering.js?v=7', 'rigori.js?v=1','manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
 const EXT = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -40,10 +40,14 @@ self.addEventListener('fetch', e => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== 'GET') return;
   if (u.origin === location.origin && r.mode === 'navigate') {
+    // L'app si apre subito dalla copia salvata; intanto si scarica la pagina aggiornata, che si vede all'apertura successiva.
+    // Le nuove versioni arrivano comunque col nuovo service worker (V cambia a ogni rilascio). Solo la prima volta si aspetta la rete.
     e.respondWith(caches.open(V).then(c => {
-      const net = fetch(r, { cache: 'no-cache' }).then(res => { if (res.ok) c.put(r, res.clone()); return res; });
-      const stop = new Promise((_, no) => setTimeout(no, 4000));
-      return Promise.race([net, stop]).catch(() => c.match(r).then(m => m || c.match('index.html')).then(m => m || net));
+      const net = fetch(r, { cache: 'no-cache' }).then(res => { if (res.ok) { const cp = res.clone(); c.put('index.html', cp.clone()); c.put('./', cp); } return res; });
+      return c.match(r, { ignoreSearch: true }).then(m => m || c.match('index.html')).then(m => {
+        if (m) { e.waitUntil(net.catch(() => {})); return m; }
+        return net.catch(() => Response.error());
+      });
     }));
     return;
   }
