@@ -431,6 +431,7 @@
     '.tcp.add{justify-content:center;align-items:center;flex-direction:row;gap:6px;border-style:dashed;color:var(--ac)}' +
     '.tseg{margin-bottom:12px}.tseg .tgear{flex:0 0 46px}.tseg .tgear .ic{width:18px;height:18px}' +
     '.trt .tz{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;font-weight:700;font-size:12px}' +
+    '.trt th:first-child{width:30px}.trt td.l,.trt th.l{padding-left:10px}'+
     '.tz.z1{background:#c9a227;color:#14171f}.tz.z2{background:#a0643c;color:#fff}' +
     '.tzl{display:flex;flex-wrap:wrap;gap:6px 14px;margin:2px 4px 10px;font-size:12px;color:var(--mu)}.tzl span{display:flex;align-items:center;gap:6px}.tzl .tz{display:inline-block;width:10px;height:10px;border-radius:3px}' +
     '.tqui{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ac2,rgba(11,122,67,.12));margin:8px 0 4px;white-space:normal}.tqui .ic{flex:none;color:var(--acf)}';
