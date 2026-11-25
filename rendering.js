@@ -53,10 +53,10 @@ W0.clsView=function(t,embed){
   if(cs==='sq')body=(typeof torneoClassifica==='function'?torneoClassifica():'')+squadBlock(t);
   else{const l=pls.map(m=>({m,v:val(m)})).filter(a=>cs==='ov'||a.v>0).sort((a,b)=>b.v-a.v||(a.m.nick||'').localeCompare(b.m.nick||''));
     if(!l.length)body=emptyState('trophy','Ancora nessun dato','La classifica si riempie con le partite giocate.','');
-    else{const pod=cs==='ov',top=pod?l.slice(0,3):[],rest=pod?l.slice(3):l,off=pod?4:1;
+    else{const pod=cs==='ov',top=pod?l.slice(0,3):[],rest=pod?l.slice(3):l,off=pod?4:1,mx=l[0].v||1;
       const st=i=>`<div class="cl-p cl-p${i+1}">${avOf(top[i].m,'cl-av')}<b class="cl-pn">${esc(top[i].m.nick)}</b><div class="cl-st"><b>${top[i].v}</b><span>${i+1}°</span></div></div>`;
       body=`${pod?`<div class="cl-pod">${[1,0,2].filter(i=>top[i]).map(st).join('')}</div>`:''}
-      ${rest.length?`<div class="card cl-list${pod?'':' solo'}">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+off}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
+      ${rest.length?`<div class="card cl-list${pod?'':' solo'}">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+off}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b><i><i style="width:${Math.max(4,Math.round(a.v/mx*100))}%"></i></i></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
   return `${hd}${seg}${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic('share')} Condividi classifica</button></p>`};
 
 // ---------- stile ----------
