@@ -330,7 +330,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=28"></script><script src="match-report.js?v=31"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
+<script src="ui-extra.js?v=28"></script><script src="match-report.js?v=32"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f5f9;--sf:#fff;--bd:#e6eaf1;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e3f3ea;--on:#fff}
 :root:root:root{--bg:#0a0e15;--sf:#131a27;--bd:#202a3b;--ac:#2fd17a;--acf:#2fd17a;--ac2:#12281d;--on:#04210f}
@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=26"></script><script src="matchday.js?v=6"></script>
+<script src="torneo.js?v=27"></script><script src="matchday.js?v=6"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -1040,7 +1040,7 @@ function matchParts(x,mgr){
   <p class="ebt"><button class="s" onclick="shareFormation('${x.id}')">${ic("share")} Condividi formazione</button>${x.played?"":`<button class="s" onclick="addToCalendar('${x.id}')">${ic("plus")} Calendario</button>`}</p>
   <p style="margin-top:22px"><button class="d" style="width:100%" onclick="ask({title:'Eliminare la partita?',msg:'Spariscono anche gol, presenze e statistiche. Non si può annullare.',ok:'Elimina',danger:1,fn:()=>{del('matches/${x.id}');S.mid=null;S.mt=null}})">Elimina partita</button></p>`;
   const info=mgr?infoM:infoP;
-  const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>`;
+  const live=mgr?liveCardHtml(x):`<div class="card"><b class="hd">Cronaca</b>${liveLog(x)||'<p class="mu">Nessun evento registrato.</p>'}</div>${typeof pensCard==="function"?pensCard(x):""}`;
   // statistiche in sola lettura: totali della partita, tabella compatta, portiere a parte, gli altri presenti in una riga
   const PS=rs.filter(m=>pr.includes(m.id)&&m.role==="giocatore"),SV=m=>(x.stats||{})[m.id]||{},num=(m,k)=>+SV(m)[k]||0;
   const tots=[["g","ball","GOL"],["a","assist","ASSIST"],["c","card","CARTELLINI"],["gs","glove","SUBITI"]].map(([k,i,l])=>[i,l,PS.reduce((t,m)=>t+(k==="c"?num(m,"y")+num(m,"r"):num(m,k)),0)]);
@@ -1060,7 +1060,7 @@ function matchParts(x,mgr){
     return `<details class="sre"${(S.spo||{})[m.id]?" open":""} ontoggle="(S.spo=S.spo||{})['${m.id}']=this.open"><summary>${gk?`<span class="gkav">${avm(m)}<i>${ic("glove")}</i></span>`:avm(m)}<b>${esc(m.nick)}</b><span class="spc">${sumE(m,s,ks)||'<span class="z">–</span>'}</span>${ic("chev")}</summary><div class="sg">${ks.map(k=>cellE(m,s,k)).join("")}</div></details>`}).join("")}</div>`;
   const st=mgr?(rows?rowsM:'<p class="mu">Segna le presenze (scheda Info) e salva per inserire le statistiche.</p>'):(rowsP||'<p class="mu">Nessun evento registrato in questa partita.</p>');
   const head=`<header class="bar mbar"><div class="mtop"><button class="ib" style="border:0" onclick="matchBack()" aria-label="Indietro">${ic("back")}</button><div class="mmeta">${esc(matchComp(x))}</div><button class="ib" style="border:0" onclick="previewMatch('${x.id}')" aria-label="Condividi risultato">${ic("share")}</button></div>
-  <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="mmid"><div class="sc2${lvNow()-(LIVE.popAt||0)<900?" pop":""}">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div>${x.played?(r=>`<span class="mres ${r}">${r==="v"?"VITTORIA":r==="p"?"SCONFITTA":"PAREGGIO"}</span>`)(+x.gf>+x.ga?"v":+x.gf<+x.ga?"p":"n"):liveClockHead(x,mgr)}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
+  <div class="mscore"><div class="tm">${crest(T.logo,ic("ball"),"sm")}<span>${esc(T.name||"")}</span></div><div class="mmid"><div class="sc2${lvNow()-(LIVE.popAt||0)<900?" pop":""}">${showScore?esc(x.gf)+" – "+esc(x.ga):"vs"}</div>${x.played?(r=>`<span class="mres ${r}">${r==="v"?"VITTORIA":r==="p"?"SCONFITTA":"PAREGGIO"}${typeof pensRes==="function"&&pensRes(x)?" AI RIGORI":""}</span>`)(+x.gf>+x.ga?"v":+x.gf<+x.ga?"p":(typeof pensRes==="function"&&pensRes(x))||"n"):liveClockHead(x,mgr)}${(p=>p?`<span class="mres pk">Rigori ${p.h} – ${p.a}</span>`:"")(typeof pensOf==="function"&&pensOf(x))}</div><div class="tm">${crest(x.oppLogo,ic("shield"),"sm")}<span>${esc(x.opp)}</span></div></div>
   <div class="mtabs">${[["info","Info"],["live","In diretta"],["stats","Statistiche"]].map(([k,n])=>`<button class="${tab===k?"on":""}" data-k="${k}" onclick="mTab('${k}')">${n}</button>`).join("")}</div></header>`;
   const foot=(mgr?liveDockHtml(x,tab):"")+(mgr?`<div class="sbar" id="sbar" hidden><span>Modifiche non salvate</span><button class="p" onclick="saveMatch('${x.id}')">Salva</button></div>`:"");
   return {head,body:panel("info",info)+panel("live",live)+panel("stats",st),foot}}
@@ -1193,4 +1193,4 @@ async function boot(){
   if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
-</script><script src="rendering.js?v=6"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+</script><script src="rendering.js?v=7"></script><script src="rigori.js?v=1"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>

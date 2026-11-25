@@ -158,7 +158,8 @@
       if (!m.ph && hasGroups(o) && gOf(h) === gOf(a)) return;   // senza fase indicata e tra squadre dello stesso girone: è una partita del girone
       const key = [nn(h), nn(a)].sort().join('|') + '|' + (m.date || '');
       if (seen.has(key)) return; seen.add(key);
-      out.push({ h, a, gf: +m.gf || 0, ga: +m.ga || 0, date: m.date || '' });
+      const pz = typeof pensOf === 'function' ? pensOf(m) : null;
+      out.push({ h, a, gf: +m.gf || 0, ga: +m.ga || 0, pf: pz ? pz.h : null, pa: pz ? pz.a : null, date: m.date || '' });
     });
     return out.sort((p, q) => (p.date < q.date ? -1 : p.date > q.date ? 1 : 0));
   }
@@ -170,7 +171,9 @@
     const i = AUTO.list.findIndex((m, j) => !AUTO.used.has(j) && ((nn(m.h) === nn(hn) && nn(m.a) === nn(an)) || (nn(m.h) === nn(an) && nn(m.a) === nn(hn))));
     if (i < 0) return null;
     AUTO.used.add(i); const m = AUTO.list[i], same = nn(m.h) === nn(hn);
-    return { gh: same ? m.gf : m.ga, ga: same ? m.ga : m.gf, auto: true, date: m.date };
+    const r = { gh: same ? m.gf : m.ga, ga: same ? m.ga : m.gf, auto: true, date: m.date };
+    if (m.pf != null && m.pa != null) { r.ph = same ? m.pf : m.pa; r.pa = same ? m.pa : m.pf; }
+    return r;
   }
   const mkNode = (ko, key, title, H, A) => {
     const r = ko[key] || autoPick(H.n, A.n), w = winner(r), hn = H.n, an = A.n;

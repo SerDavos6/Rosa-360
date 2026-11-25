@@ -701,6 +701,7 @@ function lvApply(id,fn){
   const base=S.matches.find(m=>m.id===id);if(!base)return;const bb=badgeKeys(base.tid);
   const o=LV[id]||(LV[id]={n:0,d:null,busy:false,pend:null,taps:0}),cur=lvEff(base);
   const d={gf:+cur.gf||0,ga:+cur.ga||0,played:!!cur.played,stats:JSON.parse(JSON.stringify(cur.stats||{})),events:[...(cur.events||[])]};
+  if(cur.pens!==undefined)d.pens=cur.pens?JSON.parse(JSON.stringify(cur.pens)):null;   // rigori (vedi rigori.js)
   if(o.d&&o.d.clock)d.clock=o.d.clock;
   fn(d,cur);o.d=d;o.n++;o.pend=Object.assign({},o.pend,d);o.taps++;lvKeep(id,o);
   rq();setTimeout(()=>badgeCheer(bb,badgeKeys(base.tid)),0); // il controllo traguardi dopo il disegno, così il tocco risponde subito
@@ -945,7 +946,7 @@ function goals(x){const ev=x.events||[];let a=0,b=0;const rows=[];
   ev.forEach(e=>{if(e.k==='g'){a++;rows.push({m:e.m,p:e.p,as:e.a,sc:a+'–'+b})}else if(e.k==='opp'||e.k==='og')b++});
   if(!rows.length)Object.entries(x.stats||{}).filter(([,s])=>N(s,'g')>0).sort((p,q)=>N(q[1],'g')-N(p[1],'g')).forEach(([id,s])=>rows.push({p:id,n:N(s,'g')}));
   return rows}
-function html(x,mgr){const T=S.teams.find(t=>t.id===x.tid)||{},a=+x.gf||0,b=+x.ga||0,es=a>b?['','VITTORIA']:a<b?['p','SCONFITTA']:['n','PAREGGIO'];
+function html(x,mgr){const T=S.teams.find(t=>t.id===x.tid)||{},a=+x.gf||0,b=+x.ga||0,pz=typeof pensRes==='function'&&pensRes(x),es=a>b?['','VITTORIA']:a<b?['p','SCONFITTA']:pz==='v'?['','VITTORIA AI RIGORI']:pz==='p'?['p','SCONFITTA AI RIGORI']:['n','PAREGGIO'];
   const lg=(src,name)=>safeSrc(src)?`<img class="fpl" src="${safeSrc(src)}" alt="">`:`<span class="fpl">${ini(name)}</span>`;
   const nk=id=>esc((mbr(x,id)||{}).nick||'?');
   const gr=goals(x),cards=Object.entries(x.stats||{}).filter(([,s])=>N(s,'y')||N(s,'r')).map(([id,s])=>nk(id)+(N(s,'r')?' (rosso)':' (giallo)'));
@@ -972,7 +973,7 @@ function sync(){let w=document.getElementById('fpw');const q=which(),x=q&&S.matc
   if(!x){if(w){w.hidden=true;w.innerHTML='';w.dataset.h=''}return}
   const [body,foot,es,T,lg,a,b]=html(x,q.mgr);const ph=[x.tourn,typeof matchPhase==='function'?matchPhase(x):''].filter(Boolean).join(' · ');
   const h=`<div class="fph"><div class="fpt"><span style="flex:none;width:44px"></span><span>Fine partita${ph?' · '+esc(ph):''}</span><button class="fpx" onclick="fpClose()" aria-label="Chiudi">×</button></div>
-  <div class="fpv"><div>${lg(T.logo,T.name)}<b>${esc(T.name||'Noi')}</b></div><span class="fps">${a} – ${b}</span><div>${lg(x.oppLogo,x.opp)}<b>${esc(x.opp||'')}</b></div></div><span class="fpe ${es[0]}">${es[1]}</span></div>
+  <div class="fpv"><div>${lg(T.logo,T.name)}<b>${esc(T.name||'Noi')}</b></div><span class="fps">${a} – ${b}</span><div>${lg(x.oppLogo,x.opp)}<b>${esc(x.opp||'')}</b></div></div><span class="fpe ${es[0]}">${es[1]}</span>${(p=>p?`<div class="fpk" style="margin-top:6px;color:inherit;opacity:.9">Rigori ${p.h} – ${p.a}</div>`:'')(typeof pensOf==='function'&&pensOf(x))}</div>
   <div class="fpb">${body}</div><div class="fpf">${foot}</div>`;
   if(!w){w=document.createElement('div');w.id='fpw';w.setAttribute('role','dialog');w.setAttribute('aria-label','Fine partita');document.body.append(w)}
   if(w.dataset.h!==h){const sc=(w.querySelector('.fpb')||{}).scrollTop||0;w.innerHTML=h;w.dataset.h=h;const nb=w.querySelector('.fpb');if(nb)nb.scrollTop=sc}w.hidden=false}

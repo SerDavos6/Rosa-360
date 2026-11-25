@@ -5,7 +5,7 @@
 const W0=window;
 const iniOf=n=>esc(String(n||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
 const avOf=(m,c)=>m&&m.photo?`<span class="${c}"><img loading="lazy" decoding="async" src="${safeSrc(m.photo)}" alt=""></span>`:`<span class="${c}">${iniOf(m&&m.nick)}</span>`;
-const res=x=>x.gf>x.ga?'v':x.gf<x.ga?'p':'n';
+const res=x=>x.gf>x.ga?'v':x.gf<x.ga?'p':((typeof pensRes==='function'&&pensRes(x))||'n');
 const seasonTxt=()=>{try{const s=activeSeason();return s==='all'?'Tutte le stagioni':'Stagione '+s}catch(e){return ''}};
 
 // ---------- HOME ----------
@@ -17,7 +17,7 @@ W0.homeTab=function(t,mgr){
   const up=all.filter(x=>!x.played&&x.date>=ds).sort((a,b)=>a.date<b.date?-1:1).slice(1);
   const pl=ms.filter(x=>x.played).sort((a,b)=>a.date<b.date?1:-1);
   const row=x=>{const d=dt(x.date),k=x.played?res(x):'';
-    return `<button class="hm-row" onclick="S.mid='${x.id}';render()"><span class="hm-d"><b>${d.d}</b>${d.m}</span>${crest(x.oppLogo,iniOf(x.opp),'hm-lg')}<span class="hm-t"><b>${esc(x.opp)}</b><span>${esc([x.tourn||'Amichevole',matchPhase(x)].filter(Boolean).join(' · '))}</span></span>${x.played?`<span class="hm-s ${k}">${esc(x.gf)}–${esc(x.ga)}</span>`:`<span class="hm-u">${esc(matchDetail(x).time||'Da giocare')}</span>`}</button>`};
+    return `<button class="hm-row" onclick="S.mid='${x.id}';render()"><span class="hm-d"><b>${d.d}</b>${d.m}</span>${crest(x.oppLogo,iniOf(x.opp),'hm-lg')}<span class="hm-t"><b>${esc(x.opp)}</b><span>${esc([x.tourn||'Amichevole',matchPhase(x)].filter(Boolean).join(' · '))}</span></span>${x.played?`<span class="hm-s ${k}">${esc(x.gf)}–${esc(x.ga)}${(p=>p?`<small>rig. ${p.h}–${p.a}</small>`:'')(typeof pensOf==='function'&&pensOf(x))}</span>`:`<span class="hm-u">${esc(matchDetail(x).time||'Da giocare')}</span>`}</button>`};
   const fm=pl.slice(0,5).reverse().map(x=>`<i class="rb ${res(x)}">${res(x).toUpperCase()}</i>`).join('');
   const shown=S.allM?pl:pl.slice(0,5);
   return `${form}${nextMatch(all)}${typeof torneoHome==='function'?torneoHome():''}
@@ -79,6 +79,7 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .hm-s.v{background:color-mix(in srgb,var(--win) 15%,var(--sf));color:var(--win)}
 .hm-s.n{background:color-mix(in srgb,var(--tx) 8%,var(--sf));color:var(--tx)}
 .hm-s.p{background:color-mix(in srgb,var(--loss) 15%,var(--sf));color:var(--loss)}
+.hm-s small{display:block;font:700 10px/1.2 var(--ui);text-align:center;margin-top:2px;opacity:.85}
 .hm-u{flex:none;font-size:12px;font-weight:700;color:var(--ac)}
 .hm-more{display:block;width:100%;min-height:44px;margin:0;border:0;background:none;color:var(--ac);font-weight:600;font-size:14px}
 .hm-new{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin:0 0 4px;border:1.5px dashed var(--bd);background:none;color:var(--ac)}
