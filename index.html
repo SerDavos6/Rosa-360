@@ -23,7 +23,7 @@ html{background-color:var(--bg,#f3f1ec)}
    Barre piene (niente trasparenze né elementi fluttuanti): il contenuto scorre sempre e solo nella zona centrale. */
 :root{--ui:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--num:Oswald,"Arial Narrow",sans-serif;--navh:60px;--r:16px;
  --bg:#f3f1ec;--sf:#ffffff;--tx:#14171f;--mu:#5b6170;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#ffffff;--dg:#c62828;color-scheme:light}
-:root:root:root{--bg:#0c1210;--sf:#151c19;--tx:#f3f1ec;--mu:#a9b3ae;--bd:#26302b;--ac:#2fbf71;--acf:#2fbf71;--ac2:#14281d;--on:#111111;--dg:#ff6b6b;color-scheme:dark}
+:root:root:root{--bg:#f3f1ec;--sf:#ffffff;--tx:#14171f;--mu:#5b6170;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#ffffff;--dg:#c62828;color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
@@ -333,7 +333,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 <script src="ui-extra.js?v=25"></script><script src="match-report.js?v=31"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f1ec;--sf:#fff;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#fff}
-:root:root:root{--bg:#0c1210;--sf:#151c19;--bd:#26302b;--ac:#2fbf71;--acf:#2fbf71;--ac2:#14281d;--on:#04210f}
+:root:root:root{--bg:#f3f1ec;--sf:#fff;--bd:#e4e0d6;--ac:#0f5132;--acf:#0f5132;--ac2:#dcebe1;--on:#fff}
 .card{border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 6px 18px -10px rgba(15,23,42,.18)}
 :root:root:root .card{box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 8px 20px -12px rgba(0,0,0,.6)}
 .bar{border-bottom-color:transparent;box-shadow:0 1px 0 var(--bd)}
@@ -412,14 +412,15 @@ function ic(n,c=""){return `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none"
 let toastT;
 function toast(msg,ok){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.setAttribute("role",ok?"status":"alert");d.textContent=msg;document.body.append(d);{const n=document.querySelector(".bn"),sb=$("sbar");if(n){let h=innerHeight-n.getBoundingClientRect().top;if(sb&&!sb.hidden)h+=sb.offsetHeight;d.style.bottom=(h+12)+"px"}}clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),ok?2200:4500)}
 // ---- tema: Squadra / Chiaro / Scuro ----
-function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}S.mode=m==="light"||m==="dark"||m==="auto"||m==="team"?m:"light"}return S.mode}
+function getMode(){if(!S.mode){let m=null;try{m=localStorage.getItem("mode")}catch(e){}try{if(localStorage.getItem("look")!=="md"){localStorage.setItem("look","md");if(m==="dark"){m="light";localStorage.setItem("mode","light")}}}catch(e){}
+  S.mode=m==="light"||m==="dark"||m==="auto"||m==="team"?m:"light"}return S.mode}
 function setMode(m){S.mode=m;try{localStorage.setItem("mode",m)}catch(e){}render()}
 function isDarkNow(){const b=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();return /^#[0-9a-f]{6}$/i.test(b)?lum(b)<.25:true}
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(getMode()==="auto")render()})}catch(e){}
 function toggleMode(){setMode(isDarkNow()?"light":"dark")}
 function applyMode(){let m=getMode();if(m==="team")return;if(m==="auto")m=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";const s=document.documentElement.style,cs=getComputedStyle(document.documentElement);
   let f=cs.getPropertyValue("--acf").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f=cs.getPropertyValue("--ac").trim();if(!/^#[0-9a-f]{6}$/i.test(f))f="#f5c518";
-  if(m==="light"&&f.toLowerCase()==="#2fbf71")f="#0f5132";   // verde campo scuro come colore di base nel tema chiaro
+  if(m==="dark"&&f.toLowerCase()==="#0f5132")f="#2fbf71";   // verde più chiaro come colore di base nel tema scuro   // verde campo scuro come colore di base nel tema chiaro
   let o;
   if(m==="light"){const L=lum(f),ink=L>.4?mix(f,"#000000",42):f,on=L>.4?"#111111":"#ffffff";
     o={"--bg":"#f3f1ec","--sf":"#ffffff","--tx":"#14171f","--mu":"#5b6170","--bd":"#e4e0d6","--dg":"#c62828","--ac":ink,"--acf":f,"--ac2":mix(f,"#ffffff",16),"--on":on,"--hero":heroGrad(f),"--hx":on,"--hi":on,"--hc":f,"color-scheme":"light"}}
