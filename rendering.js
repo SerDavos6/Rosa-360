@@ -177,6 +177,16 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .lv-g button{min-height:56px;padding:4px;border-radius:14px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .lv-g button b{font:800 18px/1 var(--num)}.lv-g button span{font-size:12px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lv-g button:active{background:var(--hl);color:var(--hlx);border-color:var(--hl)}
+/* carte giocatore nel colore della squadra (come prima); il migliore ha il bordo giallo */
+.fut.f2,.f2.t-x{background:var(--acf);color:var(--on);border:2px solid transparent}
+.fut.f2 .ov,.fut.f2 .st b,.f2.t-x .ov,.f2.t-x .st b{color:var(--on)}
+.fut.f2 .ps,.fut.f2 .nk span,.fut.f2 .st,.f2.t-x .ps,.f2.t-x .nk span,.f2.t-x .st{color:color-mix(in srgb,var(--on) 75%,transparent)}
+.fut.f2 .st,.f2.t-x .st{border-top-color:color-mix(in srgb,var(--on) 22%,transparent)}
+.fut.f2 .ph,.f2.t-x .ph{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on);box-shadow:none}
+.f2.t-g .ph,.f2.t-x .ph{box-shadow:0 0 0 3px var(--hl)}
+.fut.f2.lead{border-color:var(--hl);box-shadow:0 6px 18px -8px color-mix(in srgb,var(--hl) 70%,transparent)}
+.fut.f2.lead .ph{background:var(--hl);color:var(--hlx)}
+.fut.f2.staff{background:color-mix(in srgb,var(--acf) 55%,#000)}
 /* fine partita */
 #fpw .fph{background:#14171f;color:#f3f1ec}
 #fpw .fps{font-family:var(--num);font-weight:800}
