@@ -60,16 +60,6 @@ W0.clsView=function(t,embed){
       ${rest.length?`<div class="card cl-list">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+4}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b><i><i style="width:${Math.max(4,Math.round(a.v/mx*100))}%"></i></i></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
   return `${hd}${seg}${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic('share')} Condividi classifica</button></p>`};
 
-// ---------- DIRETTA: marcatori in griglia sotto i tasti ----------
-const lcOrig=W0.liveCardHtml;
-W0.liveCardHtml=function(x){
-  const h=lcOrig(x);if(x.played)return h;
-  const ps=livePlayers(x);if(!ps.length)return h;
-  const grid=`<div class="card lv-who"><div class="lv-wh"><h2>Chi ha segnato?</h2><span>tra i ${ps.length} presenti</span></div><div class="lv-g">${ps.slice().sort((a,b)=>(parseInt(a.num)||99)-(parseInt(b.num)||99)).map(m=>`<button onclick="liveGoalBy('${x.id}','${m.id}')"><b>${esc(m.num||'–')}</b><span>${esc(m.nick)}</span></button>`).join('')}</div></div>`;
-  // la griglia va subito dopo i due tasti grandi
-  const i=h.indexOf('<div class="lvact lvsm">');
-  return i<0?h:h.slice(0,i)+grid+h.slice(i)};
-
 // ---------- stile ----------
 const st=document.createElement('style');st.id='rendering';st.textContent=`
 .pg-hd{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:4px 2px 12px}
@@ -140,12 +130,6 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .io-tg>div{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;padding:10px 6px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);color:var(--mu)}
 .io-tg .ic{width:22px;height:22px}.io-tg b{font-size:12px;color:var(--tx);line-height:1.15}.io-tg span{font-size:10.5px;line-height:1.2}
 .io-tg>div.on{background:var(--acf);border-color:var(--acf);color:color-mix(in srgb,var(--on) 80%,transparent)}.io-tg>div.on b{color:var(--on)}.io-tg>div.on .ic{color:var(--hl)}
-.lv-who{padding:14px;margin-top:12px}
-.lv-wh{display:flex;align-items:baseline;justify-content:space-between}.lv-wh h2{margin:0}.lv-wh span{font-size:12px;color:var(--mu)}
-.lv-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-.lv-g button{min-height:56px;padding:4px;border-radius:14px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.lv-g button b{font:800 18px/1 var(--num)}.lv-g button span{font-size:12px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lv-g button:active{background:var(--hl);color:var(--hlx);border-color:var(--hl)}
 /* carte giocatore nel colore della squadra (come prima); il migliore ha il bordo giallo */
 .fut.f2,.f2.t-x{background:var(--acf);color:var(--on);border:2px solid transparent}
 .fut.f2 .ov,.fut.f2 .st b,.f2.t-x .ov,.f2.t-x .st b{color:var(--on)}
@@ -156,12 +140,6 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .fut.f2.lead{border-color:var(--hl);box-shadow:0 6px 18px -8px color-mix(in srgb,var(--hl) 70%,transparent)}
 .fut.f2.lead .ph{background:var(--hl);color:var(--hlx)}
 .fut.f2.staff{background:color-mix(in srgb,var(--acf) 55%,#000)}
-/* fine partita */
-#fpw .fph{background:#14171f;color:#f3f1ec}
-#fpw .fps{font-family:var(--num);font-weight:800}
-#fpw .fpe{background:var(--hl);color:var(--hlx)}
-#fpw .fpe.p{background:var(--loss);color:#fff}#fpw .fpe.n{background:var(--draw);color:#fff}
-#fpw .fpy{background:#1f2530;color:#f3f1ec;border:0}#fpw .fpy .fpk{color:var(--hl)}#fpw .fpy .mu{color:#a9b3ae}
 `;document.head.append(st);
 // se l'app ha già disegnato la prima schermata prima di questo file, la ridisegna
 try{if(S.db)render()}catch(e){}

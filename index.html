@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=26"></script><script src="matchday.js?v=3"></script>
+<script src="torneo.js?v=26"></script><script src="matchday.js?v=4"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -671,7 +671,7 @@ function teamView(t){syncIg();
   const onM=S.tab==="cal"||S.tab==="home",mx=onM&&S.mid?S.matches.find(x=>x.id===S.mid):null;
   if(onM&&S.mid&&!mx)S.mid=null;
   let head,body,foot="";
-  if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot;if(mgr&&!mx.played&&(S.mt||"live")==="live")body='<i id="lvdark" hidden></i>'+body}
+  if(mx){const p=matchParts(mx,mgr);head=p.head;body=p.body;foot=p.foot}
   else{head=teamBar(t);body=(mgr?`<div class="edband" role="status">${ic("pen")}<span>Stai modificando: i giocatori non vedono questi comandi</span><button class="s" onclick="toggleEdit(event)">Fine</button></div>`:"")+({home:homeTab,rosa:rosaView,cal:homeTab,cls:x=>clsView(x),io:x=>ioView(x,can),imp:x=>`<button class="s" style="margin-bottom:10px" onclick="S.tab='io';render()">${ic("back")} Io</button>`+impView(x,can),trn:(x,m)=>typeof torneoView==="function"?torneoView(x,m):""}[S.tab]||homeTab)(t,mgr)}
   return `${head}<div class="view"><div class="pg">${body}</div></div>${foot}${S.pd?playerModal(S.pd):""}<nav class="bn">${nav.map(([k,i,n])=>`<button class="${S.tab===k||(k==="io"&&S.tab==="imp")?"on":""}" onclick="${k==="trn"?"S.mid=null;S.pd=null;trOpen()":`S.tab='${k}';S.mid=null;S.pd=null;render()`}"><span>${i}</span>${n}${k==="io"&&can&&pend.length?'<i class="dot"></i>':""}</button>`).join("")}</nav>`}
 function rosaGroups(ms){
@@ -1194,4 +1194,4 @@ async function boot(){
   if(LINK&&typeof fanBrowse==="function"){await fanBrowse();openLink()}}
 if(typeof fluidoStart==="function")fluidoStart();
 boot();
-</script><script src="rendering.js?v=3"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+</script><script src="rendering.js?v=4"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>

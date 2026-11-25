@@ -72,22 +72,6 @@ button.p{font-weight:800}
 .rs .hd{font:800 26px/1 var(--num)}
 .big b{font:800 60px/1 var(--num);color:var(--tx)}
 
-/* ---- partita e diretta ---- */
-.mscore .sc2{font:800 60px/.95 var(--num);color:var(--tx)}
-.mclk #lvclock{font:800 22px/1 var(--num)}
-.mclk i{color:var(--hl)}
-.mres{font-size:12px}
-.mres.v{background:var(--hl);color:var(--hlx)}
-.lvact.lvbig>button{min-height:72px;border-radius:18px;font:800 24px/1.05 var(--num);text-transform:uppercase;letter-spacing:.02em}
-.lvact.lvbig>button.p{background:var(--hl);color:var(--hlx)}
-.lvact.lvbig>button .ic{width:22px;height:22px}
-.lvact.lvsm>button{border-radius:12px}
-.lvg .av{font:800 19px var(--num);border:2px solid transparent}
-.lvg>button:active .av{background:var(--hl);color:var(--hlx)}
-.lvfine{border-radius:14px}
-.lvsheet .lvdock{border-radius:24px 24px 0 0}
-.mvp{background:var(--hl);color:var(--hlx)}
-
 /* ---- rosa: carte giocatore ---- */
 .grid{gap:10px}
 .fut{border-radius:20px;border-width:1px;padding:12px 10px 14px}
@@ -201,12 +185,4 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .ioband-nx button{flex:none;min-height:40px;padding:0 16px;border:0;border-radius:10px;background:var(--hl);color:var(--hlx);font-weight:800;font-size:14px}
 .ioband-nx button.on{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on)}
 
-/* diretta: tutta su fondo scuro, punteggio grande */
-#app:has(#lvdark){--bg:#0b0f17;--sf:#121826;--tx:#f1f5f9;--mu:#94a3b8;--bd:#1f2937;--ac2:#1a2232;color-scheme:dark;background:var(--bg);color:var(--tx)}
-#app:has(#lvdark) .bar,#app:has(#lvdark) .bn{background:var(--sf)}
-#app:has(#lvdark) .mscore .sc2{font-size:76px;color:var(--tx)}
-#app:has(#lvdark) .mscore .tm .crest{border-radius:50%}
-#app:has(#lvdark) .lvact.lvbig>button:not(.p){background:var(--sf);color:var(--tx);border:1.5px solid var(--bd)}
-#app:has(#lvdark) .lvfine{background:transparent;color:var(--tx);border:1.5px solid var(--bd)}
-#app:has(#lvdark) .mtabs .on{color:var(--hl);box-shadow:inset 0 -3px 0 var(--hl)}
 `;document.head.append(st)})();
