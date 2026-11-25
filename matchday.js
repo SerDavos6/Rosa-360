@@ -169,3 +169,30 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .ioband-nx button.on{background:color-mix(in srgb,var(--on) 22%,transparent);color:var(--on)}
 
 `;document.head.append(st)})();
+// ---- telefoni stretti (molti Android: 360 px, o testo ingrandito) ----
+(function(){const st=document.createElement('style');st.textContent=`
+.trt td.l{overflow-wrap:break-word;word-break:normal;hyphens:auto;line-height:1.2}
+.trt td.l{display:table-cell}
+@media (max-width:400px){
+ .trt{font-size:13px}.trt th{width:21px}.trt th:first-child{width:27px}.trt th.w{width:28px}
+ .trt td.l,.trt th.l{padding-left:7px}.trt th,.trt td{padding-left:1px;padding-right:1px}
+ div.cl-seg button{padding:0 6px;font-size:12.5px;flex:1 1 auto}
+ .tseg button{padding:0 6px}
+}
+/* nomi: mai spezzati a metà parola */
+.rn-vs b,.fut .nk,.hm-t b,.cl-n b,.trk .tm span{overflow-wrap:normal;word-break:normal}
+.rn-vs b{hyphens:manual}
+.fut .nk{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hm-head h2{white-space:nowrap}
+@media (max-width:380px){
+ .fut .nk{font-size:15px;letter-spacing:.01em}
+ .rn-vs b{font-size:13px}
+}
+@media (max-width:340px){
+ .trt{font-size:12.5px}.trt th{width:19px}.trt th.w{width:25px}
+ div.cl-seg button{font-size:11.5px;padding:0 3px;flex:1 1 auto;min-width:0}
+ .fut .nk{font-size:13.5px}
+ .fmq .rb{width:18px;height:18px;font-size:10px}
+ .hm-head h2{font-size:17px}
+}
+`;document.head.append(st)})();

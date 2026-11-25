@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=29"></script><script src="matchday.js?v=7"></script>
+<script src="torneo.js?v=29"></script><script src="matchday.js?v=8"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -473,14 +473,17 @@ function setTeamIg(){const raw=v("tig"),u=igUser(raw);if(raw&&!u)return toast("N
 // Nome della squadra nell'intestazione sempre per intero: si rimpicciolisce finché sta in due righe senza spezzare le parole.
 // Lo spazio libero cambia con i tasti presenti (matita, Instagram, stagione), quindi si misura sul telefono dopo ogni disegno.
 function fitBarNames(){document.querySelectorAll(".bar .tn").forEach(el=>{const key=el.textContent+"|"+el.clientWidth;if(el.dataset.fit===key)return;
-  el.style.fontSize="";el.style.webkitLineClamp="";el.style.overflowWrap="normal";el.style.wordBreak="keep-all";let f=parseFloat(getComputedStyle(el).fontSize)||17,lh=f*1.15,rows=2;
+  el.style.fontSize="";el.style.webkitLineClamp="";el.style.overflowWrap="normal";el.style.wordBreak="keep-all";let f=parseFloat(getComputedStyle(el).fontSize)||17,lh=f*1.15,rows=1;const f0=f;
   const over=()=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>Math.ceil(lh*rows)+2;
+  // prima si prova a tenere il nome su una riga sola rimpicciolendolo un po' (telefoni stretti, molti Android); se non basta, due righe come prima
+  while(over()&&f>13){f-=.5;lh=f*1.15;el.style.fontSize=f+"px"}
+  if(over()){rows=2;f=f0;lh=f*1.15;el.style.fontSize=""}
   while(over()&&f>11){f-=.5;lh=f*1.15;el.style.fontSize=f+"px"}
   // nomi lunghissimi: si passa a tre righe (sempre per intero), solo in ultimo si spezza una parola
   if(over()){rows=3;el.style.webkitLineClamp="3";f=Math.max(f,11);while(over()&&f>9){f-=.5;lh=f*1.15;el.style.fontSize=f+"px"}}
   if(over()){el.style.overflowWrap="anywhere";el.style.wordBreak=""}el.dataset.fit=el.textContent+"|"+el.clientWidth})}
 (()=>{let q=0;const go=()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;fitBarNames()})};
-  new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true,characterData:true});addEventListener("resize",go);if(document.fonts)document.fonts.ready.then(go)})();
+  new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["data-fit"]});/* anche quando il ridisegno toglie la misura già fatta */addEventListener("resize",go);if(document.fonts)document.fonts.ready.then(()=>{document.querySelectorAll(".bar .tn").forEach(el=>{delete el.dataset.fit});go()})})();
 function teamIgBtn(t){const u=igUser(t&&t.ig);return u?`<a class="ib igb" href="https://www.instagram.com/${encodeURIComponent(u)}/" target="_blank" rel="noopener noreferrer" aria-label="Instagram della squadra: @${esc(u)}">${ic("ig")}</a>`:""}
 function oppLogo(inp){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{logoTmp=d;const e0=$("lg");if(e0)e0.textContent="Caricamento…";const u=await sbUpload(d,"avversari");if(logoTmp===d)logoTmp=u;const e1=$("lg");if(e1)e1.textContent="Logo caricato ✓"})}
 function matchLogo(inp,id){const f=inp.files[0];if(!f)return;readLogo(f,async d=>{const u=await sbUpload(d,"avversari");S.db.doc("matches/"+id).update({oppLogo:u})})}
