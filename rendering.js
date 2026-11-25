@@ -126,6 +126,10 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .io-tg .ic{width:22px;height:22px}.io-tg b{font-size:12px;color:var(--tx);line-height:1.15}.io-tg span{font-size:10.5px;line-height:1.2}
 .io-tg>div.on{background:var(--acf);border-color:var(--acf);color:color-mix(in srgb,var(--on) 80%,transparent)}.io-tg>div.on b{color:var(--on)}.io-tg>div.on .ic{color:var(--hl)}
 `;document.head.append(st);
+// Aprire una partita da qualsiasi scheda (la scheda della partita si vede solo dalla Home):
+// si ricordano scheda e posizione, così "indietro" riporta esattamente lì.
+W0.openMatch=function(id){const el=S.pd?document.querySelector('.pm'):document.querySelector('.view');
+  S.ret={mid:id,pd:S.pd,tab:S.tab,sc:el?el.scrollTop:0};S.pd=null;if(S.tab!=='home'&&S.tab!=='cal')S.tab='home';S.mid=id;S.mt=null;W0.__lastMid=id;render()};
 // Tornare indietro da una partita riporta alla pagina da cui la si è aperta, nello stesso punto:
 // quando si apre una partita (da qualsiasi scheda) si ricordano scheda e posizione, e "indietro" le ripristina.
 const r0=W0.render;

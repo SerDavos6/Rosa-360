@@ -4,9 +4,9 @@
 // qui ci sono caratteri, forme e il giallo "--hl" per le azioni importanti (diretta, MVP, Modifica).
 (function(){const st=document.createElement('style');st.id='matchday';st.textContent=`
 :root{--num:"Barlow Condensed",Oswald,"Arial Narrow",sans-serif;--hl:#f5b81c;--hlx:#14171f;--r:18px;
- --win:#0f5132;--draw:#9aa0ab;--loss:#c2410c}
+ --win:#0f5132;--draw:#9aa0ab;--loss:#b91c1c}
 :root:root:root{--hl:#f5b81c}
-html[style*="color-scheme: dark"]{--win:#2fbf71;--draw:#6b7280;--loss:#f0703e}
+html[style*="color-scheme: dark"]{--win:#2fbf71;--draw:#6b7280;--loss:#e5484d}
 
 /* titoli: condensati, maiuscoli, da tabellone */
 h1{font:800 34px/1 var(--num);text-transform:uppercase;letter-spacing:.01em;margin:6px 0 14px}
@@ -100,7 +100,7 @@ dialog{border-radius:24px}
 .toast{border-radius:14px}
 `;document.head.append(st)})();
 (function(){const st=document.createElement('style');st.textContent=`
-.fmx{color:#fff;border-radius:12px}button.fmx{border:0;font:inherit;cursor:pointer;min-height:0;margin:0}button.fmx:active{transform:scale(.96)}
+.fmx{color:#fff;border-radius:12px}button.fmx,.fmx.fmx{color:#fff}button.fmx{border:0;font:inherit;cursor:pointer;min-height:0;margin:0}button.fmx:active{transform:scale(.96)}
 .fmx .fml{display:grid;place-items:center;width:28px;height:28px;margin:5px auto 0;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.92);color:#14171f;font:800 11px var(--ui);font-style:normal}
 .fmx{min-width:56px;flex-basis:56px}.fmx b{font:800 20px/1.05 var(--num)}
 i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
