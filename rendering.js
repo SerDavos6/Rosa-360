@@ -126,6 +126,14 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .io-tg .ic{width:22px;height:22px}.io-tg b{font-size:12px;color:var(--tx);line-height:1.15}.io-tg span{font-size:10.5px;line-height:1.2}
 .io-tg>div.on{background:var(--acf);border-color:var(--acf);color:color-mix(in srgb,var(--on) 80%,transparent)}.io-tg>div.on b{color:var(--on)}.io-tg>div.on .ic{color:var(--hl)}
 `;document.head.append(st);
+// Tornare indietro da una partita riporta alla pagina da cui la si è aperta, nello stesso punto:
+// quando si apre una partita (da qualsiasi scheda) si ricordano scheda e posizione, e "indietro" le ripristina.
+const r0=W0.render;
+W0.render=function(){
+  try{if(S.mid&&S.mid!==W0.__lastMid&&!(S.ret&&S.ret.mid===S.mid)){const el=S.pd?document.querySelector('.pm'):document.querySelector('.view');
+    if(!W0.__lastMid)S.ret={mid:S.mid,tab:S.tab,pd:S.pd,sc:el?el.scrollTop:0}}
+    W0.__lastMid=S.mid||null}catch(e){}
+  return r0.apply(this,arguments)};
 // se l'app ha già disegnato la prima schermata prima di questo file, la ridisegna
 try{if(S.db)render()}catch(e){}
 })();
