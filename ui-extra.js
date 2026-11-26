@@ -183,22 +183,23 @@ const shareBtns=m=>`<div class="row" style="margin:12px 0"><button class="s" onc
 
 
 // ===== Traguardi e badge =====
-const BADGES={ht:['Hat-trick','star','HAT-TRICK'],g10:['10 gol','ball','10 GOL'],p20:['20 presenze','shield','20 PRES.'],cap:['Capocannoniere','trophy','CAPOCANNONIERE'],pp:['Rigore parato','glove','PARARIGORI']};
+const BADGES={ht:['Hat-trick','star','HAT-TRICK'],g10:['10 gol','ball','10 GOL'],p20:['20 presenze','shield','20 PRES.'],cap:['Capocannoniere','trophy','CAPOCANNONIERE'],ast:['Assistman','assist','ASSISTMAN'],pp:['Rigore parato','glove','PARARIGORI']};
 (function(){const st=document.createElement('style');st.textContent='.bds{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:8px}.bds span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.25)}.bds .ic{width:13px;height:13px}.bgl{display:grid;gap:10px}.bgi{display:flex;gap:10px;align-items:center;opacity:.5}.bgi.on{opacity:1}.bgi b{display:block}.bgc{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--bd);background:color-mix(in srgb,var(--acf) 22%,var(--bg));color:var(--acf)}.bgi.on .bgc{background:var(--acf);color:var(--on)}.bgc .ic{width:18px;height:18px}';document.head.append(st)})();
 // Conta solo partite giocate o in corso (con eventi in diretta); le presenze solo quelle giocate.
-function badgeCalc(tid,over){const ms=S.matches.filter(x=>x.tid===tid).map(x=>over&&x.id===over.id?over:lvEff(x)),out={};let top=0;
-  S.members.filter(m=>m.tid===tid&&m.role==='giocatore').forEach(m=>{let g=0,p=0,ht=0,ps=0,sg=0;
-    ms.forEach(x=>{if(!x.played&&!(x.events||[]).length)return;const s=(x.stats||{})[m.id]||{},n=+s.g||0;g+=n;ps+=+s.ps||0;if(n>=3)ht++;if(x.played&&(x.present||[]).includes(m.id))p++;if(inSeason(x))sg+=n});
-    out[m.id]={ht,g,p,ps,sg,pos:m.pos};top=Math.max(top,sg)});
-  for(const id in out)out[id].cap=out[id].sg>=3&&out[id].sg===top;return out}
-function badgeKeys(tid,over){const c=badgeCalc(tid,over),o={};for(const id in c){const b=c[id];o[id]=[b.cap&&'cap',b.ht>0&&'ht'+b.ht,b.g>=10&&'g10',b.p>=20&&'p20',b.pos==='P'&&b.ps>0&&'pp'].filter(Boolean)}S.members.filter(m=>m.tid===tid&&m.role==='dirigente').forEach(m=>{o[m.id]=staffKeys(staffCalc(m,over))});return o}
+function badgeCalc(tid,over){const ms=S.matches.filter(x=>x.tid===tid).map(x=>over&&x.id===over.id?over:lvEff(x)),out={};let top=0,topA=0;
+  S.members.filter(m=>m.tid===tid&&m.role==='giocatore').forEach(m=>{let g=0,p=0,ht=0,ps=0,sg=0,sa=0;
+    ms.forEach(x=>{if(!x.played&&!(x.events||[]).length)return;const s=(x.stats||{})[m.id]||{},n=+s.g||0;g+=n;ps+=+s.ps||0;if(n>=3)ht++;if(x.played&&(x.present||[]).includes(m.id))p++;if(inSeason(x)){sg+=n;sa+=+s.a||0}});
+    out[m.id]={ht,g,p,ps,sg,sa,pos:m.pos};top=Math.max(top,sg);topA=Math.max(topA,sa)});
+  for(const id in out){out[id].cap=out[id].sg>=3&&out[id].sg===top;out[id].ast=out[id].sa>=3&&out[id].sa===topA}return out}
+function badgeKeys(tid,over){const c=badgeCalc(tid,over),o={};for(const id in c){const b=c[id];o[id]=[b.cap&&'cap',b.ast&&'ast',b.ht>0&&'ht'+b.ht,b.g>=10&&'g10',b.p>=20&&'p20',b.pos==='P'&&b.ps>0&&'pp'].filter(Boolean)}S.members.filter(m=>m.tid===tid&&m.role==='dirigente').forEach(m=>{o[m.id]=staffKeys(staffCalc(m,over))});return o}
 function badgeCheer(before,after){const out=[];for(const id in after)after[id].forEach(k=>{if(!(before[id]||[]).includes(k))out.push([id,k])});if(!out.length)return false;
   const nm=id=>(S.members.find(m=>m.id===id)||{}).nick||'';toast(out.slice(0,2).map(([id,k])=>nm(id)+': '+BADGES[k.slice(0,2)==='ht'?'ht':k][0]).join(' · ')+(out.length>2?' …':''),true);setTimeout(()=>{try{confetti()}catch(e){}},350);return true}
-function badgeList(m){if(m&&m.role==='dirigente')return staffBadgeList(m);const b=badgeCalc(m.tid)[m.id]||{ht:0,g:0,p:0,ps:0,sg:0},l=[
+function badgeList(m){if(m&&m.role==='dirigente')return staffBadgeList(m);const b=badgeCalc(m.tid)[m.id]||{ht:0,g:0,p:0,ps:0,sg:0,sa:0},l=[
   {k:'ht',on:b.ht>0,note:b.ht>1?'Ottenuto '+b.ht+' volte':b.ht?'Ottenuto':'3 gol in una partita'},
   {k:'g10',on:b.g>=10,note:b.g>=10?b.g+' gol in carriera':Math.min(b.g,10)+'/10 gol'},
   {k:'p20',on:b.p>=20,note:b.p>=20?b.p+' presenze':b.p+'/20 presenze'},
-  {k:'cap',on:!!b.cap,note:b.cap?b.sg+' gol in '+seasonLabel().toLowerCase():'Miglior marcatore (da 3 gol)'}];
+  {k:'cap',on:!!b.cap,note:b.cap?b.sg+' gol in '+seasonLabel().toLowerCase():'Miglior marcatore (da 3 gol)'},
+  {k:'ast',on:!!b.ast,note:b.ast?b.sa+' assist in '+seasonLabel().toLowerCase():'Miglior assistman (da 3 assist)'}];
   if(m.pos==='P')l.push({k:'pp',on:b.ps>0,note:b.ps?b.ps+(b.ps>1?' rigori parati':' rigore parato'):'Para un rigore'});
   return l.map(e=>({...e,label:BADGES[e.k][0],icon:BADGES[e.k][1],short:BADGES[e.k][2]}))}
 function badgeIcons(m){const l=badgeList(m).filter(b=>b.on);return l.length?'<div class="bds">'+l.map(b=>'<span title="'+b.label+'">'+ic(b.icon)+'</span>').join('')+'</div>':''}
