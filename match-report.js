@@ -703,7 +703,10 @@ function lvApply(id,fn){
   const d={gf:+cur.gf||0,ga:+cur.ga||0,played:!!cur.played,stats:JSON.parse(JSON.stringify(cur.stats||{})),events:[...(cur.events||[])]};
   if(cur.pens!==undefined)d.pens=cur.pens?JSON.parse(JSON.stringify(cur.pens)):null;   // rigori (vedi rigori.js)
   if(o.d&&o.d.clock)d.clock=o.d.clock;
-  fn(d,cur);o.d=d;o.n++;o.pend=Object.assign({},o.pend,d);o.taps++;lvKeep(id,o);
+  fn(d,cur);
+  // traguardi dei dirigenti: chi segue la diretta, chi gestisce i rigori
+  {const me=typeof myMember==='function'&&myMember();if(me&&me.role==='dirigente'){if(!cur.lb)d.lb=me.id;if(d.pens&&!cur.pb)d.pb=me.id}}
+  o.d=d;o.n++;o.pend=Object.assign({},o.pend,d);o.taps++;lvKeep(id,o);
   rq();setTimeout(()=>badgeCheer(bb,badgeKeys(base.tid)),0); // il controllo traguardi dopo il disegno, così il tocco risponde subito
   lvPump(id)}
 // Coda sul telefono: ciò che non è ancora arrivato al database resta salvato qui (anche se l'app si chiude) e riparte da solo.

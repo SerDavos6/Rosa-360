@@ -184,17 +184,17 @@ const shareBtns=m=>`<div class="row" style="margin:12px 0"><button class="s" onc
 
 // ===== Traguardi e badge =====
 const BADGES={ht:['Hat-trick','star','HAT-TRICK'],g10:['10 gol','ball','10 GOL'],p20:['20 presenze','shield','20 PRES.'],cap:['Capocannoniere','trophy','CAPOCANNONIERE'],pp:['Rigore parato','glove','PARARIGORI']};
-(function(){const st=document.createElement('style');st.textContent='.bds{display:flex;justify-content:center;gap:5px;margin-top:8px}.bds span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.25)}.bds .ic{width:13px;height:13px}.bgl{display:grid;gap:10px}.bgi{display:flex;gap:10px;align-items:center;opacity:.5}.bgi.on{opacity:1}.bgi b{display:block}.bgc{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--bd);background:color-mix(in srgb,var(--acf) 22%,var(--bg));color:var(--acf)}.bgi.on .bgc{background:var(--acf);color:var(--on)}.bgc .ic{width:18px;height:18px}';document.head.append(st)})();
+(function(){const st=document.createElement('style');st.textContent='.bds{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:8px}.bds span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.25)}.bds .ic{width:13px;height:13px}.bgl{display:grid;gap:10px}.bgi{display:flex;gap:10px;align-items:center;opacity:.5}.bgi.on{opacity:1}.bgi b{display:block}.bgc{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--bd);background:color-mix(in srgb,var(--acf) 22%,var(--bg));color:var(--acf)}.bgi.on .bgc{background:var(--acf);color:var(--on)}.bgc .ic{width:18px;height:18px}';document.head.append(st)})();
 // Conta solo partite giocate o in corso (con eventi in diretta); le presenze solo quelle giocate.
 function badgeCalc(tid,over){const ms=S.matches.filter(x=>x.tid===tid).map(x=>over&&x.id===over.id?over:lvEff(x)),out={};let top=0;
   S.members.filter(m=>m.tid===tid&&m.role==='giocatore').forEach(m=>{let g=0,p=0,ht=0,ps=0,sg=0;
     ms.forEach(x=>{if(!x.played&&!(x.events||[]).length)return;const s=(x.stats||{})[m.id]||{},n=+s.g||0;g+=n;ps+=+s.ps||0;if(n>=3)ht++;if(x.played&&(x.present||[]).includes(m.id))p++;if(inSeason(x))sg+=n});
     out[m.id]={ht,g,p,ps,sg,pos:m.pos};top=Math.max(top,sg)});
   for(const id in out)out[id].cap=out[id].sg>=3&&out[id].sg===top;return out}
-function badgeKeys(tid,over){const c=badgeCalc(tid,over),o={};for(const id in c){const b=c[id];o[id]=[b.cap&&'cap',b.ht>0&&'ht'+b.ht,b.g>=10&&'g10',b.p>=20&&'p20',b.pos==='P'&&b.ps>0&&'pp'].filter(Boolean)}return o}
+function badgeKeys(tid,over){const c=badgeCalc(tid,over),o={};for(const id in c){const b=c[id];o[id]=[b.cap&&'cap',b.ht>0&&'ht'+b.ht,b.g>=10&&'g10',b.p>=20&&'p20',b.pos==='P'&&b.ps>0&&'pp'].filter(Boolean)}S.members.filter(m=>m.tid===tid&&m.role==='dirigente').forEach(m=>{o[m.id]=staffKeys(staffCalc(m,over))});return o}
 function badgeCheer(before,after){const out=[];for(const id in after)after[id].forEach(k=>{if(!(before[id]||[]).includes(k))out.push([id,k])});if(!out.length)return false;
   const nm=id=>(S.members.find(m=>m.id===id)||{}).nick||'';toast(out.slice(0,2).map(([id,k])=>nm(id)+': '+BADGES[k.slice(0,2)==='ht'?'ht':k][0]).join(' · ')+(out.length>2?' …':''),true);setTimeout(()=>{try{confetti()}catch(e){}},350);return true}
-function badgeList(m){const b=badgeCalc(m.tid)[m.id]||{ht:0,g:0,p:0,ps:0,sg:0},l=[
+function badgeList(m){if(m&&m.role==='dirigente')return staffBadgeList(m);const b=badgeCalc(m.tid)[m.id]||{ht:0,g:0,p:0,ps:0,sg:0},l=[
   {k:'ht',on:b.ht>0,note:b.ht>1?'Ottenuto '+b.ht+' volte':b.ht?'Ottenuto':'3 gol in una partita'},
   {k:'g10',on:b.g>=10,note:b.g>=10?b.g+' gol in carriera':Math.min(b.g,10)+'/10 gol'},
   {k:'p20',on:b.p>=20,note:b.p>=20?b.p+' presenze':b.p+'/20 presenze'},
@@ -203,6 +203,29 @@ function badgeList(m){const b=badgeCalc(m.tid)[m.id]||{ht:0,g:0,p:0,ps:0,sg:0},l
   return l.map(e=>({...e,label:BADGES[e.k][0],icon:BADGES[e.k][1],short:BADGES[e.k][2]}))}
 function badgeIcons(m){const l=badgeList(m).filter(b=>b.on);return l.length?'<div class="bds">'+l.map(b=>'<span title="'+b.label+'">'+ic(b.icon)+'</span>').join('')+'</div>':''}
 function badgePanel(m){return '<h2>Traguardi</h2><div class="card"><div class="bgl">'+badgeList(m).map(b=>'<div class="bgi'+(b.on?' on':'')+'"><span class="bgc">'+ic(b.icon)+'</span><div><b>'+b.label+'</b><span class="mu">'+b.note+'</span></div></div>').join('')+'</div></div>'}
+
+// ===== Traguardi dei dirigenti =====
+// Chi ha fatto cosa è scritto nella partita: lb = diretta, pb = rigori (si possono correggere a mano in "Modifica dettagli").
+// le icone microfono e cuore sono aggiunte in rendering.js (caricato dopo lo script principale)
+Object.assign(BADGES,{tc:['Telecronista','mic','TELECRONISTA'],tc10:['Voce della squadra','mic','VOCE'],tc25:['Leggenda del microfono','mic','LEGGENDA'],rg:['Uomo dei rigori','glove','RIGORI'],mv:['Mister vincente','star','VINCENTE'],mi:['Mister imbattuto','shield','IMBATTUTO'],cmp:['Campione','trophy','CAMPIONE'],fed:['Fedelissimo','heart','FEDELISSIMO']});
+function staffCalc(m,over){const ms=S.matches.filter(x=>x.tid===m.tid).map(x=>over&&x.id===over.id?over:lvEff(x)),n=k=>ms.filter(x=>x[k]===m.id).length;
+  // partite "sue": solo quelle in cui era segnato presente (vittorie di fila, imbattuto, tornei vinti, stagione)
+  const mine=ms.filter(x=>x.played&&(x.present||[]).includes(m.id)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
+  let w=0,u=0,bw=0,bu=0;
+  mine.forEach(x=>{const a=+x.gf||0,b=+x.ga||0,pz=typeof pensRes==='function'&&pensRes(x),win=a>b||(a===b&&pz==='v'),loss=a<b||(a===b&&pz==='p');w=win?w+1:0;u=loss?0:u+1;bw=Math.max(bw,w);bu=Math.max(bu,u)});
+  const tn=new Set(mine.map(x=>x.tourn).filter(Boolean)),pal=typeof trPalmares==='function'?trPalmares(m.tid):[];
+  const cmp=pal.filter(p=>tn.has(p.name)&&(/^Vinto/.test(p.txt)||p.txt==='1º posto')).map(p=>p.name);
+  const first=mine.find(x=>x.date),fed=!!first&&seasonOf(first.date)<curSeason();
+  return {tc:n('lb'),rg:n('pb'),w,u,bw,bu,cmp,fed,first}}
+function staffKeys(c){return [c.tc>=1&&'tc',c.tc>=10&&'tc10',c.tc>=25&&'tc25',c.rg>0&&'rg',c.bw>=5&&'mv',c.bu>=10&&'mi',c.cmp.length>0&&'cmp',c.fed&&'fed'].filter(Boolean)}
+function staffBadgeList(m){const c=staffCalc(m),nx=c.tc>=25?0:c.tc>=10?25:c.tc>=1?10:0;
+  const l=[{k:c.tc>=25?'tc25':c.tc>=10?'tc10':'tc',on:c.tc>0,note:c.tc?c.tc+(c.tc>1?' dirette seguite':' diretta seguita')+(nx?' · prossimo livello a '+nx:''):'Segui la prima diretta'},
+    {k:'rg',on:c.rg>0,note:c.rg?c.rg+(c.rg>1?' serie di rigori gestite':' serie di rigori gestita'):'Gestisci una serie di rigori in diretta'},
+    {k:'mv',on:c.bw>=5,note:c.bw>=5?'Record: '+c.bw+' vittorie di fila':c.w+'/5 vittorie di fila'},
+    {k:'mi',on:c.bu>=10,note:c.bu>=10?'Record: '+c.bu+' partite senza sconfitte':c.u+'/10 partite senza sconfitte'},
+    {k:'cmp',on:c.cmp.length>0,note:c.cmp.length?'Vinto: '+c.cmp.join(', '):'Vinci un torneo o un campionato'},
+    {k:'fed',on:c.fed,note:c.fed?'Con la squadra dalla stagione '+seasonOf(c.first.date):'Resta con la squadra per una stagione intera'}];
+  return l.map(e=>({...e,label:BADGES[e.k][0],icon:BADGES[e.k][1],short:BADGES[e.k][2]}))}
 
 // ===== Apri in Maps =====
 function openMaps(id){const x=S.matches.find(m=>m.id===id),raw=v('el')||(x&&matchDetail(x).location)||'';if(!raw){toast('Scrivi prima il luogo della partita.');return}

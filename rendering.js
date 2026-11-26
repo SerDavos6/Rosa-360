@@ -153,3 +153,6 @@ W0.render=function(){
 // se l'app ha già disegnato la prima schermata prima di questo file, la ridisegna
 try{if(S.db)render()}catch(e){}
 })();
+// icone in più per i traguardi dei dirigenti
+(function(){const X={mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'},o=window.ic;
+  window.ic=function(n,c=''){return X[n]?`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${X[n]}</svg>`:o(n,c)}})();

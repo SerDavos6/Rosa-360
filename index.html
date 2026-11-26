@@ -330,7 +330,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=31"></script><script src="match-report.js?v=32"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
+<script src="ui-extra.js?v=32"></script><script src="match-report.js?v=33"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f5f9;--sf:#fff;--bd:#e6eaf1;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e3f3ea;--on:#fff}
 :root:root:root{--bg:#0a0e15;--sf:#131a27;--bd:#202a3b;--ac:#2fd17a;--acf:#2fd17a;--ac2:#12281d;--on:#04210f}
@@ -552,7 +552,7 @@ function fut(m,ctl){
   return `<div class="card" style="padding:0;border:0;background:none"><div class="fut ${tier} ${m.uid?"":"ng"}" onclick="S.pd='${m.id}';render()" style="cursor:pointer">
   ${player?`<div class="ov">${o}</div>`:""}<div class="ps">${ps}</div>${(()=>{const l=S.teams.find(t=>t.id===m.tid)?.logo;return l?`<img loading="lazy" decoding="async" class="cr" src="${safeSrc(l)}" alt="">`:""})()}${m.role==="giocatore"?`<div class="nm">#${esc(m.num)}</div>`:""}
   ${ph}<div class="nk">${esc(m.nick)}${m.captain?" ©":""}</div>
-  ${player?`<div class="st"><div><b>${t.g}</b>GOL</div><div><b>${t.a}</b>ASS</div><div><b>${t.p}</b>PRES</div></div>${badgeIcons(m)}`:""}</div>
+  ${player?`<div class="st"><div><b>${t.g}</b>GOL</div><div><b>${t.a}</b>ASS</div><div><b>${t.p}</b>PRES</div></div>${badgeIcons(m)}`:isStaff(m)?badgeIcons(m):""}</div>
   <div class="mu" style="text-align:center;margin-top:4px">${esc(m.name||"")}${ctl?(m.uid?"":" · senza account"):""}</div>${ctl||""}</div>`}
 
 // ---- ruoli ----
@@ -909,7 +909,7 @@ function ioView(t,can){
 function staffInfo(m,tile){const s=staffStats(m),pal=typeof trPalmares==="function"?trPalmares(m.tid):[];
   return `<h2>Bilancio nelle partite con te presente</h2><div class="pgrid">${tile(s.p,"PRESENZE")}${tile(s.v,"VITTORIE")}${tile(s.n,"PAREGGI")}${tile(s.s,"SCONFITTE")}${tile(s.pct+"%","% VITTORIE")}${tile(s.gfp,"GOL FATTI/PART.")}${tile(s.gsp,"GOL SUBITI/PART.")}${tile(s.gf-s.gs,"DIFF. RETI")}</div>
   ${pal.length?`<h2>Palmarès</h2><div class="card" style="padding:4px 14px">${pal.map(p=>`<div class="lr">${ic("trophy")}<b style="flex:1">${esc(p.name)}</b><span>${esc(p.txt)}</span></div>`).join("")}</div>`:""}
-  <div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
+  ${typeof badgePanel==="function"?badgePanel(m):""}<div class="row" style="margin:12px 0"><button class="s" onclick="shareCard('${m.id}')">${ic("share")} Condividi carta</button></div>`}
 // dalla scheda di un giocatore si apre la partita (scheda Statistiche, dove si vede cosa ha fatto)
 // dalla scheda del giocatore si apre la partita; "indietro" riporta alla scheda del giocatore, nello stesso punto
 function openMatchFromPlayer(id){const el=S.pd?document.querySelector(".pm"):document.querySelector(".view");
@@ -1036,6 +1036,7 @@ function matchParts(x,mgr){
   <div id="edet"${S.edet?"":" hidden"}><div class="row match-detail-row"><div><label for="emd">Data</label><input id="emd" type="date" value="${esc(x.date||"")}"></div><div><label for="eop">Avversario</label><input id="eop" maxlength="80" value="${esc(x.opp||"")}"></div></div>
   <label for="etr">Torneo / campionato</label><input id="etr" list="etl" maxlength="80" placeholder="Vuoto = amichevole" value="${esc(x.tourn||"")}"><datalist id="etl">${tourNames([...new Set(S.matches.filter(m=>m.tid===x.tid).map(m=>m.tourn).filter(Boolean))]).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
   ${phaseFields("e",x,false)}
+  ${drs.length?`<div class="pc-sub" style="margin-top:14px">Traguardi dei dirigenti</div>${[["elb","Diretta seguita da","lb"]].concat(x.pens?[["epb","Rigori gestiti da","pb"]]:[]).map(([i,l,k])=>`<label for="${i}">${l}</label><select id="${i}" onchange="markDirty()"><option value="">—</option>${drs.map(d=>`<option value="${d.id}"${x[k]===d.id?" selected":""}>${esc(d.nick)}</option>`).join("")}</select>`).join("")}`:""}
   <div class="row match-detail-row"><div><label for="el">Luogo</label><input id="el" maxlength="300" value="${esc(md.location)}"></div><div><label for="eh">Ora</label><input id="eh" type="time" value="${esc(md.time)}"></div></div><div class="row"><div><label for="ec">Campo (facoltativo)</label><input id="ec" maxlength="20" placeholder="es. 3" value="${esc(md.field)}"></div></div>
   <label>Cambia logo avversario</label><input type="file" accept="image/*" onchange="matchLogo(this,'${x.id}')"></div></div>
   ${marc}${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
@@ -1109,7 +1110,8 @@ async function saveMatch(id){
   const pf=phaseRead("e");if(!pf)return;
   if(!v("emd")||!v("eop"))return toast("Data e avversario sono obbligatori.");
   const data={...collectMatch(id),location:v("el"),time:v("eh"),field:v("ec"),date:v("emd"),opp:v("eop"),tourn:v("etr"),...pf},bb=badgeKeys(data.tid);
-  if(data.oppTid&&data.opp!==S.matches.find(m=>m.id===id).opp)delete data.oppTid;   // avversario cambiato: cade il collegamento alla squadra iscritta
+  if(data.oppTid&&data.opp!==S.matches.find(m=>m.id===id).opp)delete data.oppTid;
+  {[["elb","lb"],["epb","pb"]].forEach(([i,k])=>{const e=$(i);if(e){if(e.value)data[k]=e.value;else delete data[k]}});}   // traguardi dirigenti (diretta e rigori, correggibili a mano)   // avversario cambiato: cade il collegamento alla squadra iscritta
   try{await S.db.doc("matches/"+id).set(data);S.err="";render();if(!badgeCheer(bb,badgeKeys(data.tid,{...data,id})))toast("Partita salvata",true)}
   catch(e){toast("Salvataggio non riuscito: verifica la connessione e riprova.")}
 }
@@ -1202,4 +1204,4 @@ boot();
 </script><!-- Vercel: visite (Web Analytics) e velocità reale (Speed Insights). Non raccolgono dati personali. -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments)};</script>
 <script defer src="/_vercel/insights/script.js"></script><script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="rendering.js?v=12"></script><script src="rigori.js?v=2"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+<script src="rendering.js?v=13"></script><script src="rigori.js?v=2"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
