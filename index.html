@@ -1014,7 +1014,7 @@ function matchParts(x,mgr){
   const det=(k,i,v)=>v?`<div class="idt"><span>${ic(i)} ${k}</span><b>${esc(v)}</b></div>`:"";
   // presenti: le foto una accanto all'altra (prima i giocatori, poi i dirigenti); il nome si vede tenendo premuto
   const prs=rs.filter(m=>pr.includes(m.id)).sort((a,b)=>(a.role==="dirigente")-(b.role==="dirigente")),pav=prs.length?`<div class="ipv">${prs.map(m=>`<button class="sav" title="${esc(m.nick)}" aria-label="${esc(m.nick)}" onclick="${S.members.some(y=>y.id===m.id)?`S.pd='${m.id}';render()`:`toast(this.title)`}">${safeSrc(m.photo)?`<img loading="lazy" decoding="async" src="${safeSrc(m.photo)}" alt="">`:esc(String(m.nick||"?").slice(0,2).toUpperCase())}</button>`).join("")}</div>`:"";
-  const infoP=`${x.played&&(me||prs.length)?`<div class="ich">${me?`<span class="tag2${isIn?" on":""}">${isIn?ic("check")+" C’eri":"Non c’eri"}</span>`:""}${pav||`<span class="mu">${cnt} present${cnt===1?"e":"i"}</span>`}</div>`:""}
+  const infoP=`${x.played&&pav?`<div class="ich">${pav}</div>`:""}
   ${me&&!x.played?`<div class="card"><b>Presenza</b><p class="mu" style="margin:6px 0 12px">${cnt} confermat${cnt===1?"o":"i"} finora. Ci sei anche tu?</p><button class="${isIn?"s":"p"}" style="width:100%" onclick="myPresence('${x.id}','${me.id}',${!isIn})">${isIn?"✓ Ci sono (tocca per togliere)":"Ci sono"}</button></div>`:""}
   <div class="card"><div class="idg">${det("Data","cal",dt(x.date).f)}${det("Ora","clock",md.time)}${det("Campo","field",md.field)}</div>${md.location||matchPlace(x)?`<div class="ipl">${ic("pin")}<b>${esc(md.location||matchPlace(x))}</b><button class="s" onclick="openMaps('${x.id}')">${ic("pin")} Maps</button></div>`:""}</div>
   ${marc}${typeof pairedBox==="function"?pairedBox(x):""}${h2hCard(x.tid,x.opp,x.id)}
