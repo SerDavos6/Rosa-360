@@ -207,23 +207,24 @@ function badgePanel(m){return '<h2>Traguardi</h2><div class="card"><div class="b
 // ===== Traguardi dei dirigenti =====
 // Chi ha fatto cosa è scritto nella partita: lb = diretta, pb = rigori (si possono correggere a mano in "Modifica dettagli").
 // le icone microfono e cuore sono aggiunte in rendering.js (caricato dopo lo script principale)
-Object.assign(BADGES,{tc:['Telecronista','mic','TELECRONISTA'],tc10:['Voce della squadra','mic','VOCE'],tc25:['Leggenda del microfono','mic','LEGGENDA'],rg:['Uomo dei rigori','glove','RIGORI'],mv:['Mister vincente','star','VINCENTE'],mi:['Mister imbattuto','shield','IMBATTUTO'],cmp:['Campione','trophy','CAMPIONE'],fed:['Fedelissimo','heart','FEDELISSIMO']});
+Object.assign(BADGES,{tc:['Telecronista','mic','TELECRONISTA'],tc10:['Voce della squadra','mic','VOCE'],tc25:['Leggenda del microfono','mic','LEGGENDA'],rg:['Uomo dei rigori','glove','RIGORI'],pv:['Prima vittoria','check','1ª VITTORIA'],mv:['Mister vincente','star','VINCENTE'],mi:['Mister imbattuto','shield','IMBATTUTO'],cmp:['Campione','trophy','CAMPIONE'],fed:['Fedelissimo','heart','FEDELISSIMO']});
 function staffCalc(m,over){const ms=S.matches.filter(x=>x.tid===m.tid).map(x=>over&&x.id===over.id?over:lvEff(x)),n=k=>ms.filter(x=>x[k]===m.id).length;
   // partite "sue": solo quelle in cui era segnato presente (vittorie di fila, imbattuto, tornei vinti, stagione)
   const mine=ms.filter(x=>x.played&&(x.present||[]).includes(m.id)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
-  let w=0,u=0,bw=0,bu=0;
-  mine.forEach(x=>{const a=+x.gf||0,b=+x.ga||0,pz=typeof pensRes==='function'&&pensRes(x),win=a>b||(a===b&&pz==='v'),loss=a<b||(a===b&&pz==='p');w=win?w+1:0;u=loss?0:u+1;bw=Math.max(bw,w);bu=Math.max(bu,u)});
+  let w=0,u=0,bw=0,bu=0,nv=0,fv=null;
+  mine.forEach(x=>{const a=+x.gf||0,b=+x.ga||0,pz=typeof pensRes==='function'&&pensRes(x),win=a>b||(a===b&&pz==='v'),loss=a<b||(a===b&&pz==='p');if(win){nv++;fv=fv||x}w=win?w+1:0;u=loss?0:u+1;bw=Math.max(bw,w);bu=Math.max(bu,u)});
   const tn=new Set(mine.map(x=>x.tourn).filter(Boolean)),pal=typeof trPalmares==='function'?trPalmares(m.tid):[];
   const cmp=pal.filter(p=>tn.has(p.name)&&(/^Vinto/.test(p.txt)||p.txt==='1º posto')).map(p=>p.name);
   const first=mine.find(x=>x.date),fed=!!first&&seasonOf(first.date)<curSeason();
-  return {tc:n('lb'),rg:n('pb'),w,u,bw,bu,cmp,fed,first}}
-function staffKeys(c){return [c.tc>=1&&'tc',c.tc>=10&&'tc10',c.tc>=25&&'tc25',c.rg>0&&'rg',c.bw>=5&&'mv',c.bu>=10&&'mi',c.cmp.length>0&&'cmp',c.fed&&'fed'].filter(Boolean)}
+  return {tc:n('lb'),rg:n('pb'),nv,fv,w,u,bw,bu,cmp,fed,first}}
+function staffKeys(c){return [c.tc>=1&&'tc',c.tc>=10&&'tc10',c.tc>=25&&'tc25',c.rg>0&&'rg',c.nv>0&&'pv',c.bw>=5&&'mv',c.bu>=10&&'mi',c.cmp.length>0&&'cmp',c.fed&&'fed'].filter(Boolean)}
 function staffBadgeList(m){const c=staffCalc(m),nx=c.tc>=25?0:c.tc>=10?25:c.tc>=1?10:0;
   const l=[{k:c.tc>=25?'tc25':c.tc>=10?'tc10':'tc',on:c.tc>0,note:c.tc?c.tc+(c.tc>1?' dirette seguite':' diretta seguita')+(nx?' · prossimo livello a '+nx:''):'Segui la prima diretta'},
     {k:'rg',on:c.rg>0,note:c.rg?c.rg+(c.rg>1?' serie di rigori gestite':' serie di rigori gestita'):'Gestisci una serie di rigori in diretta'},
+    {k:'pv',on:c.nv>0,note:c.nv?'vs '+esc(c.fv.opp)+' '+esc(c.fv.gf)+'–'+esc(c.fv.ga)+(c.nv>1?' · '+c.nv+' vittorie in tutto':''):'Vinci la prima partita da presente'},
     {k:'mv',on:c.bw>=5,note:c.bw>=5?'Record: '+c.bw+' vittorie di fila':c.w+'/5 vittorie di fila'},
     {k:'mi',on:c.bu>=10,note:c.bu>=10?'Record: '+c.bu+' partite senza sconfitte':c.u+'/10 partite senza sconfitte'},
-    {k:'cmp',on:c.cmp.length>0,note:c.cmp.length?'Vinto: '+c.cmp.join(', '):'Vinci un torneo o un campionato'},
+    {k:'cmp',on:c.cmp.length>0,note:c.cmp.length?'Vinto: '+c.cmp.map(esc).join(', '):'Vinci un torneo o un campionato'},
     {k:'fed',on:c.fed,note:c.fed?'Con la squadra dalla stagione '+seasonOf(c.first.date):'Resta con la squadra per una stagione intera'}];
   return l.map(e=>({...e,label:BADGES[e.k][0],icon:BADGES[e.k][1],short:BADGES[e.k][2]}))}
 
