@@ -57,7 +57,7 @@ W0.clsView=function(t,embed){
   else{const l=pls.map(m=>({m,v:val(m)})).filter(a=>cs==='ov'||a.v>0).sort((a,b)=>b.v-a.v||(a.m.nick||'').localeCompare(b.m.nick||''));
     if(!l.length)body=emptyState('trophy','Ancora nessun dato','La classifica si riempie con le partite giocate.','');
     else{const pod=cs==='ov',top=pod?l.slice(0,3):[],rest=pod?l.slice(3):l,off=pod?4:1,mx=l[0].v||1;
-      const st=i=>`<div class="cl-p cl-p${i+1}">${avOf(top[i].m,'cl-av')}<b class="cl-pn">${esc(top[i].m.nick)}</b><div class="cl-st"><b>${top[i].v}</b><span>${i+1}°</span></div></div>`;
+      const st=i=>`<button class="cl-p cl-p${i+1}" onclick="S.pd='${top[i].m.id}';render()">${avOf(top[i].m,'cl-av')}<b class="cl-pn">${esc(top[i].m.nick)}</b><div class="cl-st"><b>${top[i].v}</b><span>${i+1}°</span></div></button>`;
       body=`${pod?`<div class="cl-pod">${[1,0,2].filter(i=>top[i]).map(st).join('')}</div>`:''}
       ${rest.length?`<div class="card cl-list${pod?'':' solo'}">${rest.map((a,i)=>`<button class="cl-r" onclick="S.pd='${a.m.id}';render()"><span class="cl-k">${i+off}</span>${avOf(a.m,'cl-av sm')}<span class="cl-n"><b>${esc(a.m.nick)}</b><i><i style="width:${Math.max(4,Math.round(a.v/mx*100))}%"></i></i></span><b class="cl-v">${a.v}</b></button>`).join('')}</div>`:''}`}}
   return `${hd}${seg}${body}<p style="margin-top:14px"><button class="p" onclick="shareClass()">${ic('share')} Condividi classifica</button></p>`};
@@ -104,7 +104,7 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .cl-seg{display:flex;gap:2px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--tx) 8%,var(--bg));overflow-x:auto;scrollbar-width:none;margin:0 0 8px}.cl-seg::-webkit-scrollbar{display:none}
 .cl-seg button{flex:1 0 auto;min-height:38px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--mu);font-size:13px;font-weight:700}
 .cl-seg button.on{background:var(--sf);color:var(--ac);box-shadow:0 1px 3px rgba(20,23,31,.15)}
-.cl-pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:8px;padding:18px 0 0}
+.cl-pod>button.cl-p{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0}.cl-pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:8px;padding:18px 0 0}
 .cl-p{display:flex;flex-direction:column;align-items:center;min-width:0}
 .cl-av{width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--acf) 18%,var(--sf));color:var(--ac);font:800 15px var(--ui);border:3px solid var(--sf);flex:none}
 .cl-av img{width:100%;height:100%;object-fit:cover}
