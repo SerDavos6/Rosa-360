@@ -1,9 +1,9 @@
 // Service worker v10: la pagina si apre subito dalla copia salvata e si aggiorna dietro le quinte;
 // i file fissi (script, icone, font, libreria) escono subito dalla copia salvata e si aggiornano dietro le quinte.
 // Non tocca Supabase né le richieste non-GET, così i dati restano sempre aggiornati.
-const V = 'squadra-v136';
+const V = 'squadra-v137';
 const SUPA = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
-const SHELL = ['./', 'index.html', 'ui-extra.js?v=31', 'match-report.js?v=32', 'fluido.js?v=12', 'tifoso.js?v=18', 'push.js?v=5', 'collega.js?v=3', 'torneo.js?v=29', 'matchday.js?v=11', 'rendering.js?v=11', 'rigori.js?v=2','manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
+const SHELL = ['./', 'index.html', 'ui-extra.js?v=31', 'match-report.js?v=32', 'fluido.js?v=12', 'tifoso.js?v=18', 'push.js?v=5', 'collega.js?v=3', 'torneo.js?v=29', 'matchday.js?v=12', 'rendering.js?v=11', 'rigori.js?v=2','manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
 const EXT = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const good = res => res && (res.ok || res.type === 'opaque');
 self.addEventListener('install', e => {

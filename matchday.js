@@ -196,3 +196,5 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
  .hm-head h2{font-size:17px}
 }
 `;document.head.append(st)})();
+// tema scuro: il numero delle sconfitte un po' più chiaro sul fondo scuro, per leggerlo bene (il riquadro resta rosso pieno)
+(function(){const st=document.createElement('style');st.textContent=`html[style*="color-scheme: dark"] .hm-s.p,html[style*="color-scheme: dark"] .sp.p{color:color-mix(in srgb,var(--loss) 75%,#fff)}`;document.head.append(st)})();
