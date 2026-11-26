@@ -101,7 +101,7 @@ dialog{border-radius:24px}
 `;document.head.append(st)})();
 (function(){const st=document.createElement('style');st.textContent=`
 .fmx{color:#fff;border-radius:12px}button.fmx,.fmx.fmx{color:#fff}button.fmx{border:0;font:inherit;cursor:pointer;min-height:0;margin:0}button.fmx:active{transform:scale(.96)}
-.fmx .fml{display:grid;place-items:center;width:28px;height:28px;margin:5px auto 0;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.92);color:#14171f;font:800 11px var(--ui);font-style:normal}
+.fmx .fml{display:grid;place-items:center;width:30px;height:30px;margin:5px auto 0;border-radius:50%;object-fit:cover;background:color-mix(in srgb,var(--tx) 7%,var(--sf));color:var(--mu);font:700 11px var(--ui);font-style:normal}   /* come i loghi delle partite in Home */
 .fmx{min-width:56px;flex-basis:56px}.fmx b{font:800 20px/1.05 var(--num)}
 i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .fmx.v{background:var(--win)}.fmx.n{background:var(--draw)}.fmx.p{background:var(--loss)}
