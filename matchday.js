@@ -6,7 +6,7 @@
 :root{--num:"Barlow Condensed",Oswald,"Arial Narrow",sans-serif;--hl:#f5b81c;--hlx:#14171f;--r:18px;
  --win:#0f5132;--draw:#9aa0ab;--loss:#b91c1c}
 :root:root:root{--hl:#f5b81c}
-html[style*="color-scheme: dark"]{--win:#2fbf71;--draw:#6b7280;--loss:#e5484d}
+html[style*="color-scheme: dark"]{--win:#2fbf71;--draw:#6b7280;--loss:#dc2626}
 
 /* titoli: condensati, maiuscoli, da tabellone */
 h1{font:800 34px/1 var(--num);text-transform:uppercase;letter-spacing:.01em;margin:6px 0 14px}
