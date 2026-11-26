@@ -221,7 +221,7 @@ function staffKeys(c){return [c.tc>=1&&'tc',c.tc>=10&&'tc10',c.tc>=25&&'tc25',c.
 function staffBadgeList(m){const c=staffCalc(m),nx=c.tc>=25?0:c.tc>=10?25:c.tc>=1?10:0;
   const l=[{k:c.tc>=25?'tc25':c.tc>=10?'tc10':'tc',on:c.tc>0,note:c.tc?c.tc+(c.tc>1?' dirette seguite':' diretta seguita')+(nx?' · prossimo livello a '+nx:''):'Segui la prima diretta'},
     {k:'rg',on:c.rg>0,note:c.rg?c.rg+(c.rg>1?' serie di rigori gestite':' serie di rigori gestita'):'Gestisci una serie di rigori in diretta'},
-    {k:'pv',on:c.nv>0,note:c.nv?'vs '+esc(c.fv.opp)+' '+esc(c.fv.gf)+'–'+esc(c.fv.ga)+(c.nv>1?' · '+c.nv+' vittorie in tutto':''):'Vinci la prima partita da presente'},
+    {k:'pv',on:c.nv>0,note:c.nv?'vs '+esc(c.fv.opp)+' '+esc(c.fv.gf)+'–'+esc(c.fv.ga)+(c.nv>1?' · '+c.nv+' vittorie in tutto':''):'Vinci la prima partita'},
     {k:'mv',on:c.bw>=5,note:c.bw>=5?'Record: '+c.bw+' vittorie di fila':c.w+'/5 vittorie di fila'},
     {k:'mi',on:c.bu>=10,note:c.bu>=10?'Record: '+c.bu+' partite senza sconfitte':c.u+'/10 partite senza sconfitte'},
     {k:'cmp',on:c.cmp.length>0,note:c.cmp.length?'Vinto: '+c.cmp.map(esc).join(', '):'Vinci un torneo o un campionato'},
