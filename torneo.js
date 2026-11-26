@@ -421,7 +421,7 @@
     '.tstp .ln{flex:0 0 10px;height:2px;margin-top:11px;background:var(--bd)}.tstp .ln.ok{background:var(--acf)}' +
     '.thc{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:14px 14px 12px;margin-top:14px}.thc .thh{display:flex;align-items:center;gap:10px}.thc .thh>span{flex:1;min-width:0;display:flex;flex-direction:column}' +
     '.thc .thk{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}.thc b{font-size:17px;font-weight:800}.thc .thh .ic{color:var(--mu)}.thc .tstp{margin:12px 0 8px}' +
-    '.thc .ths{display:block;font-size:13px;color:var(--mu);white-space:normal}' +
+    '.thc .ths{display:block;font-size:13px;color:var(--mu);white-space:normal}.thc .ths.tho{margin-top:2px;font-size:15px;font-weight:700;color:var(--tx);overflow-wrap:anywhere}' +
     // selettore delle competizioni, linguette e zone di classifica (look Matchday)
     '.tcps{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -14px 12px;padding:0 14px}.tcps::-webkit-scrollbar{display:none}' +
     '.tcp{flex:0 0 auto;max-width:230px;min-height:66px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 14px;border-radius:16px;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);font:inherit}' +
@@ -544,9 +544,9 @@
     return items.map(it => {
       const o = it.o, id = E(o.id), me = norm(o.mine);
       // Riquadro compatto: nome, tappe del torneo e una riga sulla propria squadra; il tabellone completo si apre toccandolo
-      const card = (sub, v, c) => '<button class="card thc" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' +
+      const card = (sub, v, c, opp2) => '<button class="card thc" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' +
         '<span class="thh"><span><span class="thk">Torneo in corso</span><b>' + E(o.name) + '</b></span>' + ic('chev') + '</span>' + tourSteps(o, it) +
-        '<span class="ths">' + E(sub) + '</span></button>';
+        '<span class="ths">' + E(sub) + '</span>' + (opp2 ? '<span class="ths tho">' + E(opp2) + '</span>' : '') + '</button>';
       const head = (sub, v, c) => '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><b>' + E(o.name) + '</b><div class="mu" style="white-space:normal">' + sub + '</div></div>' +
         '<button class="s" onclick="trHomeGo(\'' + id + '\',\'' + v + '\',\'' + (c || '') + '\')">' + ic('trophy') + ' Apri</button></div>';
       if (it.ph === 'g') {
@@ -555,11 +555,12 @@
         return card(sub, 'g', null);
       }
       const N = it.N, k = it.last, n = k ? N[k] : null;
-      let sub = 'Fase finale', cols = null, extra = '', c = null;
+      let sub = 'Fase finale', cols = null, extra = '', c = null, opp2 = '';
       if (n) {
         const opp = norm(n.h) === me ? n.a : n.h;
         if (n.w) sub = (norm(n.w) === me ? 'Vinta: ' : 'Persa: ') + n.title;
-        else sub = n.title + ' · ' + (opp ? 'contro ' + opp : 'avversaria da decidere');
+        else if (opp) { sub = n.title + ' · contro'; opp2 = opp; }   // l'avversaria va a capo, così un nome lungo resta intero
+        else sub = n.title + ' · avversaria da decidere';
       }
       if (fmtOf(o) === 'memorial') {
         c = k ? myCat(k) : null;
@@ -575,7 +576,7 @@
       } else {
         const B = bracketGeneric(o); cols = B.rounds.map(rd => ({ t: rd.title, keys: rd.keys }));
       }
-      return card(sub, 'b', c);
+      return card(sub, 'b', c, opp2);
     }).join('');
   };
 
