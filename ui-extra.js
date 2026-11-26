@@ -190,7 +190,7 @@ function badgeCalc(tid,over){const ms=S.matches.filter(x=>x.tid===tid).map(x=>ov
   S.members.filter(m=>m.tid===tid&&m.role==='giocatore').forEach(m=>{let g=0,p=0,ht=0,ps=0,sg=0,sa=0;
     ms.forEach(x=>{if(!x.played&&!(x.events||[]).length)return;const s=(x.stats||{})[m.id]||{},n=+s.g||0;g+=n;ps+=+s.ps||0;if(n>=3)ht++;if(x.played&&(x.present||[]).includes(m.id))p++;if(inSeason(x)){sg+=n;sa+=+s.a||0}});
     out[m.id]={ht,g,p,ps,sg,sa,pos:m.pos};top=Math.max(top,sg);topA=Math.max(topA,sa)});
-  for(const id in out){out[id].cap=out[id].sg>=3&&out[id].sg===top;out[id].ast=out[id].sa>=3&&out[id].sa===topA}return out}
+  for(const id in out){out[id].cap=out[id].sg>0&&out[id].sg===top;out[id].ast=out[id].sa>0&&out[id].sa===topA}return out}
 function badgeKeys(tid,over){const c=badgeCalc(tid,over),o={};for(const id in c){const b=c[id];o[id]=[b.cap&&'cap',b.ast&&'ast',b.ht>0&&'ht'+b.ht,b.g>=10&&'g10',b.p>=20&&'p20',b.pos==='P'&&b.ps>0&&'pp'].filter(Boolean)}S.members.filter(m=>m.tid===tid&&m.role==='dirigente').forEach(m=>{o[m.id]=staffKeys(staffCalc(m,over))});return o}
 function badgeCheer(before,after){const out=[];for(const id in after)after[id].forEach(k=>{if(!(before[id]||[]).includes(k))out.push([id,k])});if(!out.length)return false;
   const nm=id=>(S.members.find(m=>m.id===id)||{}).nick||'';toast(out.slice(0,2).map(([id,k])=>nm(id)+': '+BADGES[k.slice(0,2)==='ht'?'ht':k][0]).join(' · ')+(out.length>2?' …':''),true);setTimeout(()=>{try{confetti()}catch(e){}},350);return true}
@@ -198,8 +198,8 @@ function badgeList(m){if(m&&m.role==='dirigente')return staffBadgeList(m);const 
   {k:'ht',on:b.ht>0,note:b.ht>1?'Ottenuto '+b.ht+' volte':b.ht?'Ottenuto':'3 gol in una partita'},
   {k:'g10',on:b.g>=10,note:b.g>=10?b.g+' gol in carriera':Math.min(b.g,10)+'/10 gol'},
   {k:'p20',on:b.p>=20,note:b.p>=20?b.p+' presenze':b.p+'/20 presenze'},
-  {k:'cap',on:!!b.cap,note:b.cap?b.sg+' gol in '+seasonLabel().toLowerCase():'Miglior marcatore (da 3 gol)'},
-  {k:'ast',on:!!b.ast,note:b.ast?b.sa+' assist in '+seasonLabel().toLowerCase():'Miglior assistman (da 3 assist)'}];
+  {k:'cap',on:!!b.cap,note:b.sg+' gol in '+seasonLabel().toLowerCase()},
+  {k:'ast',on:!!b.ast,note:b.sa+' assist in '+seasonLabel().toLowerCase()}].filter(e=>e.on||(e.k!=='cap'&&e.k!=='ast'));   // capocannoniere e assistman si vedono solo da chi li ha
   if(m.pos==='P')l.push({k:'pp',on:b.ps>0,note:b.ps?b.ps+(b.ps>1?' rigori parati':' rigore parato'):'Para un rigore'});
   return l.map(e=>({...e,label:BADGES[e.k][0],icon:BADGES[e.k][1],short:BADGES[e.k][2]}))}
 function badgeIcons(m){const l=badgeList(m).filter(b=>b.on);return l.length?'<div class="bds">'+l.map(b=>'<span title="'+b.label+'">'+ic(b.icon)+'</span>').join('')+'</div>':''}
