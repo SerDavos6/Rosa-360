@@ -4,6 +4,7 @@
 (function(){
 const W0=window;
 const iniOf=n=>esc(String(n||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
+W0.teamIni=iniOf;   // iniziali di una squadra senza logo (scheda partita)
 const avOf=(m,c)=>m&&m.photo?`<span class="${c}"><img loading="lazy" decoding="async" src="${safeSrc(m.photo)}" alt=""></span>`:`<span class="${c}">${iniOf(m&&m.nick)}</span>`;
 const res=x=>x.gf>x.ga?'v':x.gf<x.ga?'p':((typeof pensRes==='function'&&pensRes(x))||'n');
 const seasonTxt=()=>{try{const s=activeSeason();return s==='all'?'Tutte le stagioni':'Stagione '+s}catch(e){return ''}};
@@ -71,6 +72,9 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .hm-row+.hm-row{border-top:1px solid var(--bd)}
 .hm-d{flex:0 0 38px;text-align:center;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase}
 .hm-d b{display:block;font:700 21px/1 var(--num);color:var(--tx)}
+/* loghi nella scheda partita: cerchio con lo stesso fondo delle partite in Home */
+.mscore .tm .crest.mlg{width:56px;height:56px;border-radius:50%;border:0;padding:0;background:color-mix(in srgb,var(--tx) 7%,var(--sf));object-fit:cover;display:grid;place-items:center;font:700 18px var(--ui);color:var(--mu)}
+.mscore .tm .crest.mlg .ic{width:50%;height:50%}
 .hm-lg{flex:none;width:34px!important;height:34px!important;border-radius:50%!important;border:0!important;padding:0!important;background:color-mix(in srgb,var(--tx) 7%,var(--sf))!important;font:700 11px var(--ui)!important;color:var(--mu)!important;object-fit:cover}
 .hm-t{flex:1;min-width:0;display:flex;flex-direction:column}
 .hm-t b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

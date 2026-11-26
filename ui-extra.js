@@ -268,8 +268,11 @@ function teamViz(l){if(!l.length)return '';
   ${vizBar('Gol fatti sul totale',r.gf,r.gf+r.ga,'var(--acf)')}</div>`}
 // giocatore: gol e assist partita per partita, presenze e peso sui gol della squadra
 // logo dell'avversario sotto la barra (o le sue iniziali in un cerchio): i nomi non ci stavano
-function vzLogo(x,cx,base,op){const src=safeSrc(x.oppLogo),c=cx.toFixed(1),ini=esc(String(x.opp||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
-  return `<g opacity="${op}"><title>${esc(x.opp||'')}</title>${src?`<image href="${src}" x="${(cx-8).toFixed(1)}" y="${base+4}" width="16" height="16" preserveAspectRatio="xMidYMid meet"/>`:`<circle cx="${c}" cy="${base+12}" r="8" fill="var(--bd)"/><text x="${c}" y="${base+14.6}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--mu)">${ini}</text>`}</g>`}
+let vzN=0;
+function vzLogo(x,cx,base,op){const src=safeSrc(x.oppLogo),c=cx.toFixed(1),cy=base+13,id='vzc'+(++vzN),ini=esc(String(x.opp||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
+  // stesso aspetto dei loghi nelle partite della Home: cerchio con fondo grigio chiaro, logo ritagliato o iniziali
+  const bg=`<circle cx="${c}" cy="${cy}" r="9" style="fill:color-mix(in srgb,var(--tx) 7%,var(--sf))"/>`;
+  return `<g opacity="${op}"><title>${esc(x.opp||'')}</title>${bg}${src?`<clipPath id="${id}"><circle cx="${c}" cy="${cy}" r="9"/></clipPath><image href="${src}" x="${(cx-9).toFixed(1)}" y="${cy-9}" width="18" height="18" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/>`:`<text x="${c}" y="${cy+2.6}" text-anchor="middle" font-size="7" font-weight="700" style="fill:var(--mu)">${ini}</text>`}</g>`}
 function playerViz(m){if(!m||m.role!=='giocatore')return '';
   const l=S.matches.filter(x=>x.tid===m.tid&&x.played&&inSeason(x)).sort((a,b)=>a.date<b.date?-1:1);if(!l.length)return '';
   const s=l.slice(-12),num=(x,k)=>+(((x.stats||{})[m.id]||{})[k])||0;
