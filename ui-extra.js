@@ -61,8 +61,11 @@ function confetti(){if(confetti.on||matchMedia('(prefers-reduced-motion: reduce)
 function h2hCard(tid,opp,exId,quiet){const k=String(opp||'').trim().toLowerCase();if(!k)return '';
   const l=S.matches.filter(x=>x.tid===tid&&x.played&&x.id!==exId&&String(x.opp||'').trim().toLowerCase()===k).sort((a,b)=>a.date<b.date?1:-1);
   const lg=(S.matches.find(x=>x.id===exId)||{}).oppLogo||(S.matches.find(x=>x.tid===tid&&x.oppLogo&&String(x.opp||'').trim().toLowerCase()===k)||{}).oppLogo,lsrc=lg&&safeSrc(lg);
-  if(!l.length)return quiet?'':`<div class="card h2n">${lsrc?`<img loading="lazy" decoding="async" class="crest sm" src="${lsrc}" alt="">`:''}<div><b>${esc(opp)}</b><span class="mu">Nessun precedente tra voi</span></div><span class="tag2 on">Prima sfida</span></div>`;
-  const r=teamRec(l);return `<div class="card"><b>Storico contro ${esc(opp)}</b><p class="mu" style="margin:6px 0 8px">${r.g} ${r.g===1?'partita':'partite'} · ${r.v}V ${r.n}N ${r.p}P · gol ${r.gf}-${r.ga}</p>${l.slice(0,5).map(x=>`<div class="lr"><span class="mu" style="width:78px">${esc(dt(x.date).f)}</span><span class="mu" style="flex:1">${esc(x.tourn||'Amichevoli')}</span><b>${esc(x.gf)}-${esc(x.ga)}</b><i class="rb ${x.gf>x.ga?'v':x.gf<x.ga?'p':'n'}" style="margin:0 0 0 8px">${x.gf>x.ga?'V':x.gf<x.ga?'P':'N'}</i></div>`).join('')}</div>`}
+  const dot=(c)=>typeof logoDot==='function'?logoDot(lg,opp,c):(lsrc?`<img loading="lazy" decoding="async" class="crest sm" src="${lsrc}" alt="">`:'');
+  if(!l.length)return quiet?'':`<div class="card h2n">${dot('big')}<div><b>${esc(opp)}</b><span class="mu">Nessun precedente tra voi</span></div><span class="tag2 on">Prima sfida</span></div>`;
+  // stesso aspetto delle partite in Home: data, logo, torneo, risultato colorato; si tocca per aprire la partita
+  const r=teamRec(l),row=x=>{const d=dt(x.date),k=x.gf>x.ga?'v':x.gf<x.ga?'p':'n';return `<button class="hm-row" onclick="S.mid='${x.id}';S.mt=null;render()"><span class="hm-d"><b>${d.d}</b>${d.m}</span>${dot('')}<span class="hm-t"><b>${esc(x.opp||'')}</b><span>${esc([x.tourn||'Amichevole',typeof matchPhase==='function'?matchPhase(x):''].filter(Boolean).join(' · '))} · ${String(x.date||'').slice(0,4)}</span></span><span class="hm-s ${k}">${esc(x.gf)}–${esc(x.ga)}</span></button>`};
+  return `<div class="card h2h"><div class="h2h-hd">${dot('big')}<div><b>Storico contro ${esc(opp)}</b><span class="mu">${r.g} ${r.g===1?'partita':'partite'} · ${r.v}V ${r.n}N ${r.p}P · gol ${r.gf}-${r.ga}</span></div></div>${l.slice(0,5).map(row).join('')}</div>`}
 function h2hLive(v){const e=document.getElementById('h2h-live');if(e)e.innerHTML=h2hCard(S.tid,v,null,true)}
 
 // ===== Calendario (.ics): una partita o tutte quelle in programma, con promemoria un'ora prima =====

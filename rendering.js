@@ -5,6 +5,8 @@
 const W0=window;
 const iniOf=n=>esc(String(n||'?').replace(/[^A-Za-z0-9À-ÿ ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?');
 W0.teamIni=iniOf;   // iniziali di una squadra senza logo (scheda partita)
+// logo di una squadra nello stile delle partite in Home (cerchio grigio chiaro, logo tondo o iniziali)
+W0.logoDot=(src,name,cls)=>{src=safeSrc(src);return src?`<img loading="lazy" decoding="async" class="hm-lg ${cls||''}" src="${src}" alt="">`:`<span class="hm-lg ${cls||''}">${iniOf(name)}</span>`};
 const avOf=(m,c)=>m&&m.photo?`<span class="${c}"><img loading="lazy" decoding="async" src="${safeSrc(m.photo)}" alt=""></span>`:`<span class="${c}">${iniOf(m&&m.nick)}</span>`;
 const res=x=>x.gf>x.ga?'v':x.gf<x.ga?'p':((typeof pensRes==='function'&&pensRes(x))||'n');
 const seasonTxt=()=>{try{const s=activeSeason();return s==='all'?'Tutte le stagioni':'Stagione '+s}catch(e){return ''}};
@@ -73,6 +75,12 @@ const st=document.createElement('style');st.id='rendering';st.textContent=`
 .hm-d{flex:0 0 38px;text-align:center;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase}
 .hm-d b{display:block;font:700 21px/1 var(--num);color:var(--tx)}
 /* loghi nella scheda partita: cerchio con lo stesso fondo delle partite in Home */
+.bar .crest.mlg{width:40px;height:40px;border-radius:50%;border:0;padding:0;background:color-mix(in srgb,var(--tx) 7%,var(--sf));object-fit:cover;display:grid;place-items:center;font:700 14px var(--ui);color:var(--mu);flex:none}
+.bar .crest.mlg .ic{width:52%;height:52%}
+.hm-lg{display:inline-grid;place-items:center}
+.h2h{padding:0;overflow:hidden}.h2h-hd{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}.h2h-hd>div{min-width:0}.h2h-hd b{display:block}.h2h-hd .mu{font-size:13px}
+.h2h-hd .hm-lg.big,.h2n .hm-lg.big{width:44px!important;height:44px!important;font-size:14px!important}
+.h2n .hm-lg{flex:none}
 .mscore .tm .crest.mlg{width:56px;height:56px;border-radius:50%;border:0;padding:0;background:color-mix(in srgb,var(--tx) 7%,var(--sf));object-fit:cover;display:grid;place-items:center;font:700 18px var(--ui);color:var(--mu)}
 .mscore .tm .crest.mlg .ic{width:50%;height:50%}
 .hm-lg{flex:none;width:34px!important;height:34px!important;border-radius:50%!important;border:0!important;padding:0!important;background:color-mix(in srgb,var(--tx) 7%,var(--sf))!important;font:700 11px var(--ui)!important;color:var(--mu)!important;object-fit:cover}

@@ -330,7 +330,7 @@ dialog::backdrop{background:rgba(8,12,20,.72)}dialog img{width:100%;height:auto;
 }
 </style>
 </head><body><div id="app"><div class="view plain"><div class="pg" aria-busy="true" aria-label="Caricamento"><div class="sk-b" style="height:54px;width:55%"></div><div class="sk-b" style="height:150px;margin-top:18px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div><div class="sk-b" style="height:84px;margin-top:12px"></div></div></div></div>
-<script src="ui-extra.js?v=30"></script><script src="match-report.js?v=32"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
+<script src="ui-extra.js?v=31"></script><script src="match-report.js?v=32"></script><script src="fluido.js?v=12"></script><script>/* palette, rifiniture e scheda Prossima partita (prima erano restyle.js e rinnova.js): stesso punto di caricamento, stesso ordine dei colori */(function(){const st=document.createElement("style");st.textContent=`
 /* palette e rifiniture (ex restyle.js) */
 :root{--bg:#f3f5f9;--sf:#fff;--bd:#e6eaf1;--ac:#0b7a43;--acf:#0b7a43;--ac2:#e3f3ea;--on:#fff}
 :root:root:root{--bg:#0a0e15;--sf:#131a27;--bd:#202a3b;--ac:#2fd17a;--acf:#2fd17a;--ac2:#12281d;--on:#04210f}
@@ -659,7 +659,7 @@ async function joinTeam(){const c=v("jc").toUpperCase();if(!c)return;
   S.err=r.error?(r.error.message.includes("codice")?"Codice non valido.":r.error.message):"Richiesta inviata ai dirigenti.";render()}
 
 function teamBar(t){const multi=new Set(S.members.filter(m=>m.uid===S.uid).map(m=>m.tid)).size>1;
-  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,ic("ball"),"sm")}<div class="tnw"><div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
+  return `<header class="bar">${multi?`<button class="ib" style="border:0" onclick="S.tid=null;S.mid=null;S.pd=null;render()" aria-label="Le tue squadre">${ic("back")}</button>`:""}${crest(t.logo,typeof teamIni==="function"?teamIni(t.name):ic("ball"),"sm mlg")}<div class="tnw"><div class="tn">${esc(t.name)}</div>${seasonSelect(t.id)}</div>${teamIgBtn(t)}<button class="ib" onclick="fanBrowse()" aria-label="Cerca squadre e tornei">${ic("search")}</button>${canManage()?`<button class="ib edt${S.edit?" on":""}" role="switch" aria-checked="${S.edit?"true":"false"}" aria-label="Modifica" onclick="toggleEdit(event)">${ic("pen")}</button>`:""}</header>`}
 // Profilo: tasto in alto a destra (con il pallino rosso se ci sono richieste da approvare)
 function profBtn(t){const n=canManage()?S.reqs.filter(r=>r.tid===t.id).length:0;
   return `<button class="ib${S.tab==="imp"?" on":""}" style="position:relative" onclick="S.tab='imp';S.mid=null;S.pd=null;render()" aria-label="Profilo${n?" · "+n+" richieste":""}">${ic("user")}${n?'<i class="dot" style="top:4px;left:auto;right:4px"></i>':""}</button>`}
@@ -1202,4 +1202,4 @@ boot();
 </script><!-- Vercel: visite (Web Analytics) e velocità reale (Speed Insights). Non raccolgono dati personali. -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments)};</script>
 <script defer src="/_vercel/insights/script.js"></script><script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="rendering.js?v=10"></script><script src="rigori.js?v=2"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
+<script src="rendering.js?v=11"></script><script src="rigori.js?v=2"></script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script></body></html>
