@@ -766,7 +766,7 @@
     };
     const mine = me && ((n.h && norm(n.h) === me) || (n.a && norm(n.a) === me));
     return '<button class="tbx' + (sel ? ' on' : '') + (mine ? ' me' : '') + '" onclick="' + (act || 'trSel') + '(\'' + n.key + '\')" aria-label="' + E(n.title) + '">' +
-      '<div class="tbn">' + E(String(n.title).replace(/ (Gold|Silver|Bronze|Copper)$/, '').replace(/ (Play Off|Play Out)/, '').replace(/ (Gold-Silver|Bronze-Copper)$/, '').replace(/^.* · partita /, 'Partita ')) + '</div>' + row(n.h, n.hl, r ? r.gh : null, r ? r.ph : null) + row(n.a, n.al, r ? r.ga : null, r ? r.pa : null) + '</button>';
+      '<div class="tbn">' + E(String(n.title).replace(/ (Gold|Silver|Bronze|Copper)$/, '').replace(/ (Play Off|Play Out)/, '').replace(/ (Gold-Silver|Bronze-Copper)$/, '').replace(/^.* · partita /, 'Partita ')) + (n.two ? ' A/R' : '') + '</div>' + row(n.h, n.hl, r ? r.gh : null, r ? r.ph : null) + row(n.a, n.al, r ? r.ga : null, r ? r.pa : null) + '</button>';
   }
   // cols: [{ t: titolo del turno, keys: [...] }], ogni turno ha metà partite del precedente, in ordine (la partita j nasce da 2j e 2j+1)
   let brI = 0;
