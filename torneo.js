@@ -166,9 +166,10 @@
   // I nodi vengono creati turno dopo turno: ogni partita dell'app si usa una sola volta, nel primo incontro tra quelle due squadre ancora senza risultato.
   let AUTO = null;
   const autoStart = o => { AUTO = { list: koApp(o), used: new Set() }; };
-  function autoPick(hn, an) {
+  function autoPick(hn, an, last) {
     if (!AUTO || !hn || !an) return null;
-    const i = AUTO.list.findIndex((m, j) => !AUTO.used.has(j) && ((nn(m.h) === nn(hn) && nn(m.a) === nn(an)) || (nn(m.h) === nn(an) && nn(m.a) === nn(hn))));
+    const ok = (m, j) => !AUTO.used.has(j) && ((nn(m.h) === nn(hn) && nn(m.a) === nn(an)) || (nn(m.h) === nn(an) && nn(m.a) === nn(hn)));
+    let i = -1; AUTO.list.forEach((m, j) => { if (ok(m, j) && (last || i < 0)) i = j; });
     if (i < 0) return null;
     AUTO.used.add(i); const m = AUTO.list[i], same = nn(m.h) === nn(hn);
     const r = { gh: same ? m.gf : m.ga, ga: same ? m.ga : m.gf, auto: true, date: m.date };
@@ -179,6 +180,22 @@
     const r = ko[key] || autoPick(H.n, A.n), w = winner(r), hn = H.n, an = A.n;
     return { key, title, h: hn, a: an, hl: H.l, al: A.l, r, w: w && hn && an ? (w === 'h' ? hn : an) : null, l: w && hn && an ? (w === 'h' ? an : hn) : null };
   };
+
+  // Andata e ritorno (Memorial: semifinali). ko[key+':a'] = andata, ko[key+':r'] = ritorno; ko[key] è un vecchio risultato unico, usato come andata.
+  // Passa chi segna di più nella somma dei gol; in parità decidono i rigori del ritorno.
+  const mkNode2 = (ko, key, title, H, A) => {
+    const hn = H.n, an = A.n, ma = ko[key + ':a'] || ko[key];
+    const ra = ma ? { gh: ma.gh, ga: ma.ga } : autoPick(hn, an), rr = ko[key + ':r'] || autoPick(hn, an, !!ma);
+    let r = null;
+    if (ra) {
+      r = { gh: ra.gh + (rr ? rr.gh : 0), ga: ra.ga + (rr ? rr.ga : 0), legs: [ra, rr || null], auto: !!(ra.auto && (!rr || rr.auto)), date: (rr || ra).date };
+      if (rr && r.gh === r.ga && rr.ph != null && rr.pa != null) { r.ph = rr.ph; r.pa = rr.pa; }
+    }
+    const w = r && r.legs[1] ? winner(r) : null;
+    return { key, title, two: true, h: hn, a: an, hl: H.l, al: A.l, r, w: w && hn && an ? (w === 'h' ? hn : an) : null, l: w && hn && an ? (w === 'h' ? an : hn) : null };
+  };
+  // per la diretta (rigori.js): le fasi che in questo torneo si giocano con andata e ritorno
+  window.trLegsKo = name => { const o = tourList().find(x => norm(x.name) === norm(name)); return o && fmtOf(o) === 'memorial' ? ['F2'] : []; };
 
   // Memorial: tabellone fisso con le quattro categorie
   function bracketMemorial(o) {
@@ -192,8 +209,9 @@
       const [p, side] = src[c];
       QP.forEach(([x, y], j) => mk('Q' + c + (j + 1), 'Quarto ' + (j + 1) + ' ' + nm, ref(p + x, side), ref(p + y, side)));
       [['off', 'w', 'Play Off'], ['out', 'l', 'Play Out']].forEach(([k, sd, lab]) => {
-        mk('S' + c + k + '1', 'Semifinale 1 ' + lab + ' ' + nm, ref('Q' + c + '1', sd), ref('Q' + c + '4', sd));
-        mk('S' + c + k + '2', 'Semifinale 2 ' + lab + ' ' + nm, ref('Q' + c + '2', sd), ref('Q' + c + '3', sd));
+        // semifinali: andata e ritorno
+        N['S' + c + k + '1'] = mkNode2(ko, 'S' + c + k + '1', 'Semifinale 1 ' + lab + ' ' + nm, ref('Q' + c + '1', sd), ref('Q' + c + '4', sd));
+        N['S' + c + k + '2'] = mkNode2(ko, 'S' + c + k + '2', 'Semifinale 2 ' + lab + ' ' + nm, ref('Q' + c + '2', sd), ref('Q' + c + '3', sd));
         mk('F' + c + k, 'Finale ' + lab + ' ' + nm, ref('S' + c + k + '1', 'w'), ref('S' + c + k + '2', 'w'));
       });
     });
@@ -366,6 +384,23 @@
   window.trEdCancel = () => { delete st().ed; R(); };
   window.trDelRes = i => { const o = clone(T()); o.res.splice(i, 1); save(o); };
   window.trForce = g => { const o = clone(T()); o.force = o.force || {}; o.force[g] = !o.force[g]; save(o); };
+  window.trSaveKo2 = key => {
+    const o = clone(T()), g = (l, s) => num(val('k-' + key + '-' + l + s));
+    const a = [g('a', 'gh'), g('a', 'ga')], r = [g('r', 'gh'), g('r', 'ga')], ph = g('r', 'ph'), pa = g('r', 'pa');
+    if (a.some(v => v == null)) return toast('Inserisci i gol dell’andata.');
+    if (r.some(v => v == null) && !r.every(v => v == null)) return toast('Inserisci i gol del ritorno di entrambe le squadre.');
+    o.ko = o.ko || {}; delete o.ko[key]; o.ko[key + ':a'] = { gh: a[0], ga: a[1] };
+    if (r[0] == null) delete o.ko[key + ':r'];
+    else {
+      const rr = { gh: r[0], ga: r[1] };
+      if (a[0] + r[0] === a[1] + r[1]) {
+        if (ph == null || pa == null || ph === pa) return toast('Somma dei gol in parità: inserisci i rigori del ritorno (devono avere un vincitore).');
+        rr.ph = ph; rr.pa = pa;
+      }
+      o.ko[key + ':r'] = rr;
+    }
+    save(o);
+  };
   window.trSaveKo = key => {
     const o = clone(T()), gh = num(val('k-' + key + '-gh')), ga = num(val('k-' + key + '-ga'));
     if (gh == null || ga == null) return toast('Inserisci i gol di entrambe le squadre.');
@@ -376,7 +411,7 @@
     }
     o.ko = o.ko || {}; o.ko[key] = r; save(o);
   };
-  window.trClearKo = key => { const o = clone(T()); delete (o.ko || {})[key]; save(o); };
+  window.trClearKo = key => { const o = clone(T()), ko = o.ko || {}; delete ko[key]; delete ko[key + ':a']; delete ko[key + ':r']; save(o); };
   window.trOv = (key, side, v) => { const o = clone(T()); o.ov = o.ov || {}; if (v) o.ov[key + ':' + side] = v; else delete o.ov[key + ':' + side]; save(o); };
   window.trDelete = () => {
     const o = T(), t = team(); if (!o || !t) return;
@@ -559,7 +594,7 @@
       if (n) {
         const opp = norm(n.h) === me ? n.a : n.h;
         if (n.w) sub = (norm(n.w) === me ? 'Vinta: ' : 'Persa: ') + n.title;
-        else if (opp) { sub = n.title + ' · contro'; opp2 = opp; }   // l'avversaria va a capo, così un nome lungo resta intero
+        else if (opp) { sub = n.title + (n.two ? (n.r ? ' · ritorno' : ' · andata') : '') + ' · contro'; opp2 = opp; }   // l'avversaria va a capo, così un nome lungo resta intero
         else sub = n.title + ' · avversaria da decidere';
       }
       if (fmtOf(o) === 'memorial') {
@@ -669,7 +704,26 @@
     return chips + tbl.replace('</div><p class="mu"', '</div>' + legend + '<p class="mu"') + force + mine;
   }
 
+  function node2Html(n, mgr) {
+    const ready = n.h && n.a, r = n.r, L = r ? r.legs : [null, null], k = n.key;
+    const nm = (x, lab, win) => '<span class="' + (x ? (win ? 'w' : '') : 'ph') + '">' + E(x || lab) + '</span>';
+    const leg = (i, t) => { const x = L[i]; return '<div class="mu" style="font-size:12px;margin-top:4px">' + t + ': ' + (x ? x.gh + '–' + x.ga + (x.ph != null ? ' (rigori ' + x.ph + '–' + x.pa + ')' : '') + (x.auto ? ' · dalla partita nell’app' : '') : 'da giocare') + '</div>'; };
+    let h = '<div class="trk"><div class="mu" style="font-size:12px">' + E(n.title) + ' · andata e ritorno</div>' +
+      '<div class="tm">' + nm(n.h, n.hl, n.w && n.w === n.h) + '<b>' + (r ? r.gh : '–') + (r && r.ph != null ? ' (' + r.ph + ')' : '') + '</b></div>' +
+      '<div class="tm">' + nm(n.a, n.al, n.w && n.w === n.a) + '<b>' + (r ? r.ga : '–') + (r && r.pa != null ? ' (' + r.pa + ')' : '') + '</b></div>' +
+      (r ? leg(0, 'Andata') + leg(1, 'Ritorno') : '') +
+      '<p class="mu" style="white-space:normal;margin:6px 0 0">Conta la somma dei gol delle due partite; se è in parità, rigori alla fine del ritorno.</p>';
+    if (mgr && ready) {
+      const v = (x, f) => x && x[f] != null ? ' value="' + x[f] + '"' : '', inp = (l, f, x, ph, lab) => '<input id="k-' + k + '-' + l + f + '" type="number" min="0" max="99" inputmode="numeric" placeholder="' + ph + '"' + v(x, f) + ' aria-label="' + E(lab) + '">';
+      h += '<div class="ir"><span class="mu">Andata</span>' + inp('a', 'gh', L[0], 'Gol', 'Andata gol ' + n.h) + '<span>–</span>' + inp('a', 'ga', L[0], 'Gol', 'Andata gol ' + n.a) + '</div>' +
+        '<div class="ir"><span class="mu">Ritorno</span>' + inp('r', 'gh', L[1], 'Gol', 'Ritorno gol ' + n.h) + '<span>–</span>' + inp('r', 'ga', L[1], 'Gol', 'Ritorno gol ' + n.a) +
+        '<span class="mu">rigori</span>' + inp('r', 'ph', L[1], '–', 'Rigori ' + n.h) + '<span>–</span>' + inp('r', 'pa', L[1], '–', 'Rigori ' + n.a) + '</div>' +
+        '<div class="ir"><button class="s" onclick="trSaveKo2(\'' + k + '\')">Salva</button>' + (r && !r.auto ? '<button class="s" onclick="trClearKo(\'' + k + '\')">Azzera</button>' : '') + '</div>';
+    }
+    return h + '</div>';
+  }
   function nodeHtml(n, mgr, first, allNames) {
+    if (n.two) return node2Html(n, mgr);
     const ready = n.h && n.a && !n.bye, r = n.r;
     const nm = (x, lab, win) => '<span class="' + (x ? (win ? 'w' : '') : 'ph') + '">' + E(x || lab) + '</span>';
     const sc = r ? [r.gh, r.ga] : ['–', '–'];
@@ -745,7 +799,7 @@
     brI = 0; restoreScroll();
     const pend = GLn(o).filter(g => !gdone(o, g));
     const note = pend.length ? '<p class="mu" style="white-space:normal">Gironi non ancora conclusi: ' + pend.join(', ') + '. Le squadre compaiono qui quando il girone ha tutte le partite inserite.</p>' : '';
-    const pen = '<p class="mu" style="white-space:normal">Parità dopo i tempi regolamentari: calci di rigore' + (fmtOf(o) === 'memorial' ? ' (5 a testa)' : '') + '. I rigori sono tra parentesi.</p>';
+    const pen = '<p class="mu" style="white-space:normal">Parità dopo i tempi regolamentari: calci di rigore' + (fmtOf(o) === 'memorial' ? ' (5 a testa). Le semifinali si giocano con andata e ritorno: conta la somma dei gol e, se è in parità, i rigori alla fine del ritorno' : '') + '. I rigori sono tra parentesi.</p>';
     if (fmtOf(o) === 'memorial') {
       const N = bracketMemorial(o), s = st(), c = s.c || 'OT';
       const tabs = [['OT', 'Ottavi'], ...CATS.map(([k, n]) => [k, n])];

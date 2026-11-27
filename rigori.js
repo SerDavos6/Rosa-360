@@ -37,13 +37,23 @@ W0.pkStart=id=>{try{closeSheet()}catch(e){}liveClockStop(id);PK.p=null;PK.gk=nul
 W0.pkEnd=id=>{lvApply(id,d=>{d.played=true});S.fp=id;S.fpSel=null;setTimeout(render,0)};
 W0.pkCancel=id=>ask({title:'Annullare i rigori?',msg:'Si cancellano tutti i tiri segnati e si torna alla partita.',ok:'Annulla i rigori',danger:true,fn:()=>{lvApply(id,d=>{((d.pens&&d.pens.l)||[]).forEach(k=>psAdj(d,k,-1));d.pens=null});rq()}});
 
+// Andata e ritorno (Memorial: semifinali). All'andata il pareggio va bene; al ritorno conta la somma dei gol delle due partite.
+const nz=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+W0.legInfo=x=>{
+  if(!x||!x.ph||!x.tourn||typeof W0.trLegsKo!=='function'||!W0.trLegsKo(x.tourn).includes(x.ph))return null;
+  const k=m=>(m.date||'')+' '+(m.time||''),prev=S.matches.filter(m=>m.id!==x.id&&m.tid===x.tid&&m.ph===x.ph&&nz(m.tourn)===nz(x.tourn)&&nz(m.opp)===nz(x.opp)&&k(m)<k(x)).sort((a,b)=>k(a)<k(b)?-1:1).pop();
+  if(!prev)return {leg:'a'};
+  const p=lvEff(prev);return {leg:'r',prev:p,gf:(+x.gf||0)+(+p.gf||0),ga:(+x.ga||0)+(+p.ga||0)}};
+// la partita va ai rigori? (in parità; al ritorno di un andata e ritorno con la somma dei gol in parità; mai all'andata)
+const tie=x=>{const L=W0.legInfo(x);return L?(L.leg==='r'&&L.gf===L.ga):+x.gf===+x.ga};
+
 // "Fine partita": in parità in una fase finale si va ai rigori
 const endOrig=W0.liveEnd;
 W0.liveEnd=function(id){
   const b=S.matches.find(m=>m.id===id),x=b&&lvEff(b);
-  if(x&&!x.pens&&+x.gf===+x.ga){
-    const ko=KO(x);
-    sheet(`<h2 style="margin-top:0">${ko?'Pareggio: si va ai rigori':'È finita in parità'}</h2><p class="mu">${ko?'Questa partita non può finire pari. Segna i rigori uno alla volta: la partita si chiude quando la serie è decisa.':'Se ci sono i rigori, segnali uno alla volta; altrimenti la partita finisce in pareggio.'}</p>
+  if(x&&!x.pens&&tie(x)){
+    const L=W0.legInfo(x),ko=L?true:KO(x);
+    sheet(`<h2 style="margin-top:0">${L?'Somma dei gol in parità: si va ai rigori':ko?'Pareggio: si va ai rigori':'È finita in parità'}</h2><p class="mu">${L?`Andata ${esc(L.prev.gf)}–${esc(L.prev.ga)}, ritorno ${esc(x.gf)}–${esc(x.ga)}: in totale ${L.gf}–${L.ga}. Segna i rigori uno alla volta: la partita si chiude quando la serie è decisa.`:ko?'Questa partita non può finire pari. Segna i rigori uno alla volta: la partita si chiude quando la serie è decisa.':'Se ci sono i rigori, segnali uno alla volta; altrimenti la partita finisce in pareggio.'}</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px"><button class="p" onclick="pkStart('${id}')">Inizia i rigori</button>${ko?'':`<button onclick="closeSheet();liveEndPlain('${id}')">Finisce in pareggio</button>`}<button onclick="closeSheet()">Annulla</button></div>`);
     return}
   endOrig(id)};
@@ -57,7 +67,7 @@ W0.liveCardHtml=function(x){
     // partita chiusa con i rigori: sotto la cronaca, il riepilogo della serie (senza comandi)
     if(x.played&&W0.pensOf(x))h+=pkCard(x,false);
     // in parità si possono avviare i rigori anche a mano, in qualsiasi partita
-    if(!x.played&&!x.pens&&+x.gf===+x.ga&&(x.events||[]).length&&livePlayers(x).length)h=h.replace('<button class="lvfine"',`<button class="pk-go" onclick="pkStart('${x.id}')">${ic('ball')} Vai ai rigori</button><button class="lvfine"`);
+    if(!x.played&&!x.pens&&tie(x)&&(x.events||[]).length&&livePlayers(x).length)h=h.replace('<button class="lvfine"',`<button class="pk-go" onclick="pkStart('${x.id}')">${ic('ball')} Vai ai rigori</button><button class="lvfine"`);
     return h}
   return pkCard(x,true)};
 // riepilogo dei rigori in sola lettura (giocatori, tifosi, partita chiusa)
