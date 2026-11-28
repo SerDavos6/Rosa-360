@@ -873,7 +873,7 @@ function nextMatch(ms){
     faces=inn.slice(0,3).map(av).join("")+(inn.length>3?`<span class="more">+${inn.length-3}</span>`:"");
   return `<div class="card nxt rn-hero rn2" onclick="S.mid='${x.id}';render()">
   <div class="rn-top"><span class="rn-when">${esc(when)}</span><span class="rn-sub">${esc(sub)}</span></div>
-  <div class="rn-vs"><div>${logo(T.logo,T.name,true)}<b>${esc(T.name||"Noi")}</b></div><div class="rn-mid"><span class="rn-time">${esc(d.time||dt(x.date).f.slice(0,6))}</span>${d.time?`<span class="rn-place">${esc(dt(x.date).f.slice(0,6))}</span>`:""}</div><div>${logo(x.oppLogo,x.opp)}<b>${esc(x.opp)}</b></div></div>
+  <div class="rn-vs"><div>${logo(T.logo,T.name,true)}<b>${esc(T.name||"Noi")}</b></div><div class="rn-mid"><span class="rn-time">${esc(d.time||dt(x.date).f.slice(0,6))}</span>${d.time?`<span class="rn-place">${(o=>esc(o.d+" "+o.m+" "+String(x.date).slice(0,4)))(dt(x.date))}</span>`:""}</div><div>${logo(x.oppLogo,x.opp)}<b>${esc(x.opp)}</b></div></div>
   ${matchPlace(x)?`<div class="rn-where">${ic("pin")}<span>${esc(matchPlace(x))}</span></div>`:""}
   <div class="rn-conf">${faces?`<span class="rn-faces">${faces}</span>`:""}<span class="rn-cn"><b>${cnt} confermat${cnt===1?"o":"i"}</b></span><button class="rn-cal" onclick="event.stopPropagation();addToCalendar('${x.id}')" aria-label="Aggiungi questa partita al calendario del telefono">${ic("cal")}</button></div>
   ${btn}</div>`}
