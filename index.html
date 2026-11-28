@@ -362,7 +362,7 @@ img.rn-lg{background:#fff}
 .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rn-two .rn-go{font-size:14px;padding:0 8px}
 .rn-cnt{text-align:center;font-size:12px;opacity:.85;margin-top:8px}
 `;document.head.append(st)})();</script><script src="tifoso.js?v=18"></script><script src="push.js?v=5"></script><script src="collega.js?v=3"></script>
-<script src="torneo.js?v=32"></script><script src="matchday.js?v=13"></script>
+<script src="torneo.js?v=32"></script><script src="matchday.js?v=14"></script>
 
 <script>
 const POS={P:"Portiere",D:"Difensore",C:"Centrocampista",A:"Attaccante"};
@@ -873,7 +873,8 @@ function nextMatch(ms){
     faces=inn.slice(0,3).map(av).join("")+(inn.length>3?`<span class="more">+${inn.length-3}</span>`:"");
   return `<div class="card nxt rn-hero rn2" onclick="S.mid='${x.id}';render()">
   <div class="rn-top"><span class="rn-when">${esc(when)}</span><span class="rn-sub">${esc(sub)}</span></div>
-  <div class="rn-vs"><div>${logo(T.logo,T.name,true)}<b>${esc(T.name||"Noi")}</b></div><div class="rn-mid"><span class="rn-time">${esc(d.time||dt(x.date).f.slice(0,6))}</span><span class="rn-place">${esc(d.time?dt(x.date).f.slice(0,6):"")}${matchPlace(x)?(d.time?" · ":"")+esc(matchPlace(x)):""}</span></div><div>${logo(x.oppLogo,x.opp)}<b>${esc(x.opp)}</b></div></div>
+  <div class="rn-vs"><div>${logo(T.logo,T.name,true)}<b>${esc(T.name||"Noi")}</b></div><div class="rn-mid"><span class="rn-time">${esc(d.time||dt(x.date).f.slice(0,6))}</span>${d.time?`<span class="rn-place">${esc(dt(x.date).f.slice(0,6))}</span>`:""}</div><div>${logo(x.oppLogo,x.opp)}<b>${esc(x.opp)}</b></div></div>
+  ${matchPlace(x)?`<div class="rn-where">${ic("pin")}<span>${esc(matchPlace(x))}</span></div>`:""}
   <div class="rn-conf">${faces?`<span class="rn-faces">${faces}</span>`:""}<span class="rn-cn"><b>${cnt} confermat${cnt===1?"o":"i"}</b></span><button class="rn-cal" onclick="event.stopPropagation();addToCalendar('${x.id}')" aria-label="Aggiungi questa partita al calendario del telefono">${ic("cal")}</button></div>
   ${btn}</div>`}
 // Instagram del giocatore o del dirigente: si salva solo il nome utente, il link si apre in una nuova scheda

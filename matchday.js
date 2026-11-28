@@ -123,7 +123,7 @@ i[style*="--win"] b,i[style*="--draw"] b,i[style*="--loss"] b{color:#fff}
 .rn2 .rn-vs{margin:16px 0 12px}
 .rn-mid{flex:0 0 auto!important;gap:2px!important}
 .rn-time{font:800 46px/1 var(--num);letter-spacing:.01em}
-.rn-place{font-size:12px;opacity:.85;white-space:nowrap}
+.rn-place{font-size:12px;opacity:.85;white-space:nowrap}.rn-where{display:flex;align-items:center;justify-content:center;gap:5px;margin:-4px 0 12px;font-size:13px;opacity:.85;text-align:center}.rn-where .ic{width:14px;height:14px;flex:none}.rn2 .rn-vs{align-items:flex-start}.rn2 .rn-mid{align-self:center}
 .rn-conf{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border-radius:14px;background:rgba(0,0,0,.18)}
 .rn-faces{display:flex;flex:none}
 .rn-faces>*{width:28px;height:28px;border-radius:50%;border:2px solid var(--acf);margin-left:-8px;object-fit:cover;display:grid;place-items:center;background:color-mix(in srgb,var(--on) 85%,var(--acf));color:var(--acf);font:800 11px var(--ui)}
